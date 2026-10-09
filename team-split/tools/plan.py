@@ -5,7 +5,7 @@ D, A, S, U, T = 'src/domain/', 'src/app/', 'src/services/', 'src/ui/', 'src/doma
 
 PARTS = {
  'P1': {'title': 'FR-1 จดรายการ + FR-2 ภาพรวม', 'branch': 'fr1-fr2-transactions-overview', 'commits': [
-   ('FR-1: ตรรกะเงินและหมวดหมู่ พร้อมเทสต์', [D+'money.ts', D+'categories.ts', D+'recurring.ts', D+'types.ts', T+'recurring.test.ts']),
+   ('FR-1: ตรรกะเงินและหมวดหมู่ พร้อมเทสต์', [D+'money.ts', D+'categories.ts', D+'recurring.ts', D+'types.ts', T+'recurring.test.ts', '.gitignore']),
    ('FR-2: ตรรกะสรุปยอด วันที่ และสรุปเดือน พร้อมเทสต์', [D+'summary.ts', D+'dates.ts', D+'recap.ts', T+'recap.test.ts']),
    ('FR-1/FR-2: ชั้นข้อมูลและตารางฐานข้อมูล', ['src/data/repo.ts', 'src/data/AppProvider.tsx', 'supabase/migrations/20260927000000_init.sql', 'supabase/migrations/20260927000100_harden.sql']),
    ('FR-1/FR-2: หน้าจอรายการ หน้าหลัก และสรุปเดือน', [A+'(tabs)/transactions.tsx', A+'transaction.tsx', A+'(tabs)/index.tsx', A+'recap.tsx', U+'TxRow.tsx', U+'inputs.tsx', U+'feedback.tsx', U+'charts.tsx', U+'SpendCalendar.tsx']),
@@ -32,7 +32,7 @@ PARTS = {
    ('FR-6: สูตรเงินพอถึงและเป้าหมายออม พร้อมเทสต์', [D+'runway.ts', D+'goals.ts', T+'goals.test.ts', T+'domain.test.ts']),
    ('FR-6: หน้าจอเงินพอถึง เป้าหมาย และกระปุก', [A+'(tabs)/runway.tsx', A+'goals.tsx', A+'goal.tsx', U+'Slider.tsx', U+'Jar.tsx', U+'art.tsx', 'supabase/migrations/20260929000000_savings_goals.sql']),
    ('โครงแอป: เมนูหลัก ตั้งค่า เหรียญ และมีอะไรใหม่', [A+'_layout.tsx', A+'(tabs)/_layout.tsx', A+'settings.tsx', A+'whatsnew.tsx', A+'achievements.tsx', S+'whatsNew.ts', S+'useAchievements.ts', 'src/data/prefs.ts', D+'sample.ts', D+'achievements.ts', T+'sample.test.ts', T+'achievements.test.ts', U+'UpdateBanner.tsx', U+'Medal.tsx']),
-   ('ตั้งค่าโปรเจกต์ CI ไอคอน และเอกสาร', ['package.json', 'package-lock.json', 'tsconfig.json', 'eslint.config.js', 'vitest.config.ts', 'app.json', 'app.config.js', 'eas.json', '.gitignore', '.env.example', '.claude/settings.json', 'AGENTS.md', 'CLAUDE.md', 'README.md', '.github/workflows/web.yml', '.github/workflows/e2e-webkit.yml', '.github/workflows/android-apk.yml', '.github/workflows/eas-update.yml', 'scripts/make_icons.py', 'scripts/theme-shot.mjs', 'scripts/web-home-screen.mjs', 'e2e/demo-video.mjs', 'e2e/fake-backend.mjs', 'docs/AI_USAGE_LOG.md', 'docs/TRACEABILITY.md'] + ['assets/'+f for f in ['android-icon-background.png','android-icon-foreground.png','android-icon-monochrome.png','favicon.png','icon.png','splash-icon.png','web/apple-touch-icon.png','web/icon-192.png','web/icon-512.png']]),
+   ('ตั้งค่าโปรเจกต์ CI ไอคอน และเอกสาร', ['package.json', 'package-lock.json', 'tsconfig.json', 'eslint.config.js', 'vitest.config.ts', 'app.json', 'app.config.js', 'eas.json', '.env.example', '.claude/settings.json', 'AGENTS.md', 'CLAUDE.md', 'README.md', '.github/workflows/web.yml', '.github/workflows/e2e-webkit.yml', '.github/workflows/android-apk.yml', '.github/workflows/eas-update.yml', 'scripts/make_icons.py', 'scripts/theme-shot.mjs', 'scripts/web-home-screen.mjs', 'e2e/demo-video.mjs', 'e2e/fake-backend.mjs', 'docs/AI_USAGE_LOG.md', 'docs/TRACEABILITY.md'] + ['assets/'+f for f in ['android-icon-background.png','android-icon-foreground.png','android-icon-monochrome.png','favicon.png','icon.png','splash-icon.png','web/apple-touch-icon.png','web/icon-192.png','web/icon-512.png']]),
  ]},
 }
 
