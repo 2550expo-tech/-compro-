@@ -13,6 +13,7 @@
 | `MindPay-part5-FR6.zip` | FR-6 Money Runway + โครงแอป ตั้งค่าโปรเจกต์ CI (รวมเป็นชุดสุดท้าย) |
 | `TEAM-PLAN.pdf` | ภาพรวมทั้งทีม และขั้นตอนของเจ้าของ repo |
 | `VSCODE-GUIDE.pdf` | คู่มือ VS Code ทีละขั้น พร้อมคำสั่ง (ใช้ได้ทุกชุด ทั้ง Windows และ Mac) |
+| `MindPay-VSCode-tutorial.mp4` | คลิปสอน 3:39 นาที ทำตาม 6 ขั้นใน VS Code จริง (ตัวอย่างชุด 5 · repo จำลอง) มีคำบรรยายภาษาไทย |
 
 ในแต่ละ zip มี `HOW-TO-partN.pdf` (ขั้นตอนใน VS Code), `COMMIT-MESSAGE.txt` และโฟลเดอร์ `files` ที่คัดลอกเข้า repo ได้ทั้งก้อน
 
@@ -21,3 +22,5 @@
 
 `tools/` คือสคริปต์ที่ใช้แบ่งไฟล์และสร้างเอกสาร: `python3 build.py && python3 docs2.py` แล้ว `node render.mjs <โฟลเดอร์ out2/docs>`
 (แก้ค่า `REPO` ใน `plan.py` และ `FONTS` ใน `docs.py` ให้ชี้เครื่องตัวเองก่อน)
+
+`tools/video/` คือสคริปต์อัดคลิป: รัน VS Code (code-server) กับ repo จำลอง แล้วอัดหน้าจอด้วย Playwright และใส่แถบคำบรรยายด้วย ffmpeg
