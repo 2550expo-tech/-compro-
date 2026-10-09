@@ -12,6 +12,7 @@
 | `MindPay-part4-FR5.zip` | FR-5 โค้ชน้องกล้า + สกิน ภารกิจ ฮาโลวีน |
 | `MindPay-part5-FR6.zip` | FR-6 Money Runway + โครงแอป ตั้งค่าโปรเจกต์ CI (รวมเป็นชุดสุดท้าย) |
 | `TEAM-PLAN.pdf` | ภาพรวมทั้งทีม และขั้นตอนของเจ้าของ repo |
+| `VSCODE-GUIDE.pdf` | คู่มือ VS Code ทีละขั้น พร้อมคำสั่ง (ใช้ได้ทุกชุด ทั้ง Windows และ Mac) |
 
 ในแต่ละ zip มี `HOW-TO-partN.pdf` (ขั้นตอนใน VS Code), `COMMIT-MESSAGE.txt` และโฟลเดอร์ `files` ที่คัดลอกเข้า repo ได้ทั้งก้อน
 
