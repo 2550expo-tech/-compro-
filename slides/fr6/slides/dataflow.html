@@ -1,0 +1,51 @@
+<section id="dataflow" data-transition="fade" style="background:#F5F7F2;color:#3D5047;font-family:'Anuphan', Tahoma, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:32px">
+<div style="display:flex;flex-direction:column;gap:8px">
+<p style="font-size:26px;font-weight:600;letter-spacing:2px;color:#8A6A14">เบื้องหลัง</p>
+<h2 style="font-family:'Noto Serif Thai', Tahoma, serif;font-size:60px;font-weight:700;line-height:1.25;color:#0E3B2C">คิดสดในเครื่องทุกครั้ง ไม่เก็บในฐานข้อมูล</h2>
+</div>
+<div style="display:flex;align-items:center;gap:16px">
+<div style="width:268px;display:flex;flex-direction:column;gap:8px;background:#FDFDFB;border:2px solid #1F7A52;border-radius:20px;padding:22px">
+<h3 style="font-size:28px;font-weight:600;color:#0E3B2C">รายการ</h3>
+<p style="font-size:24px;line-height:1.4">จดเอง (FR-1) · พูดจด (FR-3) · สลิป (FR-4)</p>
+</div>
+<x-shape kind="arrow-right" style="background:#A87E1F;width:48px;height:26px"></x-shape>
+<div style="width:268px;display:flex;flex-direction:column;gap:8px;background:#FDFDFB;border:2px solid #1F7A52;border-radius:20px;padding:22px">
+<h3 style="font-size:28px;font-weight:600;color:#0E3B2C">กรองที่ยืนยันแล้ว</h3>
+<p style="font-size:24px;line-height:1.4">confirmedOnly · แบบร่างยังไม่นับ</p>
+</div>
+<x-shape kind="arrow-right" style="background:#A87E1F;width:48px;height:26px"></x-shape>
+<div style="width:268px;display:flex;flex-direction:column;gap:8px;background:#FDFDFB;border:2px solid #1F7A52;border-radius:20px;padding:22px">
+<h3 style="font-size:28px;font-weight:600;color:#0E3B2C">ยอด + ค่าเฉลี่ย</h3>
+<p style="font-size:24px;line-height:1.4">computeBalance (FR-2) · averageDailyExpense</p>
+</div>
+<x-shape kind="arrow-right" style="background:#A87E1F;width:48px;height:26px"></x-shape>
+<div style="width:268px;display:flex;flex-direction:column;gap:8px;background:#FFFBF0;border:3px solid #C8992A;border-radius:20px;padding:22px">
+<h3 style="font-size:28px;font-weight:600;color:#0E3B2C">computeRunway</h3>
+<p style="font-size:24px;line-height:1.4">จำนวนวัน · วันที่ · สถานะ (เรียกใน useMoney)</p>
+</div>
+<x-shape kind="arrow-right" style="background:#A87E1F;width:48px;height:26px"></x-shape>
+<div style="width:268px;display:flex;flex-direction:column;gap:8px;background:#FDFDFB;border:2px solid #1F7A52;border-radius:20px;padding:22px">
+<h3 style="font-size:28px;font-weight:600;color:#0E3B2C">แสดงผล</h3>
+<p style="font-size:24px;line-height:1.4">หน้าหลัก · แท็บเงินพอถึง · โค้ช (FR-5)</p>
+</div>
+</div>
+<div style="display:flex;gap:28px">
+<div style="flex:1;display:flex;gap:18px;align-items:flex-start;background:#E3EEE6;border-radius:24px;padding:24px">
+<x-icon name="Lightning" style="color:#1F7A52;width:40px;height:40px"></x-icon>
+<p style="flex:1;font-size:26px;line-height:1.45;color:#1F3B2C">เพิ่ม แก้ ลบรายการ → คิดใหม่ทันที ไม่ต้องกดรีเฟรช</p>
+</div>
+<div style="flex:1;display:flex;gap:18px;align-items:flex-start;background:#E3EEE6;border-radius:24px;padding:24px">
+<x-icon name="Settings" style="color:#1F7A52;width:40px;height:40px"></x-icon>
+<p style="flex:1;font-size:26px;line-height:1.45;color:#1F3B2C">เปลี่ยนเงินสำรอง หรือหยอดกระปุก → คิดใหม่ทันที</p>
+</div>
+<div style="flex:1;display:flex;gap:18px;align-items:flex-start;background:#E3EEE6;border-radius:24px;padding:24px">
+<x-icon name="Clock" style="color:#1F7A52;width:40px;height:40px"></x-icon>
+<p style="flex:1;font-size:26px;line-height:1.45;color:#1F3B2C">เที่ยงคืนเวลาไทย → หน้าต่าง 7 วันเลื่อน คิดใหม่เอง</p>
+</div>
+</div>
+<div style="display:flex;background:#0E3B2C;border-radius:24px;padding:24px 32px">
+<p style="font-size:28px;line-height:1.45;color:#F3F0E4">ทำไมไม่เก็บ Runway ในฐานข้อมูล: <span style="color:#E2B64A">ตัวเลขไม่มีวันค้าง</span> · คิดในเครื่องทันที ไม่ต้องรอเซิร์ฟเวอร์ · ไม่ต้องมีงานคำนวณบนเซิร์ฟเวอร์ตอนเที่ยงคืน</p>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6B7C73">MindPay · FR-6 Money Runway · 19</p>
+<aside>เบื้องหลังข้อมูลไหลแบบนี้ รายการเข้ามาได้ 3 ทาง คือจดเองจาก FR-1 พูดจดจาก FR-3 และสแกนสลิปจาก FR-4 จากนั้นกรองเหลือเฉพาะรายการที่ยืนยันแล้ว แล้วคิดยอดคงเหลือด้วยฟังก์ชันของ FR-2 กับค่าเฉลี่ยรายจ่าย แล้วส่งเข้า computeRunway ซึ่งเป็นสูตรหลักของฉัน ผลที่ได้คือจำนวนวัน วันที่ และสถานะ แล้วนำไปแสดงที่หน้าหลัก แท็บเงินพอถึง และส่งให้โค้ชใน FR-5 ทั้งหมดนี้เกิดในฮุก useMoney จุดเดียว สิ่งที่สำคัญคือ Runway ไม่ถูกเก็บในฐานข้อมูล แต่คิดใหม่สด ๆ ทุกครั้งที่ข้อมูลเปลี่ยน ทุกครั้งที่เปลี่ยนเงินสำรองหรือกระปุก และตอนเที่ยงคืนตามเวลาไทยที่หน้าต่าง 7 วันเลื่อน ข้อดีคือตัวเลขไม่มีวันค้าง และไม่ต้องตั้งงานคำนวณบนเซิร์ฟเวอร์</aside>
+</section>

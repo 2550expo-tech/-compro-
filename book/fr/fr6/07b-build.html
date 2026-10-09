@@ -1,0 +1,411 @@
+<x-ch title="สร้าง FR-6 ตั้งแต่ศูนย์: ทำตามได้ทีละขั้น" lead="บทก่อน ๆ อ่านโค้ดที่เสร็จแล้ว บทนี้พาสร้าง Money Runway ขึ้นมาใหม่ทีละชั้น ทุกขั้นมีคำสั่งให้พิมพ์ และบอกว่าต้องเห็นอะไรบนจอ">
+<p>คนที่ไม่เคยเขียนโปรแกรมมักคิดว่าโปรแกรมเมอร์นั่งพิมพ์โค้ดจากบรรทัดแรกไปบรรทัดสุดท้ายรวดเดียว ความจริงไม่ใช่ ฉันคิด FR-6 เป็นชั้น ๆ เริ่มจาก "คำนิยาม" ซึ่งยังไม่ใช่โค้ดเลย แล้วค่อยเขียนเทสต์ เขียนสูตร ต่อเข้ากับข้อมูลจริง ทำหน้าจอ ทดสอบแบบคนใช้ แล้วส่งขึ้น GitHub ทุกชั้นตรวจได้ว่าถูกก่อนขึ้นชั้นถัดไป ถ้าทำตามบทนี้ เพื่อนจะเข้าใจว่า "ทำไมโค้ดหน้าตาเป็นแบบนี้" ไม่ใช่แค่ "โค้ดทำอะไร"</p>
+<h2>ภาพรวม: 10 ขั้นจากศูนย์ถึงแอปในมือผู้ใช้</h2>
+<table><thead><tr><th>ขั้น</th><th>ทำอะไร</th><th>ไฟล์ที่เกี่ยว</th><th>รู้ได้ยังไงว่าผ่าน</th></tr></thead><tbody>
+<tr><td>0</td><td>เตรียมเครื่อง</td><td>ทั้งโปรเจกต์</td><td><span class="mono">npm test</span> ผ่าน 157/157</td></tr>
+<tr><td>1</td><td>เขียนนิยามให้ทดสอบได้</td><td>คอมเมนต์บนสุดของ runway.ts, TRACEABILITY.md</td><td>ทุกคำนิยามแปลงเป็นเทสต์ได้</td></tr>
+<tr><td>2</td><td>เขียนเทสต์ก่อน (แดง)</td><td>domain.test.ts</td><td>รันแล้ว <b>ไม่ผ่าน</b> เพราะยังไม่มีโค้ด</td></tr>
+<tr><td>3</td><td>เขียนสูตรให้เทสต์ผ่าน (เขียว)</td><td>src/domain/runway.ts</td><td>รันแล้วผ่านทุกข้อ</td></tr>
+<tr><td>4</td><td>ตรวจคุณภาพ</td><td>ทั้งโปรเจกต์</td><td>typecheck และ lint ไม่มี error</td></tr>
+<tr><td>5</td><td>ต่อสูตรเข้ากับข้อมูลจริง</td><td>AppProvider.tsx (useMoney)</td><td>ทุกหน้าได้ตัวเลขชุดเดียวกัน</td></tr>
+<tr><td>6</td><td>ทำหน้าจอและแท็บ</td><td>(tabs)/runway.tsx, (tabs)/_layout.tsx</td><td>เปิดแอปเห็นแท็บ "เงินพอถึง"</td></tr>
+<tr><td>7</td><td>ทดสอบแบบคนใช้ (E2E)</td><td>e2e/web-auth.mjs</td><td>ทุกบรรทัดขึ้น PASS</td></tr>
+<tr><td>8</td><td>ส่งขึ้น GitHub</td><td>.github/workflows</td><td>เว็บ แอป APK และแอปที่ติดตั้งแล้วอัปเดตเอง</td></tr>
+<tr><td>9</td><td>ปรับตาม feedback</td><td>ดูประวัติใน Git</td><td>เทสต์เดิมยังผ่าน และมีเทสต์ใหม่คุมของใหม่</td></tr>
+</tbody></table>
+<x-box kind="analogy" title="เปรียบเทียบ: สร้างบ้าน">
+<p>ขั้น 1 คือคุยกับเจ้าของบ้านให้ได้แบบที่ชัด ("ห้องนอน 3×4 เมตร" ไม่ใช่ "ห้องใหญ่ ๆ") ขั้น 2–3 คือลงเสาเข็มแล้วตรวจว่ารับน้ำหนักได้ ขั้น 5–6 คือก่อผนังและทาสี ขั้น 7 คือให้คนลองเดินเข้าออกจริง ขั้น 8 คือส่งมอบกุญแจ ถ้าข้ามขั้น 1 ไปทาสีเลย ทุกอย่างหลังจากนั้นจะต้องรื้อใหม่</p>
+</x-box>
+
+<h2>ขั้นที่ 0: เตรียมเครื่อง (ทำครั้งเดียว)</h2>
+<p>ต้องมี Node.js 22 ขึ้นไป, Git และ VS Code (วิธีติดตั้งทีละขั้นอยู่ในบท A3) แล้วเปิดโปรแกรม Terminal (Windows ใช้ PowerShell หรือ Git Bash) พิมพ์ทีละบรรทัด:</p>
+<x-snip lang="sh" title="Terminal" note="พิมพ์ทีละบรรทัดแล้วกด Enter">
+git clone https://github.com/2550expo-tech/Socrates-and-Skeletons-.git
+cd Socrates-and-Skeletons-
+npm install            # ดาวน์โหลดไลบรารีทั้งหมดตาม package.json (ครั้งแรกใช้เวลาหลายนาที)
+cp .env.example .env   # ค่าการเชื่อม Supabase ของทีม (ถ้าใช้ Command Prompt ของ Windows พิมพ์ copy แทน cp)
+npm test               # ลองรันเทสต์ทั้งหมดดูว่าเครื่องพร้อม
+</x-snip>
+<p>ต้องเห็นบรรทัดสรุปท้ายแบบนี้ (เวลาจะต่างกันไปตามเครื่อง):</p>
+<pre class="plain"> Test Files  18 passed (18)
+      Tests  157 passed (157)</pre>
+<p>จากนั้นเปิด VS Code → <b>File → Open Folder…</b> → เลือกโฟลเดอร์ <span class="mono">Socrates-and-Skeletons-</span> ใน VS Code กด <span class="key">Ctrl+`</span> (ปุ่มตัวหนอนใต้ Esc) เพื่อเปิด Terminal ด้านล่าง ต่อจากนี้พิมพ์คำสั่งในนั้นได้เลยโดยไม่ต้องสลับหน้าต่าง</p>
+<x-box kind="note" title="ถ้าเห็นข้อความเตือนสีเหลือง">
+<p>ตอนรันเทสต์ อาจมีข้อความขึ้นต้นด้วย <span class="mono">(!) Your Vite config uses features that are unsupported…</span> นั่นเป็นแค่ <b>คำเตือน</b> ว่าเครื่องมือเวอร์ชันหน้าจะเปลี่ยนวิธีอ่านไฟล์ตั้งค่า ไม่ใช่ error ผลเทสต์ยังเชื่อถือได้ ให้ดูที่บรรทัด <span class="mono">Tests … passed</span> เป็นหลัก</p>
+</x-box>
+
+<h2>ขั้นที่ 1: เขียนนิยามก่อนเขียนโค้ด</h2>
+<p>โจทย์ใน SRS มีแค่ "ประมาณวันที่ยอดเงินอาจต่ำ จากค่าเฉลี่ยรายจ่าย 7 วัน" และทีมได้ feedback ว่าคำว่า "ต่ำ" กำกวม ก่อนพิมพ์โค้ดสักบรรทัด ฉันจึงแปลงทุกคำที่กำกวมให้เป็นประโยคที่ <b>ใส่ตัวเลขแล้วตอบได้ว่าถูกหรือผิด</b></p>
+<table><thead><tr><th>ประโยคกำกวม (ทดสอบไม่ได้)</th><th>ประโยคที่ฉันเขียน (ทดสอบได้)</th><th>กลายเป็นเทสต์</th></tr></thead><tbody>
+<tr><td>"เตือนเมื่อเงินต่ำ"</td><td>เงินต่ำ = ยอดคงเหลือ ≤ เส้นสำรอง ค่าเริ่มต้น ฿500</td><td>ยอด ฿500 เส้น ฿500 → below_floor (TC-16)</td></tr>
+<tr><td>"ค่าเฉลี่ย 7 วัน"</td><td>รายจ่ายที่ยืนยันแล้ว ของวันนี้ + 6 วันก่อน ตามเวลาไทย ÷ จำนวนวันที่ใช้แอป (ไม่เกิน 7)</td><td>TC-12, TC-13</td></tr>
+<tr><td>"ประมาณวันที่"</td><td>Runway = ปัดลง[(ยอด − เส้น) ÷ ค่าเฉลี่ย] · วันที่ = วันนี้ + Runway</td><td>TC-14</td></tr>
+<tr><td>"ถ้าไม่มีข้อมูล"</td><td>ค่าเฉลี่ย = 0 → no_spending ไม่แสดงวันที่ (ไม่หารด้วยศูนย์)</td><td>TC-15</td></tr>
+<tr><td>"สถานะ"</td><td>&lt; 7 วัน critical · &lt; 14 วัน watch · ≥ 14 วัน healthy</td><td>TC-17 (ลองที่ 6, 7, 14 พอดี)</td></tr>
+</tbody></table>
+<p>นิยามชุดนี้อยู่ 2 ที่ และต้องตรงกันเสมอ: คอมเมนต์บนสุดของ <code>src/domain/runway.ts:1-18</code> (สำหรับคนอ่านโค้ด) และหัวข้อ FR-6 ใน <code>docs/TRACEABILITY.md:142-163</code> (สำหรับอาจารย์และคนในทีม ซึ่งมีตารางโยง "เงื่อนไขผ่าน → ฟังก์ชัน → เทสต์" ด้วย)</p>
+<x-box kind="tip" title="เคล็ดลับเขียนนิยามที่ดี">
+<p>ลองถามตัวเองว่า "ถ้าให้เพื่อน 2 คนเขียนโค้ดจากนิยามนี้แยกกัน ผลจะออกมาเท่ากันไหม" ถ้าไม่แน่ใจ แปลว่ายังกำกวม เช่น "7 วัน" ต้องบอกด้วยว่านับวันนี้ไหม ใช้เวลาประเทศไหน และนับรายการแบบร่างไหม</p>
+</x-box>
+
+<h2>ขั้นที่ 2: เขียนเทสต์ก่อน (ให้มันแดงก่อน)</h2>
+<p>วิธีที่ฉันใช้เรียกว่า <b>TDD</b> (Test-Driven Development) ทำเป็นรอบสั้น ๆ 3 จังหวะ:</p>
+<div class="flow">
+<div class="st"><b>① แดง (Red)</b><small>เขียนเทสต์ที่บอกว่า "ใส่อะไร ต้องได้อะไร" แล้วรัน ต้องไม่ผ่าน เพราะยังไม่ได้เขียนโค้ด (ถ้าผ่านทั้งที่ยังไม่มีโค้ด แปลว่าเทสต์ไม่ได้ตรวจอะไรจริง)</small></div>
+<div class="ar">↓</div>
+<div class="st gold"><b>② เขียว (Green)</b><small>เขียนโค้ดให้น้อยที่สุดที่ทำให้เทสต์ผ่าน</small></div>
+<div class="ar">↓</div>
+<div class="st"><b>③ เก็บกวาด (Refactor)</b><small>ปรับโค้ดให้อ่านง่ายขึ้น แล้วรันเทสต์ซ้ำ ต้องยังเขียวอยู่ จากนั้นวนกลับไป ① สำหรับกฎข้อถัดไป</small></div>
+</div>
+<p>มาลองทำจริงด้วย <b>Money Runway ฉบับย่อ</b> ซึ่งเป็นแก่นของ runway.ts ที่ตัดรายละเอียดออก ฉันรันทุกบรรทัดในหัวข้อนี้กับโปรเจกต์จริงแล้ว ผลตรงตามที่เขียนไว้ทุกอย่าง</p>
+<ol class="callouts">
+<li>ใน VS Code แถบซ้าย (Explorer) คลิกขวาที่โฟลเดอร์ <span class="mono">src/domain/__tests__</span> → <b>New File</b> → ตั้งชื่อ <span class="mono">mini-runway.test.ts</span></li>
+<li>พิมพ์ (หรือคัดลอก) โค้ดด้านล่าง แล้วกด <span class="key">Ctrl+S</span> บันทึก</li>
+</ol>
+<x-snip title="src/domain/__tests__/mini-runway.test.ts" note="ไฟล์ฝึกหัด สร้างเองในเครื่อง (ไม่มีในโปรเจกต์)">
+import { describe, expect, it } from 'vitest';
+import { average7, runway } from '../mini-runway';
+
+describe('Money Runway ฉบับย่อ', () => {
+  it('เฉลี่ย 7 วัน นับวันที่ไม่ได้ใช้เงินด้วย', () => {
+    expect(average7([120, 0, 85, 300, 0, 450, 60])).toBe(145);
+  });
+  it('ผู้ใช้ใหม่ 3 วัน หารด้วย 3', () => {
+    expect(average7([90, 150, 60])).toBe(100);
+  });
+  it('ยอด 3,500 สำรอง 500 ใช้วันละ 145 ได้ 20 วัน', () => {
+    expect(runway(3500, 500, 145)).toEqual({ days: 20, status: 'healthy' });
+  });
+  it('ยอดเท่ากับเส้นสำรองพอดี คือ below_floor', () => {
+    expect(runway(500, 500, 145).status).toBe('below_floor');
+  });
+  it('ไม่มีรายจ่าย ไม่หารด้วยศูนย์', () => {
+    expect(runway(3500, 500, 0)).toEqual({ days: null, status: 'no_spending' });
+  });
+  it('ขอบเกณฑ์ 6 / 7 / 14 วัน', () => {
+    expect(runway(1100, 500, 100).status).toBe('critical');
+    expect(runway(1200, 500, 100).status).toBe('watch');
+    expect(runway(1900, 500, 100).status).toBe('healthy');
+  });
+});
+</x-snip>
+<table class="walk"><thead><tr><th>บรรทัด</th><th>ความหมาย</th></tr></thead><tbody>
+<tr><td>1</td><td>ดึงเครื่องมือเขียนเทสต์ 3 ตัวจาก Vitest: <span class="mono">describe</span> (จัดกลุ่ม) <span class="mono">it</span> (เทสต์หนึ่งข้อ) <span class="mono">expect</span> (ตรวจผล)</td></tr>
+<tr><td>2</td><td>ดึงฟังก์ชัน 2 ตัวจากไฟล์ <span class="mono">../mini-runway</span> (<span class="mono">..</span> = ถอยออกไป 1 โฟลเดอร์ คือ <span class="mono">src/domain</span>) ซึ่ง <b>ยังไม่มี</b> ตั้งใจให้เป็นแบบนั้น</td></tr>
+<tr><td>4</td><td>ตั้งชื่อกลุ่มเทสต์ ชื่อนี้จะขึ้นในผลลัพธ์</td></tr>
+<tr><td>5–7</td><td>ข้อ 1 คือตัวอย่างหลักของเล่ม: 7 วัน มี 2 วันเป็น 0 รวม 1,015 ÷ 7 ต้องได้ 145 พอดี อ่านบรรทัด 6 เป็นภาษาคนว่า "คาดหวังว่า average7 ของลิสต์นี้ <b>ต้องเป็น</b> 145"</td></tr>
+<tr><td>8–10</td><td>ผู้ใช้ใหม่มีข้อมูลแค่ 3 วัน (90 + 150 + 60 = 300) ต้องหาร 3 ได้ 100 ไม่ใช่หาร 7</td></tr>
+<tr><td>11–13</td><td>สูตรหลัก <span class="mono">toEqual</span> ตรวจทั้งอ็อบเจกต์ว่าทุกช่องตรง: 3,000 ÷ 145 = 20.69 → 20 วัน สถานะ healthy</td></tr>
+<tr><td>14–16</td><td>ขอบล่าง: ยอดเท่ากับเส้นพอดี ต้องนับว่าแตะเส้นแล้ว</td></tr>
+<tr><td>17–19</td><td>ค่าเฉลี่ย 0 ต้องได้ <span class="mono">null</span> (ไม่ใช่ Infinity หรือแอปพัง)</td></tr>
+<tr><td>20–24</td><td>ทดสอบที่ขอบเกณฑ์: เงินเหนือเส้น 600, 700, 1,400 ใช้วันละ 100 = 6, 7, 14 วันพอดี ต้องได้ critical, watch, healthy</td></tr>
+</tbody></table>
+<p>ใน Terminal ของ VS Code พิมพ์:</p>
+<x-snip lang="sh" title="Terminal">
+npx vitest run src/domain/__tests__/mini-runway.test.ts
+</x-snip>
+<p>ต้องเห็น <b>สีแดง</b> แบบนี้ (ตัดมาเฉพาะส่วนสำคัญ):</p>
+<pre class="plain"> FAIL  src/domain/__tests__/mini-runway.test.ts
+Error: Cannot find module '../mini-runway' imported from …/src/domain/__tests__/mini-runway.test.ts
+ ❯ src/domain/__tests__/mini-runway.test.ts:2:1
+
+ Test Files  1 failed (1)
+      Tests  no tests</pre>
+<p>อ่านว่า "หาไฟล์ mini-runway ไม่เจอ (บรรทัด 2 คอลัมน์ 1)" ถูกต้องแล้ว เพราะเรายังไม่ได้สร้าง นี่คือจังหวะ <b>แดง</b></p>
+
+<h2>ขั้นที่ 3: เขียนสูตรให้เทสต์ผ่าน (เขียว)</h2>
+<p>คลิกขวาที่โฟลเดอร์ <span class="mono">src/domain</span> → New File → <span class="mono">mini-runway.ts</span> แล้วพิมพ์:</p>
+<x-snip title="src/domain/mini-runway.ts" note="ไฟล์ฝึกหัด: แก่นของ runway.ts ฉบับย่อ">
+// Money Runway ฉบับย่อ: เงินเป็นบาท และรับรายจ่ายรายวันมาเป็นลิสต์
+export type Status = 'healthy' | 'watch' | 'critical' | 'below_floor' | 'no_spending';
+
+/** ค่าเฉลี่ยรายจ่ายต่อวันจาก 7 วันล่าสุด (ถ้ามีไม่ถึง 7 วัน หารเท่าที่มี) */
+export function average7(dailySpend: number[]): number {
+  const last7 = dailySpend.slice(-7);
+  if (last7.length === 0) return 0;
+  const total = last7.reduce((sum, x) => sum + x, 0);
+  return total / last7.length;
+}
+
+/** เงินพอใช้อีกกี่วัน และสถานะ */
+export function runway(balance: number, floor: number, avg: number) {
+  const spendable = balance - floor;
+  if (spendable <= 0) return { days: 0, status: 'below_floor' as Status };
+  if (avg <= 0) return { days: null, status: 'no_spending' as Status };
+  const days = Math.floor(spendable / avg);
+  const status: Status = days < 7 ? 'critical' : days < 14 ? 'watch' : 'healthy';
+  return { days, status };
+}
+</x-snip>
+<table class="walk"><thead><tr><th>บรรทัด</th><th>ความหมาย</th></tr></thead><tbody>
+<tr><td>2</td><td>ชนิดข้อมูล Status: ค่าได้แค่ 5 คำนี้ ถ้าพิมพ์ผิดเช่น <span class="mono">'helthy'</span> TypeScript จะขีดเส้นแดงทันที</td></tr>
+<tr><td>5</td><td>ฟังก์ชันรับลิสต์ตัวเลข (รายจ่ายของแต่ละวัน เรียงจากเก่าไปใหม่) คืนตัวเลขหนึ่งตัว</td></tr>
+<tr><td>6</td><td><span class="mono">slice(-7)</span> = เอา 7 ตัวท้ายสุด (7 วันล่าสุด) ถ้ามีไม่ถึง 7 ตัวก็ได้เท่าที่มี นี่แหละคือกฎผู้ใช้ใหม่ฉบับย่อ</td></tr>
+<tr><td>7</td><td>ลิสต์ว่างคืน 0 กันการหาร 0 ÷ 0 (ซึ่งใน JavaScript ได้ NaN แปลว่า "ไม่ใช่ตัวเลข")</td></tr>
+<tr><td>8</td><td><span class="mono">reduce</span> บวกทุกตัวเข้าด้วยกัน เริ่มจาก 0</td></tr>
+<tr><td>9</td><td>หารด้วยจำนวนวันในปฏิทิน (รวมวันที่เป็น 0) ไม่ใช่จำนวนวันที่มีรายจ่าย</td></tr>
+<tr><td>13</td><td>รับ 3 ค่า: ยอด เส้นสำรอง ค่าเฉลี่ย</td></tr>
+<tr><td>14</td><td>เงินที่ใช้ได้จริง = ยอด − เส้น</td></tr>
+<tr><td>15–16</td><td>ด่านตรวจ 2 ด่านก่อนหาร เรียงเหมือนของจริง: เงินหมดก่อน แล้วค่อยค่าเฉลี่ยศูนย์ (<span class="mono">as Status</span> บอก TypeScript ว่าข้อความนี้เป็นชนิด Status)</td></tr>
+<tr><td>17</td><td>หารแล้วปัดลงด้วย <span class="mono">Math.floor</span></td></tr>
+<tr><td>18</td><td>เงื่อนไขซ้อน: น้อยกว่า 7 → critical, ไม่งั้นน้อยกว่า 14 → watch, ไม่งั้น healthy</td></tr>
+</tbody></table>
+<p>บันทึกไฟล์ แล้วรันคำสั่งเดิมอีกครั้ง โดยเติม <span class="mono">--reporter=verbose</span> ให้แสดงชื่อเทสต์ทุกข้อ:</p>
+<x-snip lang="sh" title="Terminal">
+npx vitest run src/domain/__tests__/mini-runway.test.ts --reporter=verbose
+</x-snip>
+<pre class="plain"> ✓ … > Money Runway ฉบับย่อ > เฉลี่ย 7 วัน นับวันที่ไม่ได้ใช้เงินด้วย
+ ✓ … > Money Runway ฉบับย่อ > ผู้ใช้ใหม่ 3 วัน หารด้วย 3
+ ✓ … > Money Runway ฉบับย่อ > ยอด 3,500 สำรอง 500 ใช้วันละ 145 ได้ 20 วัน
+ ✓ … > Money Runway ฉบับย่อ > ยอดเท่ากับเส้นสำรองพอดี คือ below_floor
+ ✓ … > Money Runway ฉบับย่อ > ไม่มีรายจ่าย ไม่หารด้วยศูนย์
+ ✓ … > Money Runway ฉบับย่อ > ขอบเกณฑ์ 6 / 7 / 14 วัน
+
+ Test Files  1 passed (1)
+      Tests  6 passed (6)</pre>
+<p><b>เขียวครบ 6 ข้อ</b> นี่คือจังหวะเขียว</p>
+<h2>ทดลองทำบั๊กเอง: ทำไมต้องทดสอบที่ขอบ</h2>
+<p>แก้บรรทัด 18 ของ mini-runway.ts จาก <span class="mono">days &lt; 7</span> เป็น <span class="mono">days &lt;= 7</span> (บั๊กที่คนพลาดบ่อยที่สุด) บันทึก แล้วรันใหม่:</p>
+<pre class="plain"> FAIL  src/domain/__tests__/mini-runway.test.ts > Money Runway ฉบับย่อ > ขอบเกณฑ์ 6 / 7 / 14 วัน
+AssertionError: expected 'critical' to be 'watch' // Object.is equality
+
+Expected: "watch"
+Received: "critical"
+
+ ❯ src/domain/__tests__/mini-runway.test.ts:22:43
+
+      Tests  1 failed | 5 passed (6)</pre>
+<p>อ่านว่า "บรรทัด 22 ของไฟล์เทสต์ คาดว่าจะได้ watch แต่ได้ critical" เทสต์อีก 5 ข้อยังผ่าน เพราะไม่มีข้อไหนลองที่ 7 วันพอดี ถ้าไม่มีเทสต์ข้อขอบ บั๊กนี้จะหลุดไปถึงผู้ใช้ คนที่มีเงินพอ 7 วันจะเห็นป้ายแดง "ใกล้เส้นสำรอง" ทั้งที่ควรเป็น "เริ่มต้องระวัง" แก้กลับเป็น <span class="mono">&lt;</span> แล้วรันอีกครั้งให้เขียว</p>
+<h2>จากฉบับย่อสู่ของจริง (จังหวะเก็บกวาด)</h2>
+<p>ฉบับย่อพิสูจน์ว่าแก่นของสูตรถูก แต่แอปจริงต้องรับมือโลกจริงมากกว่านั้น ฉันเติมทีละเรื่อง แต่ละเรื่องเพิ่มเทสต์ก่อนแล้วค่อยแก้โค้ด (วนรอบแดง → เขียว ซ้ำ) จนได้ <code>src/domain/runway.ts</code> ที่อ่านทีละบรรทัดไปแล้วในบทก่อน ๆ</p>
+<table><thead><tr><th>เรื่อง</th><th>ฉบับย่อ</th><th>ของจริง (runway.ts)</th><th>ทำไมต้องเพิ่ม</th></tr></thead><tbody>
+<tr><td>หน่วยเงิน</td><td>บาท มีทศนิยม</td><td>สตางค์ จำนวนเต็ม (<span class="mono">balanceSatang</span>)</td><td>ทศนิยมในคอมพิวเตอร์เพี้ยนได้ (บท A5)</td></tr>
+<tr><td>ข้อมูลเข้า</td><td>ลิสต์รายจ่ายรายวันที่รวมมาแล้ว</td><td>รายการ Transaction ทั้งหมด ต้องกรองเอง</td><td>ฐานข้อมูลเก็บเป็นรายการ ไม่ได้เก็บเป็นยอดรายวัน</td></tr>
+<tr><td>กรองรายการ</td><td>ไม่มี</td><td>เฉพาะ confirmed · เฉพาะ expense · อยู่ในหน้าต่าง 7 วัน</td><td>สลิปแบบร่างและรายรับไม่ใช่ "ความเร็วในการใช้เงิน"</td></tr>
+<tr><td>วันที่</td><td>ไม่มี</td><td>นับวันตามเวลาไทย (<span class="mono">bkkDayKey</span>)</td><td>เครื่องของผู้ใช้อาจตั้งเวลาประเทศอื่น</td></tr>
+<tr><td>ผู้ใช้ใหม่</td><td>นับจากความยาวลิสต์</td><td>นับจากวันของรายการแรกสุด (รายรับหรือรายจ่าย) ถึงวันนี้ ไม่เกิน 7</td><td>วันที่ยังไม่ได้ใช้แอป ต่างจากวันที่ไม่ได้ใช้เงิน</td></tr>
+<tr><td>ปัดค่าเฉลี่ย</td><td>ไม่ปัด</td><td>ปัดเป็นสตางค์ (<span class="mono">Math.round</span>)</td><td>เก็บเป็นจำนวนเต็มต่อได้</td></tr>
+<tr><td>ผลลัพธ์</td><td>days, status</td><td>+ depletionDay, capped, spendableSatang และตัวตั้งทั้ง 3</td><td>หน้าจอต้องใช้แสดงการ์ด "คำนวณยังไง"</td></tr>
+<tr><td>เพดาน</td><td>ไม่มี</td><td>ตัดที่ 365 วัน (<span class="mono">capped</span>)</td><td>คาดการณ์ไกลเกินปีไม่มีความหมาย</td></tr>
+<tr><td>ฟังก์ชันเสริม</td><td>ไม่มี</td><td>safeDailySpend, endOfMonthDay, runwayAfterPurchase, runwayWithReduction</td><td>เครื่องมือ "ใช้ได้วันละ" "เช็กก่อนจ่าย" "ลองปรับ"</td></tr>
+</tbody></table>
+<x-box kind="warn" title="อย่าลืมลบไฟล์ฝึกหัด">
+<p>ไฟล์ mini-runway ทั้ง 2 ไฟล์มีไว้ฝึกในเครื่องเท่านั้น พิมพ์ <span class="mono">git status --short</span> จะเห็นบรรทัดขึ้นต้นด้วย <span class="mono">??</span> แปลว่า "ไฟล์ใหม่ที่ Git ยังไม่รู้จัก" ลบทิ้งได้เลย (คลิกขวา → Delete) อย่า commit ขึ้นโปรเจกต์ของทีม</p>
+</x-box>
+
+<h2>ขั้นที่ 4: ตรวจคุณภาพก่อนไปต่อ</h2>
+<p>เทสต์ผ่านยังไม่พอ ก่อนไปขั้นถัดไปฉันรัน 3 คำสั่งนี้เสมอ แต่ละตัวจับปัญหาคนละแบบ:</p>
+<x-snip lang="sh" title="Terminal">
+npm test            # ทุกกฎยังถูกไหม (unit test ทั้งโปรเจกต์ 157 ข้อ)
+npm run typecheck   # ชนิดข้อมูลถูกไหม (TypeScript ตรวจทั้งโปรเจกต์)
+npx expo lint       # เขียนผิดแบบแผนไหม (ESLint)
+</x-snip>
+<table><thead><tr><th>คำสั่ง</th><th>จับอะไรได้</th><th>ตัวอย่างกับ FR-6</th></tr></thead><tbody>
+<tr><td class="mono">npm test</td><td>ตรรกะผิด</td><td>เขียน <span class="mono">&lt;=</span> แทน <span class="mono">&lt;</span> (เพิ่งลองไป)</td></tr>
+<tr><td class="mono">npm run typecheck</td><td>ใช้ข้อมูลผิดชนิด</td><td>เอา <span class="mono">r.days + 1</span> ทั้งที่ days อาจเป็น null</td></tr>
+<tr><td class="mono">npx expo lint</td><td>รูปแบบที่มักทำให้เกิดบั๊ก</td><td>รายการ dependency ของ useMemo ใน useMoney (ดูด้านล่าง)</td></tr>
+</tbody></table>
+<p>ตัวอย่าง typecheck: ถ้าเขียนโค้ดคิด "พรุ่งนี้เหลือกี่วัน" แบบนี้</p>
+<x-snip title="ตัวอย่างที่ผิด" note="ทดลองแล้ว ได้ error ตามด้านล่างจริง">
+const r = computeRunway({ balanceSatang: 350000, floorSatang: 50000, averageSatang: 14500 });
+export const tomorrow = r.days + 1;
+</x-snip>
+<pre class="plain">error TS18047: 'r.days' is possibly 'null'.</pre>
+<p>TypeScript เตือนว่า days อาจเป็น null (กรณีไม่มีรายจ่าย) ถ้าปล่อยไว้ ผู้ใช้ที่ยังไม่มีรายจ่ายจะเห็นคำว่า "null วัน" หรือ NaN บนจอ วิธีแก้คือเช็กก่อน เช่น <span class="mono">r.days === null ? 'คำนวณไม่ได้' : r.days + 1</span> ซึ่งเป็นเหตุผลที่ในหน้าจอจริงมีฟังก์ชัน <span class="mono">daysText</span> คอยแยกกรณี (บรรทัด 22–26 ของ runway.tsx)</p>
+<p>ตัวอย่าง lint ที่เกิดกับ FR-6 จริง: ใน useMoney ฉันใส่ <span class="mono">today</span> ไว้ในรายการ dependency ของ useMemo ทั้งที่ข้างในไม่ได้ใช้ตัวแปรนี้เลย ถ้าลบบรรทัดปิดคำเตือนออกแล้วรัน lint จะได้ (ลองแล้ว):</p>
+<pre class="plain">457:6  warning  React Hook useMemo has an unnecessary dependency: 'today'.
+               Either exclude it or remove the dependency array  react-hooks/exhaustive-deps</pre>
+<p>lint คิดว่าใส่เกินมาโดยไม่ตั้งใจ แต่ฉันตั้งใจ: พอ <span class="mono">today</span> เปลี่ยนตอนเที่ยงคืน useMemo จะคิดยอดและ Runway ใหม่ หน้าต่าง 7 วันจึงเลื่อนเองแม้เปิดแอปค้างไว้ ฉันจึงปิดคำเตือนเฉพาะบรรทัดนั้น พร้อมเขียนคอมเมนต์บอกเหตุผลไว้บรรทัดก่อนหน้า (<code>src/data/AppProvider.tsx:456-457</code>) กฎคือ <b>ปิดคำเตือนได้ ถ้าเขียนเหตุผลไว้ให้คนถัดไปอ่าน</b></p>
+
+<h2>ขั้นที่ 5: ต่อสูตรเข้ากับข้อมูลจริง</h2>
+<p>ตอนนี้สูตรถูกแล้ว แต่ยังลอยอยู่ ไม่มีใครเรียกใช้ ฉันต่อมันเข้ากับข้อมูลจริงที่จุดเดียว คือฮุก <span class="mono">useMoney</span> ใน <code>src/data/AppProvider.tsx:442-459</code> (อ่านทีละบรรทัดในบท "อ่านโค้ด: การ์ดบนหน้าหลัก และ useMoney")</p>
+<div class="flow">
+<div class="st"><b>Supabase / ข้อมูลตัวอย่าง</b><small>profiles (ยอดเริ่มต้น เงินสำรอง) · transactions · savings_goals</small></div>
+<div class="ar">↓ <span>AppProvider โหลดมาเก็บไว้: profile, txs, carrySatang, goals, today</span></div>
+<div class="st gold"><b>useMoney()</b><small>computeBalance → averageDailyExpense → reservedSatang → computeRunway</small></div>
+<div class="ar">↓ <span>คืน { balance, average, runway, drafts, reserved, floor }</span></div>
+<div class="st"><b>หน้าหลัก · แท็บเงินพอถึง · โค้ช · สรุปเดือน และหน้าอื่น ๆ</b><small>ทุกหน้าเรียก useMoney() ตัวเดียวกัน ตัวเลขจึงตรงกันทุกหน้า</small></div>
+</div>
+<x-box kind="tip" title="ทำไมทำสูตรก่อน แล้วค่อยต่อข้อมูล">
+<p>เพราะสูตรเป็น pure function ทดสอบได้ในเสี้ยววินาทีโดยไม่ต้องมีอินเทอร์เน็ต ไม่ต้องมีบัญชี ไม่ต้องเปิดแอป ถ้าทำกลับกัน (ทำหน้าจอก่อน) ทุกครั้งที่อยากรู้ว่าสูตรถูกไหม ต้องเปิดแอป ล็อกอิน จดรายการ แล้วนั่งคิดเลขเทียบ ช้ากว่ากันหลายร้อยเท่า</p>
+</x-box>
+
+<h2>ขั้นที่ 6: ทำหน้าจอ และเพิ่มแท็บ</h2>
+<p>MindPay ใช้ Expo Router ซึ่งมีกฎง่ายมาก: <b>ไฟล์หนึ่งไฟล์ในโฟลเดอร์ src/app = หน้าจอหนึ่งหน้า</b> และชื่อไฟล์คือที่อยู่ของหน้านั้น ส่วนโฟลเดอร์ที่ชื่ออยู่ในวงเล็บอย่าง <span class="mono">(tabs)</span> เป็นแค่ "กลุ่ม" ไม่ถูกนับเป็นส่วนของที่อยู่ (บท A7)</p>
+<table><thead><tr><th>ไฟล์</th><th>กลายเป็น</th></tr></thead><tbody>
+<tr><td class="mono">src/app/(tabs)/index.tsx</td><td>หน้าหลัก ที่อยู่ <span class="mono">/</span></td></tr>
+<tr><td class="mono">src/app/(tabs)/runway.tsx</td><td>แท็บเงินพอถึง ที่อยู่ <span class="mono">/runway</span> (บนเว็บพิมพ์ต่อท้าย URL ได้เลย)</td></tr>
+<tr><td class="mono">src/app/(tabs)/_layout.tsx</td><td>กรอบของกลุ่ม (tabs): แถบแท็บด้านล่าง ไอคอน และชื่อแท็บ</td></tr>
+</tbody></table>
+<p>ฉันจึงสร้างไฟล์ <span class="mono">runway.tsx</span> ในโฟลเดอร์ (tabs) แล้วบอกแถบแท็บว่าแท็บนี้ชื่ออะไร ใช้ไอคอนอะไร:</p>
+<x-code src="src/app/(tabs)/_layout.tsx" lines="23-28"></x-code>
+<table class="walk"><thead><tr><th>บรรทัด</th><th>ความหมาย</th></tr></thead><tbody>
+<tr><td>23</td><td>ตาราง TABS: กุญแจคือชื่อไฟล์ (ไม่มี .tsx) ค่าคือชื่อที่แสดงกับไอคอน 2 แบบ <span class="mono">Record&lt;string, …&gt;</span> แปลว่า "อ็อบเจกต์ที่กุญแจเป็นข้อความ"</td></tr>
+<tr><td>26</td><td>แท็บของฉัน: ไฟล์ runway → แสดงคำว่า "เงินพอถึง" ไอคอนใบไม้โปร่ง (<span class="mono">leaf-outline</span>) และเปลี่ยนเป็นใบไม้ทึบ (<span class="mono">leaf</span>) เมื่อกำลังเปิดแท็บนี้อยู่ ใบไม้สื่อถึงต้นไม้เงินที่ออกใบตามจำนวนวัน</td></tr>
+</tbody></table>
+<x-code src="src/app/(tabs)/_layout.tsx" lines="175-186"></x-code>
+<table class="walk"><thead><tr><th>บรรทัด</th><th>ความหมาย</th></tr></thead><tbody>
+<tr><td>175</td><td>คอมโพเนนต์กรอบของกลุ่มแท็บ Expo Router เรียกใช้เองเพราะชื่อไฟล์ขึ้นต้นด้วย _layout</td></tr>
+<tr><td>177</td><td>บันทึกว่าวันนี้เปิดแอปแล้ว และแจกสกินของน้องกล้าเมื่อทำภารกิจครบ (ส่วนของ FR-5 ไม่เกี่ยวกับ FR-6 โดยตรง)</td></tr>
+<tr><td>179</td><td>ใช้แถบแท็บที่ทีมวาดเอง (TabBar มีปุ่มสแกนสลิปสีทองตรงกลาง) และซ่อนหัวหน้าจอมาตรฐาน</td></tr>
+<tr><td>180–183</td><td>ลำดับแท็บจากซ้ายไปขวา: หน้าหลัก, รายการ, เงินพอถึง, โค้ช บรรทัด 182 คือแท็บของฉัน (ปุ่มสแกนแทรกอยู่กลางแถบ ระหว่างแท็บที่ 2 กับ 3)</td></tr>
+</tbody></table>
+<p>ถ้าเริ่มทำหน้าจอเองจากศูนย์ อย่าเพิ่งทำให้สวย ทำให้ตัวเลขขึ้นจอได้ก่อน แบบนี้ (ลองแล้ว ผ่าน typecheck):</p>
+<x-snip lang="ts" title="หน้าจอขั้นแรก (ฉบับฝึก)" note="ตัวอย่างประกอบ: แค่ 2 บรรทัดข้อความ">
+import { Text, View } from 'react-native';
+import { useMoney } from '../../data/AppProvider';
+
+export default function RunwayScreen() {
+  const { runway } = useMoney();
+  return (
+    <View style={{ padding: 24, gap: 8 }}>
+      <Text>เงินพอใช้อีก {runway.days ?? '-'} วัน</Text>
+      <Text>สถานะ: {runway.status}</Text>
+    </View>
+  );
+}
+</x-snip>
+<table class="walk"><thead><tr><th>บรรทัด</th><th>ความหมาย</th></tr></thead><tbody>
+<tr><td>1</td><td>ดึงกล่อง (View) และตัวหนังสือ (Text) จาก React Native ซึ่งกลายเป็น div/span บนเว็บ และกล่องจริงของ Android บนมือถือ</td></tr>
+<tr><td>2</td><td>ดึงฮุก useMoney จากขั้นที่ 5</td></tr>
+<tr><td>4</td><td><span class="mono">export default</span> = นี่คือหน้าจอหลักของไฟล์ Expo Router จะหยิบตัวนี้ไปแสดง</td></tr>
+<tr><td>5</td><td>เรียกฮุก แล้วหยิบเฉพาะ runway ออกมา (destructuring บท A5)</td></tr>
+<tr><td>6–11</td><td>คืนหน้าตาเป็น JSX: กล่องเว้นขอบ 24 จุด ข้างในมีข้อความ 2 บรรทัด <span class="mono">{ }</span> คือช่องใส่ค่าจากตัวแปร <span class="mono">?? '-'</span> แปลว่า "ถ้า days เป็น null ให้แสดงขีดแทน" (นี่คือการแก้ปัญหาที่ typecheck เตือนในขั้นที่ 4)</td></tr>
+</tbody></table>
+<p>จากนั้นค่อย ๆ เติมทีละการ์ด บันทึกไฟล์แล้วดูผลทันที การ์ดทั้งหมดตรงกับ "ส่วนที่ 3–7" ในบท "อ่านโค้ด: หน้าจอแท็บเงินพอถึง":</p>
+<ol class="callouts">
+<li>การ์ดเขียวพร้อมตัวเลขใหญ่ วันที่ และป้ายสถานะ (ตอนแรกยังไม่มีวงแหวน วงแหวนมาทีหลังในรอบปรับ UX)</li>
+<li>การ์ด "คำนวณยังไง" แบบใบเสร็จ ให้ผู้ใช้ตรวจเลขเองได้</li>
+<li>เส้นเวลา 0 / 7 / 14 / 30 วัน</li>
+<li>เครื่องมือลองปรับ (เวอร์ชันแรกเป็นปุ่ม 4 ปุ่ม ดูขั้นที่ 9)</li>
+<li>เช็กก่อนจ่าย และปุ่มส่งคำถามต่อให้โค้ช</li>
+</ol>
+<p>วิธีเปิดแอปดูระหว่างเขียน:</p>
+<x-snip lang="sh" title="Terminal">
+npx expo start      # เปิดเซิร์ฟเวอร์สำหรับพัฒนา (dev server)
+</x-snip>
+<p>เมื่อขึ้น QR ใน Terminal: กดปุ่ม <span class="key">w</span> เพื่อเปิดในเบราว์เซอร์ หรือสแกน QR ด้วยแอป Expo Go บนมือถือ (เครื่องคอมกับมือถือต้องอยู่ Wi-Fi เดียวกัน) แล้วกด "ลองใช้ด้วยข้อมูลตัวอย่าง" เพื่อดูตัวเลขโดยไม่ต้องสมัคร ทุกครั้งที่กด <span class="key">Ctrl+S</span> บันทึกไฟล์ หน้าจอจะเปลี่ยนตามเองภายในไม่กี่วินาที (Fast Refresh) ไม่ต้องปิดเปิดแอปใหม่</p>
+
+<h2>ขั้นที่ 7: ทดสอบแบบคนใช้จริง (E2E)</h2>
+<p>Unit test บอกว่าสูตรถูก แต่ไม่ได้บอกว่าผู้ใช้ "ลากแถบได้จริง" หรือ "กดปุ่มแล้วไปหน้าโค้ชจริง" ฉันจึงเขียนสคริปต์ให้เบราว์เซอร์อัตโนมัติ (Playwright) ทำแทนคน นี่คือข้อ 14 ของไฟล์ E2E:</p>
+<x-code src="e2e/web-auth.mjs" lines="572-627"></x-code>
+<table class="walk"><thead><tr><th>บรรทัด</th><th>ความหมาย</th></tr></thead><tbody>
+<tr><td>572–574</td><td>เริ่มเทสต์ข้อ 14 เปิดหน้าต่างเบราว์เซอร์ใหม่ที่สะอาด (ไม่มีข้อมูลค้างจากข้ออื่น)</td></tr>
+<tr><td>575–579</td><td>เข้าเว็บ รอปุ่ม "ลองใช้ด้วยข้อมูลตัวอย่าง" รอแอนิเมชันเปิดแอปจบ (<span class="mono">introGone</span>) กดปุ่ม แล้วรอจนเห็นคำว่า "ยอดคงเหลือ" ซึ่งแปลว่าหน้าหลักโหลดเสร็จ</td></tr>
+<tr><td>580–581</td><td>ไปที่ที่อยู่ <span class="mono">/runway</span> ตรง ๆ (ได้เพราะกฎ "ไฟล์ = หน้า" ของขั้นที่ 6)</td></tr>
+<tr><td>583</td><td>หาแถบเลื่อนจาก <b>บทบาท</b> (role = slider) และ <b>ชื่อ</b> "ใช้น้อยลงวันละกี่เปอร์เซ็นต์" ชื่อนี้คือชื่อเดียวกับที่โปรแกรมอ่านหน้าจอของคนตาบอดอ่านออกเสียง เทสต์นี้จึงตรวจการเข้าถึง (accessibility) ไปด้วยในตัว</td></tr>
+<tr><td>584–597</td><td>เลื่อนให้แถบอยู่ในจอ รอให้แอนิเมชันเปิดหายไปจริง แล้ววนวัดตำแหน่งแถบทุก 0.25 วินาที จนกว่าตำแหน่งจะนิ่ง (การ์ดค่อย ๆ เลื่อนเข้ามา ถ้าลากตอนยังขยับ จะลากพลาด)</td></tr>
+<tr><td>598–603</td><td>เก็บข้อมูลไว้ช่วยหาสาเหตุถ้าเทสต์พัง: ตอนจะกด มีอะไรอยู่ใต้เมาส์</td></tr>
+<tr><td>604–611</td><td>ลากจริงด้วยเมาส์: กดค้างที่ปุ่มกลม ลากไป 30% แล้วต่อไปที่ 60% ของความยาวราง แล้วปล่อย ทำไม 60% ได้ค่า 30? เพราะรางยาวจาก 0 ถึง 50 ค่าที่ 60% ของรางคือ 0.6 × 50 = 30</td></tr>
+<tr><td>612–615</td><td>อ่านค่าปัจจุบันของแถบจาก <span class="mono">aria-valuenow</span> แล้วตรวจ 2 อย่าง: ต้องเป็น "30" และต้องเห็นคำว่า "เพิ่มขึ้น" (จากข้อความ "เงินจะพอ … วัน · เพิ่มขึ้น … วัน") พร้อมถ่ายภาพหน้าจอเก็บไว้</td></tr>
+<tr><td>617–620</td><td>ทดสอบคีย์บอร์ด: โฟกัสที่แถบ กดลูกศรขวา 1 ครั้ง ค่าต้องเพิ่ม 5 (จาก 30 เป็น 35) สำหรับคนที่ใช้คีย์บอร์ดแทนเมาส์</td></tr>
+<tr><td>621–623</td><td>กด Home ให้แถบกลับเป็น 0 แล้วพิมพ์ 2000 ในช่องราคา (<span class="mono">#runway-price</span>) ต้องเห็นทั้ง "ตอนนี้" และ "ถ้าซื้อ ฿2,000"</td></tr>
+<tr><td>624–626</td><td>กดปุ่ม "ถามโค้ชเรื่องนี้" แล้วตรวจว่าช่องพิมพ์ในหน้าโค้ช (<span class="mono">#coach-input</span>) มีคำถามที่มี "฿2,000" รออยู่ (FR-6 ส่งต่อ FR-5 ได้จริง)</td></tr>
+<tr><td>627</td><td>ปิดหน้าต่างเบราว์เซอร์ของข้อนี้</td></tr>
+</tbody></table>
+<p>วิธีรัน (ครั้งแรกต้องติดตั้งเบราว์เซอร์ทดสอบก่อน):</p>
+<x-snip lang="sh" title="Terminal">
+npx playwright install chromium   # ครั้งแรกครั้งเดียว
+npm run e2e:web                   # build เว็บ แล้วรันเทสต์ทั้งหมด (ใช้เวลาหลายนาที)
+</x-snip>
+<p>ผลแต่ละข้อจะขึ้นเป็นบรรทัดแบบนี้ (ตามฟังก์ชัน <span class="mono">check</span> บรรทัด 31–33 ของไฟล์เดียวกัน):</p>
+<pre class="plain">PASS  Runway: dragging the slider to 30% less a day shows the extra days  — value=30 …
+PASS  Runway: the slider also moves with the arrow keys  — value=35
+PASS  Runway: buying ฿2,000 shows the days before and after
+PASS  Runway: "ask the coach" opens the coach with the question ready  — ถ้าฉันซื้อของราคา ฿2,000 วันนี้ จะเป็นยังไง</pre>
+<x-box kind="note" title="E2E ไม่แตะฐานข้อมูลจริง">
+<p>ไฟล์ <code>e2e/fake-backend.mjs</code> จำลองเซิร์ฟเวอร์ Supabase ขึ้นมาในเครื่อง (บท A12) เทสต์ข้อนี้ใช้โหมดข้อมูลตัวอย่าง จึงรันกี่รอบก็ได้ ไม่ทำให้บัญชีของใครเลอะ</p>
+</x-box>
+
+<h2>ขั้นที่ 8: ส่งงานขึ้น GitHub</h2>
+<p>เมื่อทุกอย่างผ่าน ก็ถึงเวลาเก็บงานเข้า Git และส่งขึ้น GitHub (พื้นฐานอยู่ในบท A13) ทำได้ทั้งใน Terminal และในแผง <b>Source Control</b> ของ VS Code (ไอคอนกิ่งไม้ทางซ้าย)</p>
+<x-snip lang="sh" title="Terminal" note="แนวปฏิบัติที่แนะนำ: แยก branch แล้วเปิด Pull Request">
+git switch -c fr6-whatif-slider        # สร้าง branch ใหม่สำหรับงานนี้
+git status --short                     # ดูว่าไฟล์ไหนเปลี่ยน (M = แก้ไข, ?? = ไฟล์ใหม่)
+git add src/ui/Slider.tsx "src/app/(tabs)/runway.tsx" e2e/web-auth.mjs README.md docs/TRACEABILITY.md
+git commit -m "Runway what-if: a slider instead of four chips"
+git push -u origin fr6-whatif-slider   # ส่ง branch ขึ้น GitHub
+</x-snip>
+<p>จากนั้นเปิดหน้า GitHub ของโปรเจกต์ จะมีปุ่ม <b>Compare &amp; pull request</b> ให้เพื่อนในทีมช่วยอ่านโค้ด (code review) ก่อนรวมเข้า main</p>
+<x-box kind="warn" title="พูดตามจริง: ทีมเราทำยังไง">
+<p>ในประวัติของโปรเจกต์ไม่มี merge commit เลย แปลว่าทีม push ขึ้น <span class="mono">main</span> ตรง ๆ ทุกครั้ง ซึ่งเร็ว แต่ไม่มีคนอ่านโค้ดก่อนรวม ทีมชดเชยด้วยเทสต์อัตโนมัติที่รันทุกครั้งที่ push ถ้าอาจารย์ถาม ให้ตอบตรง ๆ แบบนี้ และบอกว่าถ้าทีมใหญ่ขึ้น ควรใช้ branch + Pull Request ตามด้านบน</p>
+</x-box>
+<p>ทุกครั้งที่มีโค้ดใหม่บน main, GitHub Actions จะทำงานต่อให้เอง 4 งาน (ไฟล์อยู่ในโฟลเดอร์ <span class="mono">.github/workflows</span>):</p>
+<table><thead><tr><th>ไฟล์</th><th>ทำอะไร</th><th>ผลที่ได้</th></tr></thead><tbody>
+<tr><td class="mono">web.yml</td><td>build เว็บ → รัน unit test → รัน E2E บน Chromium → ถ้าผ่านทั้งหมดจึงเผยแพร่</td><td>เว็บ MindPay บน GitHub Pages อัปเดต (ถ้าเทสต์ไม่ผ่าน เว็บจะ <b>ไม่</b> ถูกเผยแพร่ และแนบภาพหน้าจอตอนพังไว้ให้ดู)</td></tr>
+<tr><td class="mono">e2e-webkit.yml</td><td>รัน E2E ชุดเดียวกันบนเอนจินของ Safari แบบ iPhone โหมดมืด</td><td>รู้ว่าผู้ใช้ iPhone ใช้ได้ด้วย (ไม่ขวางการเผยแพร่เว็บ)</td></tr>
+<tr><td class="mono">android-apk.yml</td><td>build ไฟล์ติดตั้ง Android บนเซิร์ฟเวอร์ของ GitHub (15–25 นาที)</td><td>ไฟล์ mind-pay.apk ในหน้า Releases</td></tr>
+<tr><td class="mono">eas-update.yml</td><td>ส่งโค้ด JavaScript ใหม่ไปให้แอปที่ติดตั้งแล้ว (EAS Update)</td><td>แอปในมือถือโหลดเองเบื้องหลัง เปิดครั้งถัดไปได้เวอร์ชันใหม่ ไม่ต้องลง APK ใหม่</td></tr>
+</tbody></table>
+<x-box kind="tip" title="ทำไมแถบเลื่อนของฉันส่งถึงมือถือได้โดยไม่ต้องลงแอปใหม่">
+<p>เพราะฉันเขียนแถบเลื่อนด้วย JavaScript ล้วน (<code>src/ui/Slider.tsx</code>) ไม่ได้ติดตั้งไลบรารีที่มีโค้ด native เพิ่ม EAS Update จึงส่งไปให้แอปที่ติดตั้งแล้วได้ทันที ถ้าใช้ไลบรารีแถบเลื่อนสำเร็จรูปที่มีโค้ด native ทุกคนต้องลง APK ใหม่ (ข้อความ commit ของงานนี้เขียนเหตุผลนี้ไว้เอง)</p>
+</x-box>
+
+<h2>ขั้นที่ 9: ปรับตาม feedback (ประวัติจริงของ FR-6 ใน Git)</h2>
+<p>ซอฟต์แวร์ไม่เคย "เสร็จ" ในรอบเดียว ลองพิมพ์คำสั่งนี้ดูประวัติของหน้าจอ FR-6:</p>
+<x-snip lang="sh" title="Terminal">
+git log --format="%h %ad %s" --date=short -- "src/app/(tabs)/runway.tsx"
+git log --format="%h %ad %s" --date=short -- src/domain/runway.ts
+</x-snip>
+<p>ใน VS Code ก็ดูได้: เปิดไฟล์ แล้วดูแผง <b>Timeline</b> ที่มุมล่างซ้ายของ Explorer จะเห็นทุกครั้งที่ไฟล์นี้ถูกแก้ ผลจริง (เรียงจากเก่าไปใหม่):</p>
+<table><thead><tr><th>วันที่</th><th>commit</th><th>เปลี่ยนอะไรใน FR-6</th><th>บทเรียน</th></tr></thead><tbody>
+<tr><td>27 ก.ย.</td><td class="mono">452e71f</td><td>MVP: runway.ts ทั้งไฟล์ เทสต์ TC-12–18 และหน้าจอแรก</td><td>สูตรเสร็จพร้อมเทสต์ตั้งแต่วันแรก</td></tr>
+<tr><td>27 ก.ย.</td><td class="mono">88313d6</td><td>บรรทัดผลลัพธ์ในการ์ด "คำนวณยังไง" เป็นสีแดงเมื่อ critical หรือ below_floor (เดิมใช้สีหลักเสมอ)</td><td>เจอตอนลองใช้เว็บจริง ไม่ใช่จากเทสต์ (ชื่อ commit: Fix issues found while checking the live web app)</td></tr>
+<tr><td>27 ก.ย.</td><td class="mono">43fd731</td><td>ป้ายสถานะอ่านง่ายขึ้นบนการ์ดเขียวเข้ม</td><td>สีที่สวยบนพื้นขาว อาจอ่านไม่ออกบนพื้นเข้ม</td></tr>
+<tr><td>28 ก.ย.</td><td class="mono">426a79b</td><td>"วันนี้" มาจาก <span class="mono">today</span> ของแอป แทนการคิดเองในหน้าจอ</td><td>เปิดแอปค้างข้ามเที่ยงคืน ตัวเลขต้องเปลี่ยนเอง</td></tr>
+<tr><td>28 ก.ย.</td><td class="mono">a681223</td><td>วงแหวนทอง (เต็มที่ 45 วัน) ตัวเลขนับขึ้น และหยุดเมื่อผู้ใช้เปิด "ลดการเคลื่อนไหว"</td><td>แอนิเมชันต้องเคารพผู้ใช้ที่เวียนหัวง่าย</td></tr>
+<tr><td>29 ก.ย.</td><td class="mono">759143d</td><td>ลองปรับ: จากปุ่ม 4 ปุ่มเป็นแถบเลื่อน 0–50%</td><td>ดูรายละเอียดด้านล่าง</td></tr>
+<tr><td>29 ก.ย.</td><td class="mono">f310504</td><td>กระปุกออม: เงินในกระปุกถูกหักออก และมีบรรทัดในการ์ด "คำนวณยังไง"</td><td>ฟีเจอร์ใหม่ต่อเข้าสูตรเดิมผ่าน floorSatang ได้ ไม่ต้องแก้ runway.ts</td></tr>
+<tr><td>29–30 ก.ย.</td><td class="mono">c983c5f, 98a4734</td><td>สีจากธีม (ไม่เขียนรหัสสีตายตัว) และของตกแต่งธีมฮาโลวีนข้างหัวข้อ</td><td>ใช้ token ของ design system แล้วเปลี่ยนธีมได้ทั้งแอป</td></tr>
+<tr><td>1 ต.ค.</td><td class="mono">c7bd4b7</td><td>ปุ่มถามโค้ชส่งเวลาที่กด (<span class="mono">at</span>) ไปด้วย</td><td>ถามราคาเดิมซ้ำ ช่องพิมพ์ต้องเติมให้ใหม่ (คอมเมนต์ใน coach.tsx บรรทัด 76)</td></tr>
+<tr><td>3 ต.ค.</td><td class="mono">9abd1aa</td><td>เส้นเวลา: แถบที่ยังเหนือเส้นสำรองจางลง (ยกเว้นแถบ "วันนี้")</td><td>ให้ตาไปหยุดที่แถบวันนี้และแถบสีแดงก่อน</td></tr>
+</tbody></table>
+<x-box kind="tip" title="สังเกตบรรทัดที่สองของคำสั่ง">
+<p><span class="mono">src/domain/runway.ts</span> มี commit เดียว คือวันแรก (452e71f) <b>หน้าจอถูกแก้อีก 10 ครั้งหลังวันแรก แต่สูตรไม่ถูกแก้อีกเลย</b> นี่คือผลของการแยกสูตรออกจากหน้าจอ: ทีมปรับหน้าตาได้เต็มที่โดยไม่เสี่ยงทำให้ตัวเลขผิด และถ้าวันไหนต้องแก้สูตร เทสต์ TC-12–18 จะฟ้องทันทีถ้าทำของเดิมพัง</p>
+</x-box>
+<h2>เจาะ 1 การปรับปรุง: จากปุ่ม 4 ปุ่ม เป็นแถบเลื่อน</h2>
+<p>เวอร์ชันแรกของ "ลองปรับ" เป็นปุ่มเลือก (Chip) 4 ปุ่ม ดูได้จากคำสั่ง <span class="mono">git show 759143d -- "src/app/(tabs)/runway.tsx"</span> หรือเปิดหน้า commit บน GitHub: <a class="fl" href="https://github.com/2550expo-tech/Socrates-and-Skeletons-/commit/759143d940b428e2589b262b0d69589e25ff79a6"><code>commit 759143d</code></a></p>
+<x-snip lang="ts" title="ก่อน: ปุ่ม 4 ปุ่ม (บรรทัดที่ถูกลบใน commit 759143d)" note="จาก git show">
+<Row gap={space.sm} style={{ flexWrap: 'wrap' }}>
+  {[0, 10, 20, 30].map((p) => (
+    <Chip key={p} label={p === 0 ? 'เท่าเดิม' : `${p}%`} selected={reduce === p} onPress={() => setReduce(p)} />
+  ))}
+</Row>
+</x-snip>
+<x-snip lang="ts" title="หลัง: แถบเลื่อน (บรรทัดที่เพิ่มใน commit เดียวกัน)" note="จาก git show">
+<Slider
+  value={reduce}
+  onChange={setReduce}
+  min={0}
+  max={50}
+  step={5}
+  label="ใช้น้อยลงวันละกี่เปอร์เซ็นต์"
+  format={(v) => `${v}%`}
+  ticks={[0, 10, 20, 30, 40, 50]}
+/>
+</x-snip>
+<table><thead><tr><th>เรื่อง</th><th>ปุ่ม 4 ปุ่ม</th><th>แถบเลื่อน</th></tr></thead><tbody>
+<tr><td>ค่าที่เลือกได้</td><td>4 ค่า (0, 10, 20, 30%)</td><td>11 ค่า (0 ถึง 50% ทีละ 5)</td></tr>
+<tr><td>ความรู้สึกตอนใช้</td><td>กดแล้วตัวเลขกระโดด</td><td>ลากแล้วเห็นตัวเลขกับต้นไม้ค่อย ๆ เปลี่ยนตามนิ้ว เห็นความสัมพันธ์ "ยิ่งประหยัด ยิ่งอยู่ได้นาน"</td></tr>
+<tr><td>สิ่งที่แสดง</td><td>ใช้วันละเท่าไร เงินพอกี่วัน และเพิ่มขึ้นกี่วัน</td><td>ทั้งหมดนั้น + ประหยัดวันละเท่าไร + ต้นไม้เล็กที่ออกใบตาม</td></tr>
+<tr><td>การเข้าถึง</td><td>กดได้</td><td>ลาก แตะ กดลูกศร และโปรแกรมอ่านหน้าจออ่านค่าได้ สั่นเบา ๆ ทุกขั้นบนมือถือ</td></tr>
+<tr><td>ต้องแก้สูตรไหม</td><td colspan="2">ไม่ต้อง <span class="mono">runwayWithReduction</span> รับเปอร์เซ็นต์ 0–100 ได้อยู่แล้วตั้งแต่วันแรก แก้แค่หน้าจอกับเพิ่ม Slider.tsx และเพิ่มเทสต์ E2E การลาก</td></tr>
+</tbody></table>
+
+<h2>เช็กลิสต์ก่อนบอกว่า "เสร็จ" (Definition of Done)</h2>
+<p>ทีมที่ดีตกลงกันก่อนว่า "เสร็จ" แปลว่าอะไร ของ FR-6 ฉันใช้รายการนี้:</p>
+<table><thead><tr><th>✓</th><th>ข้อ</th><th>ตรวจด้วย</th></tr></thead><tbody>
+<tr><td>☐</td><td>นิยามในโค้ดกับใน TRACEABILITY.md ตรงกัน</td><td>อ่านเทียบกัน</td></tr>
+<tr><td>☐</td><td>ทุกเงื่อนไขผ่าน (acceptance criteria) มีเทสต์ และมีเทสต์ที่ขอบเกณฑ์</td><td>ตาราง "เงื่อนไขผ่าน → โค้ด → เทสต์"</td></tr>
+<tr><td>☐</td><td>unit test, typecheck และ lint ผ่านทั้งโปรเจกต์ (ไม่ใช่แค่ไฟล์ของตัวเอง)</td><td>3 คำสั่งในขั้นที่ 4</td></tr>
+<tr><td>☐</td><td>หน้าจอใช้ได้บนเว็บและมือถือ ทั้งโหมดสว่างและมืด และตอนเปิด "ลดการเคลื่อนไหว"</td><td>ลองเอง + E2E บน Chromium และ WebKit</td></tr>
+<tr><td>☐</td><td>ทุกสถานะมีข้อความกำกับ ไม่ใช้สีอย่างเดียว</td><td>ดูภาพหน้าจอทั้ง 5 สถานะ</td></tr>
+<tr><td>☐</td><td>E2E ของฟีเจอร์ใหม่ผ่าน และของเดิมไม่พัง</td><td><span class="mono">npm run e2e:web</span></td></tr>
+<tr><td>☐</td><td>README และ TRACEABILITY.md อัปเดตแล้ว</td><td>อ่านทวน</td></tr>
+<tr><td>☐</td><td>ข้อความ commit บอกว่าทำอะไรและทำไม</td><td><span class="mono">git log</span></td></tr>
+<tr><td>☐</td><td>GitHub Actions เขียวทุกงาน</td><td>แท็บ Actions บน GitHub</td></tr>
+</tbody></table>
+<x-box kind="say" title="ถ้าอาจารย์ถามว่า &quot;เธอพัฒนา FR-6 ด้วยกระบวนการแบบไหน&quot;">
+<p>"ฉันแบ่งงานเป็นชั้น เริ่มจากเขียนนิยามให้ทดสอบได้ เพราะ feedback บอกว่าคำว่าเงินต่ำกำกวม ทุกนิยามมีเทสต์ TC-12 ถึง 18 คุมไว้ สูตรเขียนเป็น pure function ในไฟล์ runway.ts แยกจากหน้าจอ แล้วต่อเข้ากับข้อมูลจริงที่จุดเดียวคือ useMoney ค่อยทำหน้าจอ และมี E2E ที่ลากแถบและกดปุ่มเหมือนคนจริง หลังจากนั้นปรับตาม feedback อีกหลายรอบ เช่น เปลี่ยนปุ่ม 4 ปุ่มเป็นแถบเลื่อน และเพิ่มกระปุกออม ซึ่งดูใน Git ได้ว่าหน้าจอถูกแก้ 10 ครั้ง แต่ runway.ts ไม่ต้องแก้เลยตั้งแต่วันแรก"</p>
+</x-box>
+</x-ch>

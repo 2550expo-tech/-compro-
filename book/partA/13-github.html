@@ -1,0 +1,122 @@
+<x-ch title="Git และ GitHub: เก็บโค้ด ทำงานเป็นทีม และ build อัตโนมัติ" lead="ทุกการแก้โค้ดถูกบันทึกเป็นประวัติ และทุกครั้งที่ส่งโค้ดขึ้น GitHub จะมีหุ่นยนต์ 4 ตัวช่วยทดสอบ สร้างเว็บ สร้าง APK และส่งอัปเดตให้ผู้ใช้">
+
+<h2>Git: ระบบบันทึกประวัติ</h2>
+<x-box kind="analogy" title="เปรียบเทียบ">
+<p>Git เหมือนปุ่ม "Save game" ของเกม ทุกครั้งที่ทำสำเร็จหนึ่งด่าน (แก้ฟีเจอร์เสร็จ) เราเซฟไว้พร้อมโน้ตว่าทำอะไร ถ้าพลาดภายหลังก็โหลดเซฟเก่ากลับมาได้ และดูย้อนได้ว่าใครเปลี่ยนอะไรเมื่อไร</p>
+</x-box>
+<table><thead><tr><th>คำ</th><th>ความหมาย</th></tr></thead><tbody>
+<tr><td><b>repository (repo)</b></td><td>โฟลเดอร์โปรเจกต์ที่ Git ดูแล รวมประวัติทั้งหมด (ซ่อนอยู่ในโฟลเดอร์ .git)</td></tr>
+<tr><td><b>commit</b></td><td>"จุดเซฟ" 1 ครั้ง มีรหัส (เช่น 646b485) ข้อความอธิบาย ผู้ทำ และเวลา</td></tr>
+<tr><td><b>branch</b></td><td>"เส้นทางคู่ขนาน" ของโค้ด แยกไปทำฟีเจอร์โดยไม่กระทบเส้นหลัก เส้นหลักของทีมชื่อ <span class="mono">main</span></td></tr>
+<tr><td><b>remote / origin</b></td><td>สำเนาของ repo บนเซิร์ฟเวอร์ (GitHub)</td></tr>
+<tr><td><b>push</b></td><td>ส่ง commit ในเครื่องขึ้น GitHub</td></tr>
+<tr><td><b>pull</b></td><td>ดึง commit ใหม่จาก GitHub ลงเครื่อง</td></tr>
+<tr><td><b>clone</b></td><td>คัดลอก repo ทั้งหมดจาก GitHub ลงเครื่องครั้งแรก</td></tr>
+<tr><td><b>pull request (PR)</b></td><td>คำขอรวม branch หนึ่งเข้า main ให้เพื่อนรีวิวก่อน</td></tr>
+<tr><td><b>merge conflict</b></td><td>สองคนแก้บรรทัดเดียวกัน Git ไม่รู้จะเลือกของใคร ต้องตัดสินใจเอง</td></tr>
+<tr><td><b>.gitignore</b></td><td>รายชื่อไฟล์ที่ไม่ต้องเก็บใน Git เช่น node_modules (ใหญ่และติดตั้งใหม่ได้), .env (อาจมีความลับ), dist (สร้างใหม่ได้)</td></tr>
+</tbody></table>
+
+<h2>ใช้ Git ประจำวัน</h2>
+<x-snip lang="sh" title="Terminal" note="วงจรทำงาน 1 รอบ">
+git pull                                  # 1. ดึงของล่าสุดก่อนเริ่ม
+git checkout -b fix-runway-text           # 2. แยก branch ใหม่ (ไม่บังคับ)
+# ... แก้โค้ดใน VS Code ...
+npm test                                  # 3. รันเทสต์ให้ผ่านก่อน
+git status                                # 4. ดูว่าแก้ไฟล์ไหนไปบ้าง
+git add src/domain/runway.ts              # 5. เลือกไฟล์ที่จะเซฟ
+git commit -m "Runway: say 'ประมาณ' in the date"   # 6. เซฟพร้อมข้อความ
+git push -u origin fix-runway-text        # 7. ส่งขึ้น GitHub แล้วเปิด Pull Request
+</x-snip>
+<p>ใน VS Code ทำแบบเดียวกันได้ด้วยเมาส์ที่แท็บ <b>Source Control</b> (Ctrl+Shift+G): ไฟล์ที่แก้จะขึ้นในรายการ กด + เพื่อเลือก พิมพ์ข้อความ กด Commit แล้วกด Sync Changes</p>
+<x-box kind="tip" title="ข้อความ commit ที่ดี">
+<p>บอกว่า "ทำอะไร และทำไม" สั้น ๆ เช่นของทีมเรา: <i>"Runway: arrow keys on the web; steadier drag test"</i>, <i>"Audit follow-up: fix regressions found by independent review"</i> อ่านประวัติแล้วรู้เรื่องโดยไม่ต้องเปิดโค้ด ดูประวัติทั้งหมดด้วย <span class="mono">git log --oneline</span></p>
+</x-box>
+
+<h2>ประวัติของ MindPay บน GitHub</h2>
+<p>repo อยู่ที่ <span class="mono">github.com/2550expo-tech/Socrates-and-Skeletons-</span> (สาธารณะ ใครก็อ่านได้) branch main มี <b>66 commit</b> ตั้งแต่ 27 ก.ย. ถึง 3 ต.ค. 2569</p>
+<table><thead><tr><th>วันที่</th><th class="n">commit</th><th>งานหลักของวันนั้น (จากข้อความ commit)</th></tr></thead><tbody>
+<tr><td>27 ก.ย.</td><td class="n">20</td><td>MVP แรก FR-1, FR-2, FR-4, FR-5, FR-6 · build APK อัตโนมัติ · เว็บบน GitHub Pages · EAS Update · AI ใช้ Gemini หรือ Claude · อ่านสลิปใหม่อัตโนมัติตอนเปิดแอป</td></tr>
+<tr><td>28 ก.ย.</td><td class="n">22</td><td>ระบบสมัครแบบรหัสอีเมล, น้องกล้า, สแกนเองแยกตามช่วงเวลา, แก้ปัญหากุญแจ AI, อ่าน QR มุมขวาล่าง, เทสต์ในเบราว์เซอร์ (รวม Safari)</td></tr>
+<tr><td>29 ก.ย.</td><td class="n">19</td><td>พูดจด (FR-3), น้องกล้าพูดได้, ธีมสี 8 แบบ, เพิ่มเงินเข้า, รายการประจำ, กระปุกออม</td></tr>
+<tr><td>30 ก.ย.</td><td class="n">2</td><td>ธีมฮาโลวีน, เทสต์ความอ่านง่ายของสี</td></tr>
+<tr><td>1–3 ต.ค.</td><td class="n">3</td><td>ตรวจทั้ง repository แก้บั๊ก จัด Design System ให้ตรงกัน</td></tr>
+</tbody></table>
+
+<h2>GitHub Actions: หุ่นยนต์ที่ทำงานทุกครั้งที่ push</h2>
+<p><b>CI/CD</b> (Continuous Integration / Continuous Delivery) คือให้คอมพิวเตอร์ทดสอบและส่งของให้อัตโนมัติทุกครั้งที่โค้ดเปลี่ยน ของทีมเราเขียนเป็นไฟล์ YAML ใน <span class="mono">.github/workflows/</span> มี 4 ตัว</p>
+<table><thead><tr><th>ไฟล์</th><th>ทำอะไร</th><th>ผลลัพธ์</th></tr></thead><tbody>
+<tr><td class="mono">web.yml</td><td>build เว็บ → unit test → E2E 145 ข้อ → ถ้าผ่านทั้งหมดจึงเผยแพร่</td><td>เว็บที่ 2550expo-tech.github.io/Socrates-and-Skeletons-/</td></tr>
+<tr><td class="mono">android-apk.yml</td><td>unit test → typecheck → สร้างโปรเจกต์ Android → build APK (15–25 นาที)</td><td>ไฟล์ mind-pay.apk ในหน้า Releases "latest-apk"</td></tr>
+<tr><td class="mono">eas-update.yml</td><td>unit test → ส่งโค้ด JavaScript ใหม่ขึ้น EAS Update</td><td>แอปที่ลงแล้วได้โค้ดใหม่ตอนเปิดครั้งถัดไป</td></tr>
+<tr><td class="mono">e2e-webkit.yml</td><td>E2E ชุดเดียวกันบนเอนจิน Safari แบบ iPhone โหมดมืด</td><td>รายงานผล (ไม่บล็อกการเผยแพร่)</td></tr>
+</tbody></table>
+<div class="flow">
+<div class="st dark"><b>git push ขึ้น main</b></div>
+<div class="ar">↓ <span>GitHub เปิดเครื่องเสมือน Ubuntu ให้ฟรีตัวละ 1 เครื่อง ทำพร้อมกัน</span></div>
+<div class="cols" style="margin:0">
+<div class="st"><b>web.yml</b><small>เทสต์ไม่ผ่าน = เว็บไม่เปลี่ยน ผู้ใช้ยังได้เวอร์ชันเดิมที่ดีอยู่</small></div>
+<div class="st"><b>android-apk.yml</b><small>เทสต์หรือ typecheck ไม่ผ่าน = ไม่มี APK ใหม่</small></div>
+<div class="st"><b>eas-update.yml</b><small>ต้องมี secret EXPO_TOKEN และเทสต์ผ่าน</small></div>
+<div class="st"><b>e2e-webkit.yml</b><small>ตรวจบน Safari เพิ่ม</small></div>
+</div>
+</div>
+
+<h3>อ่าน web.yml ทีละบรรทัด</h3>
+<x-code src=".github/workflows/web.yml" lines="1-76"></x-code>
+<table class="walk"><thead><tr><th>บรรทัด</th><th>ความหมาย</th></tr></thead><tbody>
+<tr><td>1–6</td><td>คอมเมนต์ (YAML ใช้ <span class="mono">#</span>) บอกว่าเผยแพร่เว็บไปที่ไหน และวิธีเพิ่มลงหน้าจอโฮมบน iPhone</td></tr>
+<tr><td>7</td><td>ชื่อที่แสดงในแท็บ Actions ของ GitHub</td></tr>
+<tr><td>9–12</td><td><b>เมื่อไรจะทำงาน</b>: ทุกครั้งที่ push ขึ้น branch main และกดสั่งเองได้ (workflow_dispatch)</td></tr>
+<tr><td>14–15</td><td>สิทธิ์เขียนลง repo (ต้องใช้ตอนเผยแพร่ไป branch gh-pages)</td></tr>
+<tr><td>17–19</td><td>ถ้า push ใหม่มาระหว่างที่ตัวเก่ายังทำงาน ยกเลิกตัวเก่า ทำแต่ตัวล่าสุด</td></tr>
+<tr><td>21–24</td><td>งานชื่อ web รันบนเครื่อง Ubuntu ล่าสุด ไม่เกิน 20 นาที</td></tr>
+<tr><td>26</td><td>ดึงโค้ดของ commit นี้ลงเครื่อง (<span class="mono">uses</span> = ใช้ action สำเร็จรูปที่คนอื่นเขียนไว้)</td></tr>
+<tr><td>28–31</td><td>ติดตั้ง Node.js 22 และจำ cache ของ npm ให้ครั้งหน้าเร็วขึ้น</td></tr>
+<tr><td>33</td><td><span class="mono">npm ci</span> ติดตั้งแพ็กเกจตาม package-lock.json แบบเป๊ะ (ต่างจาก npm install ตรงที่ไม่เปลี่ยนเวอร์ชันเลย)</td></tr>
+<tr><td>35–36</td><td>สร้าง .env จากตัวอย่าง (มีแค่กุญแจสาธารณะ)</td></tr>
+<tr><td>38–41</td><td>build เว็บลงโฟลเดอร์ dist พร้อมบอกว่าเว็บอยู่ใต้ /Socrates-and-Skeletons-</td></tr>
+<tr><td>43–46</td><td>เพิ่มไอคอนและตั้งค่าให้ "เพิ่มไปยังหน้าจอโฮม" แล้วเปิดเต็มจอเหมือนแอป</td></tr>
+<tr><td>48–49</td><td>คัดลอกหน้าแรกเป็น 404.html เพราะ GitHub Pages ไม่รู้จักที่อยู่อย่าง /runway ถ้ามีคนเปิดตรง ๆ จะได้หน้า 404 ซึ่งก็คือแอปเราที่พาไปหน้านั้นให้</td></tr>
+<tr><td>51–52</td><td>รัน unit test 157 ข้อ ไม่ผ่าน = หยุดทั้งงาน</td></tr>
+<tr><td>57–61</td><td>ติดตั้งเบราว์เซอร์ทดสอบ แล้วรัน E2E 145 ข้อ</td></tr>
+<tr><td>63–68</td><td><span class="mono">if: failure()</span> = เฉพาะตอนพัง: เก็บภาพหน้าจอจาก E2E ไว้ให้ดาวน์โหลดดูว่าพังตรงไหน</td></tr>
+<tr><td>70–76</td><td>ผ่านทุกด่านแล้วจึงเผยแพร่โฟลเดอร์ dist ขึ้น branch gh-pages ซึ่ง GitHub Pages ใช้เป็นเว็บไซต์</td></tr>
+</tbody></table>
+
+<h3>อ่าน android-apk.yml (ส่วนสำคัญ)</h3>
+<x-code src=".github/workflows/android-apk.yml" lines="12-90"></x-code>
+<table class="walk"><thead><tr><th>บรรทัด</th><th>ความหมาย</th></tr></thead><tbody>
+<tr><td>12–17</td><td>ทำงานเมื่อ push ขึ้น main ยกเว้นแก้แค่เอกสาร (.md, docs/) ซึ่งไม่ต้อง build APK ใหม่</td></tr>
+<tr><td>24–26</td><td>ตัวที่เริ่ม build แล้วให้ทำจนจบ ตัวใหม่ต่อคิว (build ใช้เวลานาน ไม่อยากทิ้งกลางทาง)</td></tr>
+<tr><td>31</td><td>เวลาสูงสุด 45 นาที</td></tr>
+<tr><td>40–43</td><td>ติดตั้ง Java 17 เพราะเครื่องมือ build ของ Android (Gradle) ต้องใช้</td></tr>
+<tr><td>48–52</td><td>ด่านตรวจ: unit test และ typecheck ต้องผ่านก่อน</td></tr>
+<tr><td>57–58</td><td><span class="mono">expo prebuild</span> สร้างโฟลเดอร์ android ทั้งโปรเจกต์จาก app.json (ทีมไม่เก็บโฟลเดอร์นี้ใน Git สร้างใหม่ทุกครั้ง)</td></tr>
+<tr><td>60–66</td><td>เพิ่มหน่วยความจำให้ Gradle (คอมเมนต์เล่าว่าเคยค้างจนหมดเวลาเพราะหน่วยความจำไม่พอ)</td></tr>
+<tr><td>68–72</td><td>build APK แบบ release เฉพาะสถาปัตยกรรม arm64 (ครอบคลุมมือถือแทบทุกเครื่องใน 7 ปีหลัง และ build เร็วกว่า)</td></tr>
+<tr><td>74–80</td><td>เปลี่ยนชื่อเป็น mind-pay.apk และเก็บไว้</td></tr>
+<tr><td>82–90</td><td>ลบ release "latest-apk" เดิม แล้วสร้างใหม่พร้อมไฟล์ APK ใหม่ (ลิงก์ดาวน์โหลดจึงเหมือนเดิมตลอด) บอกว่า build จาก commit ไหน เมื่อไร</td></tr>
+</tbody></table>
+<x-box kind="note" title="APK แบบ debug-signed">
+<p>APK นี้ "เซ็น" ด้วยกุญแจ debug ของ Android ใช้ทดสอบและพรีเซนต์ได้ แต่ส่งขึ้น Play Store ไม่ได้ ถ้าจะลง Play Store ต้อง build ด้วย EAS Build แบบ production และมีบัญชีนักพัฒนา Google (README อธิบายไว้)</p>
+</x-box>
+
+<h2>Secrets บน GitHub</h2>
+<p>ค่าลับที่ workflow ต้องใช้ เก็บใน Settings → Secrets and variables → Actions ของ repo ไม่ได้อยู่ในโค้ด</p>
+<table><thead><tr><th>Secret</th><th>ใช้ที่</th><th>ได้มาจาก</th></tr></thead><tbody>
+<tr><td class="mono">GITHUB_TOKEN</td><td>web.yml, android-apk.yml</td><td>GitHub สร้างให้อัตโนมัติทุกครั้ง</td></tr>
+<tr><td class="mono">EXPO_TOKEN</td><td>eas-update.yml</td><td>expo.dev → Account settings → Access tokens (ถ้าไม่ตั้ง workflow นี้ข้ามไปเฉย ๆ)</td></tr>
+</tbody></table>
+<p>ส่วนกุญแจ AI ไม่ได้อยู่บน GitHub เลย อยู่ใน Supabase Secrets (บท A10)</p>
+
+<h2>ไฟล์เอกสารใน repo</h2>
+<table><thead><tr><th>ไฟล์</th><th>มีอะไร</th></tr></thead><tbody>
+<tr><td class="mono">README.md</td><td>หน้าแรกของ repo: ลิงก์ลองใช้, FR, สถาปัตยกรรม, วิธีติดตั้ง, ตั้งค่า AI, ความปลอดภัย, ข้อจำกัด</td></tr>
+<tr><td class="mono">docs/TRACEABILITY.md</td><td>FR → acceptance criteria → โค้ด → เทสต์ และแผนทดสอบมือ (MT)</td></tr>
+<tr><td class="mono">docs/AI_USAGE_LOG.md</td><td>บันทึกการใช้ AI ตามที่ SRS กำหนด 20 แถว</td></tr>
+<tr><td class="mono">docs/DESIGN_SYSTEM.md</td><td>กฎการออกแบบ (บท A11)</td></tr>
+<tr><td class="mono">docs/SUPABASE_AUTH_SETUP.md</td><td>ตั้งค่าอีเมลยืนยันตัวตนของ Supabase</td></tr>
+<tr><td class="mono">AGENTS.md / CLAUDE.md</td><td>คำแนะนำสำหรับผู้ช่วย AI ที่ช่วยเขียนโค้ด (ใช้ Expo 57, คำสั่งที่ควรรัน)</td></tr>
+</tbody></table>
+</x-ch>

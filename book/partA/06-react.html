@@ -1,0 +1,141 @@
+<x-ch title="React: วาดหน้าจอจากข้อมูล" lead="React คือวิธีคิดที่ว่า &quot;หน้าจอ = ฟังก์ชันของข้อมูล&quot; ข้อมูลเปลี่ยนเมื่อไร หน้าจอวาดใหม่เอง ไม่ต้องสั่งแก้ทีละจุด">
+
+<h2>แนวคิดหลัก: หน้าจอเป็นผลลัพธ์ของข้อมูล</h2>
+<p>สมัยก่อน ถ้ายอดเงินเปลี่ยน โปรแกรมเมอร์ต้องเขียนเองว่า "ไปหาข้อความยอดเงิน แก้ตัวเลข ไปหาต้นไม้ เปลี่ยนจำนวนใบ ไปหาป้ายสถานะ เปลี่ยนสี..." พลาดจุดเดียวหน้าจอก็ขัดกันเอง React เปลี่ยนวิธีคิด: <b>เราเขียนแค่ว่า "ถ้าข้อมูลเป็นแบบนี้ หน้าจอหน้าตาแบบนี้"</b> แล้ว React จะวาดใหม่ให้เองทุกครั้งที่ข้อมูลเปลี่ยน</p>
+<div class="flow">
+<div class="st"><b>ข้อมูล (state)</b><small>เช่น รายการทั้งหมด txs, ยอดคงเหลือ</small></div>
+<div class="ar">↓ <span>React เรียก component ใหม่</span></div>
+<div class="st gold"><b>Component (ฟังก์ชันวาดหน้าจอ)</b><small>อ่านข้อมูล แล้วคืน "หน้าตา" เป็น JSX</small></div>
+<div class="ar">↓ <span>React เทียบกับของเดิม แก้เฉพาะจุดที่ต่าง</span></div>
+<div class="st"><b>หน้าจอที่ผู้ใช้เห็น</b></div>
+</div>
+
+<h2>Component: ชิ้นส่วนหน้าจอที่เป็นฟังก์ชัน</h2>
+<p>Component คือฟังก์ชันที่ชื่อขึ้นต้นด้วยตัวใหญ่ และคืนค่าเป็น <b>JSX</b> (หน้าตาที่เขียนคล้าย HTML อยู่ในโค้ด) หน้าจอทั้งหน้าก็เป็น component และปุ่มเล็ก ๆ ก็เป็น component ซ้อนกันเป็นชั้น ๆ</p>
+<x-snip title="Component เล็กที่สุด" lang="ts">
+function Hello({ name }: { name: string }) {
+  return <Text>สวัสดี {name}</Text>;
+}
+
+// เรียกใช้ที่อื่น:
+<Hello name="มิ้นท์" />     // แสดง "สวัสดี มิ้นท์"
+</x-snip>
+<table><thead><tr><th>ส่วน</th><th>ความหมาย</th></tr></thead><tbody>
+<tr><td class="mono">&lt;Text&gt;...&lt;/Text&gt;</td><td>JSX แท็กเปิดและปิด เหมือน HTML (Text คือชิ้นส่วนแสดงข้อความของ React Native)</td></tr>
+<tr><td class="mono">{name}</td><td>วงเล็บปีกกาใน JSX = "ใส่ค่าจากโค้ด JavaScript ตรงนี้"</td></tr>
+<tr><td class="mono">{ name }: { name: string }</td><td><b>props</b> คือค่าที่ผู้เรียกส่งเข้ามา (เหมือนพารามิเตอร์) ในที่นี้แกะเอาช่อง name ออกมา</td></tr>
+<tr><td class="mono">&lt;Hello name="มิ้นท์" /&gt;</td><td>ใช้ component เหมือนแท็ก ส่ง props เป็น attribute แท็กที่ไม่มีของข้างในปิดด้วย <span class="mono">/&gt;</span></td></tr>
+</tbody></table>
+
+<h3>ตัวอย่างจริง: T ชิ้นส่วนตัวหนังสือที่ทุกหน้าใช้</h3>
+<p>ทุกข้อความในแอปใช้ <span class="mono">&lt;T&gt;</span> แทนการตั้งขนาดและสีเอง เพื่อให้ทั้งแอปหน้าตาเหมือนกัน (กฎใน Design System บท A11)</p>
+<x-code src="src/ui/components.tsx" lines="36-90"></x-code>
+<table class="walk"><thead><tr><th>บรรทัด</th><th>ความหมาย</th></tr></thead><tbody>
+<tr><td>36</td><td>ระดับตัวหนังสือมี 8 แบบ ตั้งแต่ใหญ่สุด <span class="mono">display</span> (ยอดเงินบนการ์ด) ไปจนเล็กสุด <span class="mono">micro</span></td></tr>
+<tr><td>38–47</td><td>ตารางจับคู่ว่าแต่ละระดับใช้ฟอนต์อะไร: หัวข้อใหญ่ใช้ Noto Serif Thai (มีหัว) ที่เหลือใช้ Anuphan น้ำหนักต่างกัน <span class="mono">Record&lt;Variant, string&gt;</span> บังคับให้ต้องใส่ครบทั้ง 8 ระดับ</td></tr>
+<tr><td>49–57</td><td>ประกาศ component ชื่อ <span class="mono">T</span> พร้อมแกะ props ออกมา <span class="mono">v = 'body'</span> แปลว่าถ้าไม่ระบุระดับ ใช้ body</td></tr>
+<tr><td>58–67</td><td>ชนิดของ props แต่ละตัว (เครื่องหมาย ? = ไม่บังคับ) <span class="mono">children</span> คือสิ่งที่อยู่ระหว่าง &lt;T&gt; กับ &lt;/T&gt; ส่วน <span class="mono">accessibilityRole</span> บอกโปรแกรมอ่านหน้าจอสำหรับคนตาบอดว่าเป็นหัวข้อหรือข้อความแจ้งเตือน</td></tr>
+<tr><td>68</td><td>เรียก <span class="mono">useTheme()</span> เอาชุดสีของธีมที่ผู้ใช้เลือก (สว่าง/มืด, ป่าทอง/ม่วง ฯลฯ)</td></tr>
+<tr><td>69</td><td>เลือกขนาดและความสูงบรรทัดจากตาราง <span class="mono">type</span> (label ใช้ขนาดเท่า micro)</td></tr>
+<tr><td>70–86</td><td>คืน JSX: ชิ้นส่วน <span class="mono">Text</span> ของ React Native พร้อม style ที่ซ้อนกันเป็นชั้น (array ของ style ตัวหลังทับตัวหน้า)</td></tr>
+<tr><td>78</td><td>ฟอนต์ตามระดับ</td></tr>
+<tr><td>79</td><td>สี: ถ้าผู้เรียกส่งสีมาใช้สีนั้น ไม่งั้นข้อความเล็กใช้สีรอง (inkSoft) ข้อความอื่นใช้สีหลัก (ink)</td></tr>
+<tr><td>80</td><td>จัดกึ่งกลางถ้าส่ง <span class="mono">center</span></td></tr>
+<tr><td>82–83</td><td>ระดับ label (หัวข้อเล็กตัวพิมพ์ใหญ่ เช่น "MONEY RUNWAY") ห่างตัวอักษรกว้างขึ้น และใช้สีที่ผ่านเกณฑ์อ่านง่าย</td></tr>
+<tr><td>84</td><td>style ที่ผู้เรียกส่งมาเองใส่ท้ายสุด จึงทับค่าทั้งหมดได้</td></tr>
+<tr><td>87</td><td>แสดงสิ่งที่อยู่ข้างใน (ข้อความ)</td></tr>
+</tbody></table>
+<p>ใช้งานแบบนี้: <span class="mono">&lt;T v="h3"&gt;จดรายการ&lt;/T&gt;</span> หรือ <span class="mono">&lt;T v="small" color={theme.watch}&gt;อ่านวันที่ไม่ชัด&lt;/T&gt;</span></p>
+
+<h2>State: ข้อมูลที่เปลี่ยนได้ และทำให้หน้าจอวาดใหม่</h2>
+<p>ตัวแปรธรรมดาในฟังก์ชันจะหายไปทุกครั้งที่ React วาดใหม่ ถ้าอยากให้ component "จำ" ค่าได้ ต้องใช้ <b>state</b> ผ่าน hook ชื่อ <span class="mono">useState</span></p>
+<x-snip title="useState" lang="ts">
+const [amount, setAmount] = useState('');   // ค่าเริ่มต้น = ข้อความว่าง
+// amount    = ค่าปัจจุบัน
+// setAmount = ฟังก์ชันเปลี่ยนค่า เรียกแล้ว React วาดหน้าจอใหม่
+
+<AmountField value={amount} onChangeText={setAmount} />
+// ผู้ใช้พิมพ์ "8" → setAmount('8') → วาดใหม่ ช่องแสดง 8
+</x-snip>
+<p>หน้าจดรายการ (FR-1) ใช้ state จำค่าทุกช่องในฟอร์ม ดูจากโค้ดจริง:</p>
+<x-code src="src/app/transaction.tsx" lines="35-46"></x-code>
+<table class="walk"><thead><tr><th>บรรทัด</th><th>ความหมาย</th></tr></thead><tbody>
+<tr><td>35</td><td>ประเภทเริ่มต้น: ถ้าแก้รายการเดิม ใช้ประเภทเดิม ไม่งั้นดูว่าเปิดมาจากปุ่ม "เพิ่มเงินเข้า" ไหม (เป็นรายรับ) ไม่งั้นเป็นรายจ่าย</td></tr>
+<tr><td>36</td><td>state ประเภท (รายรับ/รายจ่าย) <span class="mono">useState&lt;TxKind&gt;</span> บอกว่าเก็บได้แค่ 'income' หรือ 'expense'</td></tr>
+<tr><td>37</td><td>state ช่องจำนวนเงิน เก็บเป็น<b>ข้อความ</b> ตามที่ผู้ใช้พิมพ์ (แปลงเป็นสตางค์ตอนกดบันทึก) ถ้าแก้รายการเดิม เติมค่าเดิมให้</td></tr>
+<tr><td>38–39</td><td>ชื่อรายการ และหมวด</td></tr>
+<tr><td>40</td><td>จำว่าผู้ใช้เลือกหมวดเองแล้วหรือยัง (ถ้ายัง แอปจะเดาหมวดจากชื่อที่พิมพ์ให้)</td></tr>
+<tr><td>41–42</td><td>วันและเวลา (ค่าเริ่มต้นคือตอนนี้ ตามเวลาไทย)</td></tr>
+<tr><td>43</td><td>บันทึกเพิ่มเติม</td></tr>
+<tr><td>44–46</td><td>สถานะของหน้าจอเอง: กำลังบันทึกอยู่ไหม, กำลังถามยืนยันการลบไหม, ข้อความ error ใต้ช่องเงิน</td></tr>
+</tbody></table>
+<x-box kind="warn" title="กฎของ Hook">
+<p>ฟังก์ชันที่ขึ้นต้นด้วย <span class="mono">use</span> เรียกว่า <b>hook</b> มีกฎ 2 ข้อ: (1) เรียกได้เฉพาะใน component หรือใน hook อื่น (2) ต้องเรียกที่ระดับบนสุดของ component ห้ามอยู่ใน if หรือ loop เพราะ React จำ state ตามลำดับการเรียก ESLint ของโปรเจกต์ตรวจกฎนี้ให้อัตโนมัติ</p>
+</x-box>
+
+<h2>Hook ที่ใช้ในโปรเจกต์</h2>
+<table><thead><tr><th>Hook</th><th>ทำอะไร</th><th>ตัวอย่างใน MindPay</th></tr></thead><tbody>
+<tr><td class="mono">useState</td><td>จำค่าที่เปลี่ยนได้ เปลี่ยนแล้ววาดใหม่</td><td>ทุกช่องในฟอร์ม, รายการทั้งหมดใน AppProvider</td></tr>
+<tr><td class="mono">useEffect</td><td>ทำงาน "ข้างเคียง" หลังวาดเสร็จ เช่น ตั้งเวลา ฟัง event โหลดข้อมูล และเก็บกวาดเมื่อเลิกใช้</td><td>ตั้งนาฬิกาให้วันเปลี่ยนตอนเที่ยงคืน</td></tr>
+<tr><td class="mono">useMemo</td><td>คำนวณแล้วจำผลไว้ คำนวณใหม่เฉพาะเมื่อข้อมูลที่ระบุเปลี่ยน</td><td><span class="mono">useMoney()</span> คำนวณยอดเงินและ Runway</td></tr>
+<tr><td class="mono">useCallback</td><td>จำ "ฟังก์ชัน" ไว้ไม่ให้สร้างใหม่ทุกครั้ง</td><td><span class="mono">loadAll</span>, <span class="mono">activateRepo</span></td></tr>
+<tr><td class="mono">useRef</td><td>กล่องจำค่าที่เปลี่ยนแล้ว <b>ไม่</b> ต้องวาดใหม่</td><td>จำว่ากำลังใช้บัญชีไหนอยู่ (<span class="mono">activeUserRef</span>)</td></tr>
+<tr><td class="mono">useContext</td><td>หยิบข้อมูลที่ "แชร์ทั้งแอป" มาใช้</td><td><span class="mono">useApp()</span></td></tr>
+<tr><td>hook ของเราเอง</td><td>รวม hook หลายตัวเป็นชิ้นเดียว ตั้งชื่อขึ้นต้นด้วย use</td><td><span class="mono">useMoney</span>, <span class="mono">useTheme</span>, <span class="mono">useToast</span></td></tr>
+</tbody></table>
+
+<h3>ตัวอย่าง useEffect: วันใหม่เริ่มตอนเที่ยงคืนตามเวลาไทย</h3>
+<x-code src="src/data/AppProvider.tsx" lines="182-212"></x-code>
+<table class="walk"><thead><tr><th>บรรทัด</th><th>ความหมาย</th></tr></thead><tbody>
+<tr><td>182–183</td><td>คอมเมนต์: วันใหม่เริ่ม 00:00 เวลากรุงเทพ ทั้งตอนเปิดแอปค้างไว้ (ใช้นาฬิกาจับเวลา) และตอนกลับมาเปิดแอปตอนเช้า</td></tr>
+<tr><td>184</td><td><span class="mono">useEffect(() =&gt; {...}, [])</span> array ว่างท้ายสุดแปลว่า "ทำครั้งเดียวตอน component เริ่มทำงาน"</td></tr>
+<tr><td>185</td><td>ตัวแปรเก็บนาฬิกาจับเวลา</td></tr>
+<tr><td>186–196</td><td>ฟังก์ชัน <span class="mono">check</span>: ดูวันที่ตอนนี้ตามเวลาไทย ถ้าไม่ตรงกับ "วันนี้" ที่จำไว้ แปลว่าข้ามวันแล้ว ให้อัปเดตวันนี้ (<span class="mono">setToday</span>) ซึ่งทำให้ตัวเลขทุกอย่างที่ขึ้นกับวันนี้คำนวณใหม่ (เช่น ค่าเฉลี่ย 7 วันของ FR-6)</td></tr>
+<tr><td>191</td><td>ตั้งธง "วันใหม่" ให้น้องกล้าทักทายและสรุปเมื่อวาน</td></tr>
+<tr><td>192</td><td>จดวันที่ล่าสุดลงเครื่อง</td></tr>
+<tr><td>194–195</td><td>ยกเลิกนาฬิกาเดิม แล้วตั้งใหม่ให้ปลุกตอนเที่ยงคืนครั้งหน้า (+1 วินาทีเผื่อ) <span class="mono">msUntilNextBkkMidnight</span> คำนวณว่าเหลืออีกกี่มิลลิวินาที</td></tr>
+<tr><td>197</td><td>เช็กทันทีหนึ่งครั้งตอนเริ่ม</td></tr>
+<tr><td>198–204</td><td>อ่านวันที่เปิดแอปครั้งล่าสุดจากเครื่อง ถ้าไม่ใช่วันนี้ แปลว่าเป็นการเปิดครั้งแรกของวัน</td></tr>
+<tr><td>205–207</td><td>ฟังเหตุการณ์ "แอปกลับมาอยู่หน้าจอ" (เช่น เปิดแอปค้างไว้ข้ามคืน แล้วเช้ามาสลับกลับมา) แล้วเช็กวันใหม่อีกครั้ง</td></tr>
+<tr><td>208–211</td><td><b>ฟังก์ชันเก็บกวาด</b> (cleanup): ถ้า component นี้ถูกปิด ให้ยกเลิกนาฬิกาและเลิกฟังเหตุการณ์ ไม่ให้ทำงานค้างกินแบตเตอรี่</td></tr>
+</tbody></table>
+
+<h2>Context: แชร์ข้อมูลให้ทุกหน้าโดยไม่ต้องส่งต่อเป็นทอด ๆ</h2>
+<p>ถ้าหน้าหลัก หน้ารายการ และหน้าเงินพอถึง ต้องใช้รายการเงินชุดเดียวกัน จะส่ง props ต่อกันเป็นทอด ๆ ก็ยุ่ง React มี <b>Context</b> เหมือน "ประกาศเสียงตามสาย" ตัวให้ข้อมูล (Provider) อยู่บนสุด ใครอยู่ข้างในจะหยิบไปใช้ได้เลย MindPay มี Provider หลายชั้นครอบทั้งแอปไว้ใน <code>src/app/_layout.tsx</code> (บท A7) ตัวสำคัญที่สุดคือ <b>AppProvider</b></p>
+<x-code src="src/data/AppProvider.tsx" lines="87-121"></x-code>
+<table class="walk"><thead><tr><th>บรรทัด</th><th>ความหมาย</th></tr></thead><tbody>
+<tr><td>87</td><td>สร้าง Context เปล่า ๆ ไว้ (เริ่มต้นเป็น null)</td></tr>
+<tr><td>89–93</td><td><span class="mono">useApp()</span>: hook ที่ทุกหน้าใช้หยิบข้อมูลกลาง ถ้าเรียกนอก Provider จะ error ทันที (กันลืมครอบ)</td></tr>
+<tr><td>95–98</td><td>แบบที่ไม่ error แต่คืน null สำหรับชิ้นส่วนเล็กที่อาจอยู่นอก Provider</td></tr>
+<tr><td>100</td><td>ประกาศ component <span class="mono">AppProvider</span> ซึ่งครอบหน้าจอทั้งหมด (<span class="mono">children</span>)</td></tr>
+<tr><td>101</td><td>สถานะการเข้าสู่ระบบ: กำลังโหลด / ยังไม่เข้า / พร้อม</td></tr>
+<tr><td>102–103</td><td>Repo ที่ใช้อยู่ (คลาวด์หรือเครื่อง) และ id ของผู้ใช้</td></tr>
+<tr><td>104–107</td><td><b>ข้อมูลหลักของแอป</b>: โปรไฟล์, รายการทั้งหมด, ยอดยกมาจากรายการเก่ามาก, กระปุกออม</td></tr>
+<tr><td>108–110</td><td>ข้อความ error ตอนโหลด, กำลังรีเฟรชไหม, ข้อความแจ้งเรื่องบัญชี (เช่น "สมัครสำเร็จ")</td></tr>
+<tr><td>111</td><td>วันนี้ตามเวลาไทย (ฟังก์ชันใน useState ทำงานครั้งเดียวตอนเริ่ม)</td></tr>
+<tr><td>112</td><td>ธงวันใหม่</td></tr>
+<tr><td>113–121</td><td>ค่าที่ใช้ <span class="mono">useRef</span> เพราะไม่ต้องวาดหน้าจอใหม่เมื่อเปลี่ยน: วันนี้ (ไว้ใช้ในนาฬิกา), Repo ปัจจุบัน, บัญชีที่กำลังโหลด, ลิงก์อีเมลที่จัดการแล้ว, เลขรอบการโหลด และการเปลี่ยนแปลงในเครื่องระหว่างโหลด</td></tr>
+</tbody></table>
+<p>ส่วนท้ายของ AppProvider (บรรทัด 325–439) รวมข้อมูลและฟังก์ชันทั้งหมด (เช่น <span class="mono">addTx</span>, <span class="mono">removeTx</span>, <span class="mono">saveProfile</span>) เป็น object เดียว แล้วส่งให้ทุกหน้าผ่าน <span class="mono">&lt;AppContext.Provider value={value}&gt;</span> ที่บรรทัด 439</p>
+
+<h2>ทุกอย่างประกอบกัน: หน้าจอใช้ข้อมูลกลางยังไง</h2>
+<x-snip title="รูปแบบที่ทุกหน้าใช้" lang="ts">
+export default function SomeScreen() {
+  const theme = useTheme();                    // สีของธีม
+  const { txs, addTx } = useApp();             // ข้อมูลและคำสั่งกลาง
+  const { balance, runway } = useMoney();      // ตัวเลขที่คำนวณแล้ว
+  const [open, setOpen] = useState(false);     // state ของหน้านี้เอง
+
+  return (
+    <Screen>
+      <T v="h1">ยอด {formatBaht(balance)}</T>
+      {runway.days !== null ? <T>เงินพอใช้อีก {runway.days} วัน</T> : null}
+    </Screen>
+  );
+}
+</x-snip>
+<p>บรรทัด <span class="mono">{runway.days !== null ? ... : null}</span> คือ <b>การแสดงแบบมีเงื่อนไข</b> ใน JSX: ถ้ามีจำนวนวัน แสดงข้อความ ถ้าไม่มี (null) ไม่แสดงอะไร จะเจอรูปแบบนี้ทุกหน้า อีกแบบที่เจอบ่อยคือ <span class="mono">{list.map((x) =&gt; &lt;Row key={x.id} ... /&gt;)}</span> แสดงรายการหลายแถวจาก array (ต้องใส่ <span class="mono">key</span> ที่ไม่ซ้ำ ให้ React รู้ว่าแถวไหนเป็นแถวไหน)</p>
+<x-box kind="tip" title="สรุปบท A6 ใน 4 ประโยค">
+<p>(1) Component คือฟังก์ชันที่คืนหน้าตา (JSX) (2) props คือของที่ส่งเข้า component, state คือความจำของ component (3) เปลี่ยน state ด้วย setXxx แล้ว React วาดใหม่เอง (4) ข้อมูลที่ทั้งแอปใช้ร่วมกันอยู่ใน AppProvider หยิบใช้ด้วย <span class="mono">useApp()</span> และตัวเลขเงินหยิบด้วย <span class="mono">useMoney()</span></p>
+</x-box>
+</x-ch>

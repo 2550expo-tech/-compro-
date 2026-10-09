@@ -1,0 +1,168 @@
+<x-ch title="React Native และ Expo: โค้ดชุดเดียว ได้ทั้งแอปและเว็บ" lead="ทำไมทีมเราเขียนโค้ดครั้งเดียว แล้วได้ทั้งแอป Android, iPhone และเว็บ และการเปลี่ยนหน้าจอด้วย Expo Router ทำงานยังไง">
+
+<h2>React Native คืออะไร</h2>
+<p>React (บท A6) เดิมใช้ทำเว็บ ซึ่งวาดหน้าจอด้วย HTML แต่แอปมือถือไม่มี HTML <b>React Native</b> จึงเปลี่ยน "ชิ้นส่วนพื้นฐาน" ให้เป็นของจริงบนมือถือ เราเขียน <span class="mono">&lt;View&gt;</span> แล้วบน Android กลายเป็นกล่องของ Android บน iPhone กลายเป็นกล่องของ iOS แอปจึงลื่นเหมือนแอปที่เขียนด้วยภาษาของมือถือโดยตรง</p>
+<p>สำหรับเว็บ มีแพ็กเกจ <b>react-native-web</b> (บรรทัด 37 ใน package.json) แปลชิ้นส่วนเดียวกันเป็น HTML เช่น <span class="mono">&lt;View&gt;</span> → <span class="mono">&lt;div&gt;</span> <span class="mono">&lt;Text&gt;</span> → <span class="mono">&lt;span&gt;</span> โค้ดชุดเดียวจึงได้ 3 แพลตฟอร์ม</p>
+<table><thead><tr><th>ชิ้นส่วน React Native</th><th>คล้ายกับ (เว็บ)</th><th>ใช้ทำอะไร</th></tr></thead><tbody>
+<tr><td class="mono">View</td><td class="mono">div</td><td>กล่องสำหรับจัดวาง (การ์ด แถว คอลัมน์)</td></tr>
+<tr><td class="mono">Text</td><td class="mono">span / p</td><td>ข้อความ (ข้อความทุกตัวต้องอยู่ใน Text)</td></tr>
+<tr><td class="mono">Pressable</td><td class="mono">button</td><td>พื้นที่ที่แตะได้ มี onPress, onPressIn, onPressOut</td></tr>
+<tr><td class="mono">ScrollView / FlatList / SectionList</td><td>หน้าที่เลื่อนได้</td><td>เลื่อนเนื้อหายาว ๆ (FlatList/SectionList เหมาะกับรายการยาวมาก เพราะวาดเฉพาะแถวที่เห็น)</td></tr>
+<tr><td class="mono">TextInput</td><td class="mono">input</td><td>ช่องพิมพ์ (ห่ออยู่ใน Field / AmountField ของเรา)</td></tr>
+<tr><td class="mono">Image</td><td class="mono">img</td><td>รูปภาพ</td></tr>
+<tr><td class="mono">SafeAreaView</td><td>-</td><td>ไม่ให้เนื้อหาไปซ้อนกับรอยบาก แถบสถานะ หรือขอบล่างของมือถือ</td></tr>
+<tr><td class="mono">Animated.View</td><td>-</td><td>กล่องที่ขยับได้ (แอนิเมชัน)</td></tr>
+</tbody></table>
+<h3>การจัดวางด้วย style</h3>
+<p>React Native ไม่มีไฟล์ CSS แต่ใส่ <span class="mono">style={{ ... }}</span> เป็น object ตรง ๆ ชื่อเหมือน CSS แต่เป็น camelCase เช่น <span class="mono">backgroundColor</span> หน่วยเป็นตัวเลขเฉย ๆ (หมายถึง "จุด" ที่ปรับตามความละเอียดจอเอง) การจัดวางใช้ <b>Flexbox</b>:</p>
+<table><thead><tr><th>style</th><th>ความหมาย</th></tr></thead><tbody>
+<tr><td class="mono">flexDirection: 'row'</td><td>เรียงลูกในแนวนอน (ค่าเริ่มต้นคือแนวตั้ง 'column')</td></tr>
+<tr><td class="mono">flex: 1</td><td>ขยายเต็มพื้นที่ที่เหลือ</td></tr>
+<tr><td class="mono">alignItems: 'center'</td><td>จัดลูกให้อยู่กลาง (แกนขวาง)</td></tr>
+<tr><td class="mono">justifyContent: 'space-between'</td><td>กระจายลูกให้ชิดหัวท้าย (แกนหลัก)</td></tr>
+<tr><td class="mono">gap: 8</td><td>ระยะห่างระหว่างลูกแต่ละตัว</td></tr>
+<tr><td class="mono">padding / margin</td><td>ระยะห่างด้านใน / ด้านนอก</td></tr>
+<tr><td class="mono">borderRadius</td><td>มุมโค้ง</td></tr>
+</tbody></table>
+<p>ตัวอย่างจากชิ้นส่วน <span class="mono">Row</span> ที่ใช้ทั้งแอป: บรรทัดเดียวจบ</p>
+<x-code src="src/ui/components.tsx" lines="189-203"></x-code>
+<p>บรรทัด 202: สร้าง View ที่เรียงลูกแนวนอน (row) จัดกลางแนวตั้ง และเว้นระยะ <span class="mono">gap</span> ค่าเริ่มต้น 8 แล้วต่อด้วย style ที่ผู้เรียกส่งมา</p>
+
+<h2>Expo: ชุดเครื่องมือที่ทำให้ React Native ง่ายขึ้น</h2>
+<p>React Native เปล่า ๆ ต้องติดตั้ง Android Studio, Xcode และตั้งค่ามากมาย <b>Expo</b> ห่อทุกอย่างให้ และมีโมดูลสำเร็จรูป (expo-camera, expo-speech ฯลฯ) ที่ใช้ได้เลย สิ่งที่ Expo ให้ทีมเรา:</p>
+<ul>
+<li><b>Expo Go + dev server</b>: แก้โค้ดแล้วเห็นผลบนมือถือภายในไม่กี่วินาที</li>
+<li><b>Expo Router</b>: ระบบเปลี่ยนหน้าจอจากโครงสร้างไฟล์ (หัวข้อถัดไป)</li>
+<li><b>expo export</b>: ทำเว็บเวอร์ชันเป็นไฟล์นิ่ง ๆ เอาไปวางบนเว็บไซต์ได้</li>
+<li><b>prebuild + EAS Build</b>: สร้างโปรเจกต์ Android/iOS และไฟล์ APK</li>
+<li><b>EAS Update</b>: ส่งโค้ดใหม่ไปถึงแอปที่ลงแล้วโดยไม่ต้องลง APK ใหม่</li>
+</ul>
+<x-box kind="warn" title="Expo ทีมเราใช้เวอร์ชัน 57">
+<p>Expo เปลี่ยนเร็วมาก ทุกเวอร์ชันมีคำสั่งที่เปลี่ยนชื่อหรือย้ายที่ ไฟล์ <span class="mono">AGENTS.md</span> ในโปรเจกต์จึงเตือนว่าก่อนใช้ API ของ Expo ให้เปิดเอกสารของเวอร์ชัน 57 (docs.expo.dev/versions/v57.0.0/) ไม่ใช่จำจากที่เคยเห็น</p>
+</x-box>
+
+<h2>Expo Router: ไฟล์ 1 ไฟล์ = หน้าจอ 1 หน้า</h2>
+<p>ใน <span class="mono">src/app/</span> ทุกไฟล์คือหน้าจอ ชื่อไฟล์คือที่อยู่ (URL) ของหน้านั้น บนเว็บพิมพ์ที่อยู่ได้ตรง ๆ เลย</p>
+<table><thead><tr><th>ไฟล์</th><th>ที่อยู่</th><th>หน้าจอ</th><th>FR</th></tr></thead><tbody>
+<tr><td class="mono">_layout.tsx</td><td>-</td><td>โครงทั้งแอป: ฟอนต์, Provider, กฎว่าเข้าหน้าไหนได้ (ไม่ใช่หน้าจอ)</td><td>ทุก FR</td></tr>
+<tr><td class="mono">welcome.tsx</td><td>/welcome</td><td>สมัคร เข้าสู่ระบบ ลืมรหัสผ่าน ลองใช้ข้อมูลตัวอย่าง</td><td>บัญชี</td></tr>
+<tr><td class="mono">onboarding.tsx</td><td>/onboarding</td><td>ตั้งค่าเงินครั้งแรก (ยอดเงินตอนนี้, เงินสำรอง, งบ)</td><td>FR-2, FR-6</td></tr>
+<tr><td class="mono">(tabs)/_layout.tsx</td><td>-</td><td>แถบเมนูล่าง 4 แท็บ + ปุ่มสแกน</td><td>-</td></tr>
+<tr><td class="mono">(tabs)/index.tsx</td><td>/</td><td>หน้าหลัก</td><td>FR-2 (+FR-6)</td></tr>
+<tr><td class="mono">(tabs)/transactions.tsx</td><td>/transactions</td><td>แท็บรายการ ปฏิทินการใช้จ่าย</td><td>FR-1, FR-2</td></tr>
+<tr><td class="mono">(tabs)/runway.tsx</td><td>/runway</td><td>แท็บเงินพอถึง</td><td>FR-6</td></tr>
+<tr><td class="mono">(tabs)/coach.tsx</td><td>/coach</td><td>แท็บโค้ชน้องกล้า</td><td>FR-5</td></tr>
+<tr><td class="mono">transaction.tsx</td><td>/transaction</td><td>จด/แก้/ลบ/ตรวจสลิป 1 รายการ</td><td>FR-1, FR-4</td></tr>
+<tr><td class="mono">voice.tsx</td><td>/voice</td><td>พูดจด</td><td>FR-3</td></tr>
+<tr><td class="mono">scan.tsx</td><td>/scan</td><td>สแกนสลิป</td><td>FR-4</td></tr>
+<tr><td class="mono">drafts.tsx</td><td>/drafts</td><td>สลิปรอยืนยัน</td><td>FR-4</td></tr>
+<tr><td class="mono">settings.tsx</td><td>/settings</td><td>ตั้งค่า (เงินสำรอง, ธีม, เสียงน้องกล้า ฯลฯ)</td><td>หลาย FR</td></tr>
+<tr><td class="mono">goals.tsx, goal.tsx</td><td>/goals, /goal</td><td>กระปุกออม</td><td>FR-6</td></tr>
+<tr><td class="mono">recap.tsx</td><td>/recap</td><td>สรุปเดือนแบบเรื่องเล่า</td><td>FR-2</td></tr>
+<tr><td class="mono">achievements.tsx, skins.tsx</td><td>/achievements, /skins</td><td>เหรียญ ภารกิจ ตู้สกินน้องกล้า</td><td>FR-5 (เสริม)</td></tr>
+<tr><td class="mono">whatsnew.tsx</td><td>/whatsnew</td><td>มีอะไรใหม่</td><td>-</td></tr>
+</tbody></table>
+<ul>
+<li>โฟลเดอร์ในวงเล็บ เช่น <span class="mono">(tabs)</span> เป็น "กลุ่ม" ไม่โผล่ในที่อยู่ ใช้จัดหน้าที่อยู่ใต้แถบเมนูเดียวกัน</li>
+<li><span class="mono">index.tsx</span> คือหน้าแรกของโฟลเดอร์นั้น (ที่อยู่ <span class="mono">/</span>)</li>
+<li>ไฟล์ <span class="mono">_layout.tsx</span> ไม่ใช่หน้าจอ แต่เป็น "กรอบ" ที่ครอบหน้าจอในโฟลเดอร์เดียวกัน</li>
+</ul>
+<h3>เปลี่ยนหน้าในโค้ด</h3>
+<table><thead><tr><th>โค้ด</th><th>ผล</th></tr></thead><tbody>
+<tr><td class="mono">router.push('/scan')</td><td>เปิดหน้าสแกนซ้อนขึ้นมา (กดกลับได้)</td></tr>
+<tr><td class="mono">router.push({ pathname: '/transaction', params: { kind: 'income' } })</td><td>เปิดหน้าจดรายการ พร้อมส่งค่า kind=income (ปุ่ม "เพิ่มเงินเข้า")</td></tr>
+<tr><td class="mono">useLocalSearchParams()</td><td>หน้าปลายทางอ่านค่าที่ส่งมา (<code>src/app/transaction.tsx:28</code>)</td></tr>
+<tr><td class="mono">router.navigate('/runway')</td><td>ไปที่แท็บเงินพอถึง</td></tr>
+<tr><td class="mono">goBack()</td><td>กลับหน้าก่อน ถ้าไม่มี (เช่น เปิดลิงก์ตรงบนเว็บ) กลับหน้าหลัก (<code>src/ui/nav.ts</code>)</td></tr>
+</tbody></table>
+
+<h2>อ่านโค้ด: _layout.tsx โครงของทั้งแอป</h2>
+<p>ไฟล์นี้ทำงานเป็นไฟล์แรกเมื่อเปิดแอป ทุกหน้าจออยู่ข้างในมัน</p>
+<x-code src="src/app/_layout.tsx" lines="1-51"></x-code>
+<table class="walk"><thead><tr><th>บรรทัด</th><th>ความหมาย</th></tr></thead><tbody>
+<tr><td>1–22</td><td>นำเครื่องมือมาใช้: โหลดฟอนต์, Stack (การซ้อนหน้า), หน้าจอเปิดแอป, แถบสถานะ, ฟอนต์ Anuphan 4 น้ำหนัก และ Noto Serif Thai 2 น้ำหนัก, Provider ต่าง ๆ ของเรา</td></tr>
+<tr><td>24–25</td><td>สั่งให้หน้าจอเปิดแอป (splash สีเขียวรูปน้องกล้า) ค้างไว้ก่อน จนกว่าแอนิเมชันเปิดแอปจะมารับช่วง <span class="mono">.catch(() =&gt; {})</span> = ถ้าทำไม่ได้ก็ไม่เป็นไร</td></tr>
+<tr><td>27</td><td><span class="mono">export default</span> = นี่คือ component หลักของไฟล์ Expo Router จะเรียกตัวนี้</td></tr>
+<tr><td>28–35</td><td>โหลดฟอนต์ทั้ง 6 ตัว ได้ผลว่าโหลดเสร็จหรือยัง (<span class="mono">fontsLoaded</span>) หรือมี error ไหม</td></tr>
+<tr><td>36–50</td><td>ซ้อน Provider เป็นชั้น ๆ เหมือนตุ๊กตาแม่ลูกดก ชั้นนอกสุดถึงชั้นในสุด: ขอบจอปลอดภัย → กรอบเว็บ → ระบบพลุฉลอง → <b>ข้อมูลกลาง (AppProvider)</b> → ข้อความแจ้งเตือน (toast) → <b>สแกนสลิปอัตโนมัติ (FR-4)</b> → ตัวเปลี่ยนหน้า ชั้นในใช้ของชั้นนอกได้ เช่น AutoScanProvider ใช้ข้อมูลจาก AppProvider ได้เพราะอยู่ข้างใน</td></tr>
+<tr><td>43</td><td>ส่ง <span class="mono">ready</span> = ฟอนต์โหลดเสร็จ หรือโหลดพังก็ให้ไปต่อ (ไม่ค้างหน้าขาวตลอดไป)</td></tr>
+</tbody></table>
+<x-code src="src/app/_layout.tsx" lines="53-73"></x-code>
+<table class="walk"><thead><tr><th>บรรทัด</th><th>ความหมาย</th></tr></thead><tbody>
+<tr><td>53–54</td><td><span class="mono">WebFrame</span>: บนคอม แสดงแอปกว้างเท่ามือถือไว้ตรงกลางจอ</td></tr>
+<tr><td>56</td><td>ถ้าไม่ใช่เว็บ (<span class="mono">Platform.OS !== 'web'</span>) ไม่ต้องทำอะไร คืนของข้างในตรง ๆ (<span class="mono">&lt;&gt;...&lt;/&gt;</span> คือกล่องที่มองไม่เห็น)</td></tr>
+<tr><td>58</td><td>พื้นหลังเต็มจอ จัดกลาง สีเข้มขึ้นเล็กน้อยในโหมดมืด</td></tr>
+<tr><td>59–68</td><td>กล่องแอป กว้างสูงสุด 440 จุด มีเงารอบ ๆ ให้ดูเหมือนมือถือวางบนโต๊ะ</td></tr>
+</tbody></table>
+<x-code src="src/app/_layout.tsx" lines="75-126"></x-code>
+<table class="walk"><thead><tr><th>บรรทัด</th><th>ความหมาย</th></tr></thead><tbody>
+<tr><td>75–78</td><td><span class="mono">Navigator</span> ดูสถานะจากข้อมูลกลาง: เข้าสู่ระบบหรือยัง มี Repo ไหม โปรไฟล์ตั้งค่าเสร็จไหม และยังโหลดอยู่ไหม</td></tr>
+<tr><td>79–80</td><td>จำว่าแอนิเมชันเปิดแอปจบหรือยัง</td></tr>
+<tr><td>82–84</td><td>คำนวณ 3 สถานะ: <b>signedIn</b> (เข้าสู่ระบบแล้ว), <b>needsOnboarding</b> (เข้าแล้วแต่ยังไม่ตั้งค่าเงิน), <b>inApp</b> (เข้าแล้วและตั้งค่าแล้ว ใช้แอปได้เต็มที่)</td></tr>
+<tr><td>88</td><td>สีไอคอนแถบสถานะด้านบน (สว่างบนพื้นเข้ม)</td></tr>
+<tr><td>89</td><td>ถ้ายังโหลดอยู่ ยังไม่แสดงหน้าจอ</td></tr>
+<tr><td>90–91</td><td>หลังแอนิเมชันจบ แสดงหน้าต่างแจ้งเรื่องบัญชี และแถบ "มีอัปเดตใหม่"</td></tr>
+<tr><td>92</td><td>แอนิเมชันเปิดแอป (น้องกล้าโผล่) ซ้อนอยู่บนสุดจนจบ</td></tr>
+<tr><td>97–102</td><td><span class="mono">Stack</span> = หน้าจอซ้อนกันเป็นกอง หน้าใหม่ทับหน้าเก่า กดกลับก็หยิบหน้าบนออก ตั้งค่าทุกหน้า: ไม่มีหัวหน้าสำเร็จรูป, พื้นตามธีม, เลื่อนเข้ามาจากขวา</td></tr>
+<tr><td>103–105</td><td><b>Stack.Protected</b> = ประตูมียาม: หน้า welcome เข้าได้เฉพาะตอน <b>ยังไม่</b> เข้าสู่ระบบ</td></tr>
+<tr><td>106–108</td><td>หน้า onboarding เข้าได้เฉพาะตอนเข้าแล้วแต่ยังไม่ตั้งค่าเงิน</td></tr>
+<tr><td>109–122</td><td>หน้าในแอปทั้งหมดเข้าได้เฉพาะตอนพร้อมใช้งาน บางหน้าแสดงแบบ modal (เลื่อนขึ้นจากล่าง) เช่น จดรายการ พูดจด, บางหน้าเต็มจอ เช่น สแกนสลิป สรุปเดือน</td></tr>
+</tbody></table>
+<x-box kind="tip" title="ผลของ Stack.Protected">
+<p>ผู้ใช้ไม่ต้องกดอะไร พอสมัครเสร็จ สถานะเปลี่ยนเป็น needsOnboarding ยามจะปิดประตู welcome และเปิดประตู onboarding แอปจึงพาไปหน้าตั้งค่าเงินเอง พอตั้งค่าเสร็จก็ไปหน้าหลักเอง และกดย้อนกลับก็ไม่เจอหน้าสมัครอีก (ตรงกับ acceptance criteria ในเอกสาร Traceability)</p>
+</x-box>
+
+<h2>แถบเมนูล่าง: (tabs)/_layout.tsx</h2>
+<x-code src="src/app/(tabs)/_layout.tsx" lines="23-28"></x-code>
+<p>บรรทัด 23–28: ตารางของ 4 แท็บ แต่ละแท็บมีชื่อไทย ไอคอนตอนไม่ได้เลือก และไอคอนตอนเลือก (แบบทึบ) ชื่อช่อง (index, transactions, runway, coach) ตรงกับชื่อไฟล์ในโฟลเดอร์ (tabs)</p>
+<x-code src="src/app/(tabs)/_layout.tsx" lines="134-186"></x-code>
+<table class="walk"><thead><tr><th>บรรทัด</th><th>ความหมาย</th></tr></thead><tbody>
+<tr><td>134</td><td>วาดแท็บครึ่งแรก (หน้าหลัก, รายการ) ทางซ้าย</td></tr>
+<tr><td>135–169</td><td>ปุ่มทองตรงกลาง: วงกลม 60 จุด ลอยขึ้นมา 26 จุด (<span class="mono">marginTop: -26</span>) มีวงแหวนกระเพื่อม (<span class="mono">PulseRing</span>) 3 รอบตอนเปิดแอป และกระเพื่อมตลอดระหว่างสแกนอัตโนมัติ</td></tr>
+<tr><td>144–147</td><td>แตะแล้วมือถือสั่นแรงปานกลาง และเปิดหน้าสแกน</td></tr>
+<tr><td>170</td><td>วาดแท็บครึ่งหลัง (เงินพอถึง, โค้ช) ทางขวา</td></tr>
+<tr><td>175–186</td><td>component หลัก: ใช้แถบเมนูที่ทีมออกแบบเอง (<span class="mono">tabBar=</span>) แทนของสำเร็จรูป และประกาศ 4 แท็บ <span class="mono">useKlaSync()</span> บันทึกว่าวันนี้เปิดแอป (ใช้นับภารกิจ "เปิดแอป 30 วันติด")</td></tr>
+</tbody></table>
+
+<h2>โค้ดที่ต่างกันระหว่างมือถือกับเว็บ</h2>
+<p>บางอย่างทำได้ต่างกัน เช่น มือถือเก็บข้อมูลด้วย SQLite แต่เว็บใช้ localStorage ของเบราว์เซอร์ ทีมเราแก้ด้วย <b>ไฟล์คู่</b>: ตั้งชื่อ <span class="mono">storage.ts</span> สำหรับมือถือ และ <span class="mono">storage.web.ts</span> สำหรับเว็บ ตอน build ระบบ (Metro bundler) เลือกไฟล์ให้เองตามแพลตฟอร์ม ที่เหลือของแอป import แค่ <span class="mono">'./storage'</span></p>
+<div class="cols">
+<div><x-code src="src/data/storage.ts" lines="1-12"></x-code></div>
+<div><x-code src="src/data/storage.web.ts" lines="1-24"></x-code></div>
+</div>
+<p>ทั้งสองไฟล์มี <span class="mono">getItem</span>, <span class="mono">setItem</span>, <span class="mono">removeItem</span> หน้าตาเดียวกัน ฉบับเว็บห่อด้วย try/catch เพราะเบราว์เซอร์โหมดส่วนตัวอาจห้ามเก็บข้อมูล คู่ไฟล์แบบนี้มีทั้งหมด 5 คู่:</p>
+<table><thead><tr><th>ไฟล์</th><th>มือถือ</th><th>เว็บ</th></tr></thead><tbody>
+<tr><td class="mono">data/storage</td><td>SQLite (expo-sqlite)</td><td>localStorage</td></tr>
+<tr><td class="mono">data/sessionStorageSetup</td><td>ที่เก็บการเข้าสู่ระบบของ Supabase บนมือถือ</td><td>ของเบราว์เซอร์</td></tr>
+<tr><td class="mono">services/gallery</td><td>อ่านแกลเลอรีทั้งหมด (expo-media-library)</td><td>ให้ผู้ใช้เลือกรูปเอง (เบราว์เซอร์ไม่อนุญาตให้เว็บเปิดแกลเลอรี)</td></tr>
+<tr><td class="mono">services/speech</td><td>ตัวฟังเสียงของมือถือ (Google/Apple)</td><td>Web Speech API ของเบราว์เซอร์</td></tr>
+<tr><td class="mono">services/tts</td><td>เสียงอ่านของมือถือ (expo-speech)</td><td>speechSynthesis ของเบราว์เซอร์</td></tr>
+</tbody></table>
+<p>ส่วนที่ต่างเล็กน้อยใช้ <span class="mono">Platform.OS</span> ในไฟล์เดียวกัน เช่น หน้าจดรายการบนเว็บให้พิมพ์วันที่ แต่บน Android เปิดปฏิทินของเครื่อง (<code>src/app/transaction.tsx:288</code>)</p>
+<h3>Native module แบบไม่บังคับ</h3>
+<x-code src="src/services/speech.ts" lines="1-24"></x-code>
+<p>บรรทัด 24 ใช้ <span class="mono">requireOptionalNativeModule</span> = "ขอโมดูลฟังเสียง ถ้าไม่มีก็ได้ null ไม่ต้อง crash" เพราะแอปที่ลงไว้ก่อนเพิ่มฟีเจอร์พูดจดไม่มีโมดูลนี้ แต่ยังได้รับโค้ดใหม่ผ่าน EAS Update (หัวข้อถัดไป) ถ้าเรียกแบบบังคับ แอปเก่าจะเด้งปิด แบบนี้แอปเก่าแค่แสดงช่องพิมพ์แทนไมค์</p>
+
+<h2>จากโค้ด สู่เว็บและแอปที่ผู้ใช้ลง</h2>
+<div class="flow">
+<div class="st dark"><b>โค้ดใน src/ (TypeScript + React Native)</b></div>
+<div class="ar">↓</div>
+<div class="cols3" style="margin:0">
+<div class="st"><b>เว็บ</b><small><span class="mono">expo export --platform web</span> รวมโค้ดเป็นไฟล์ JavaScript + HTML ในโฟลเดอร์ dist แล้ววางบน GitHub Pages</small></div>
+<div class="st"><b>APK (Android)</b><small><span class="mono">expo prebuild</span> สร้างโปรเจกต์ Android จาก app.json แล้ว Gradle build เป็นไฟล์ .apk</small></div>
+<div class="st"><b>EAS Update</b><small>ส่งเฉพาะโค้ด JavaScript ใหม่ แอปที่ลงแล้วโหลดเองตอนเปิดแอป ใช้ตอนเปิดครั้งถัดไป</small></div>
+</div>
+</div>
+<p>ทั้ง 3 ทางทำอัตโนมัติทุกครั้งที่ push โค้ดขึ้น branch main บน GitHub (บท A13) ไฟล์ตั้งค่าของแอปคือ <span class="mono">app.json</span> ส่วนสำคัญ:</p>
+<table><thead><tr><th>ค่าใน app.json</th><th>ความหมาย</th></tr></thead><tbody>
+<tr><td class="mono">"name": "MindPay", "slug": "mindpay"</td><td>ชื่อแอปที่เห็นใต้ไอคอน</td></tr>
+<tr><td class="mono">"version": "1.0.0" + "runtimeVersion": {"policy": "appVersion"}</td><td>EAS Update ส่งโค้ดใหม่ให้เฉพาะแอปที่เวอร์ชันตรงกัน ถ้าเพิ่ม native module ใหม่ ต้องเพิ่มเวอร์ชัน แล้วลง APK ใหม่</td></tr>
+<tr><td class="mono">"android.package"</td><td>รหัสแอป <span class="mono">com.socratesandskeletons.mindpay</span></td></tr>
+<tr><td class="mono">"blockedPermissions"</td><td>บล็อกสิทธิ์กล้อง วิดีโอ เสียงในเครื่อง ที่ไม่ได้ใช้ (ความเป็นส่วนตัว)</td></tr>
+<tr><td class="mono">"plugins"</td><td>ตั้งค่า native ของโมดูล เช่น ข้อความขอสิทธิ์แกลเลอรี/ไมโครโฟนเป็นภาษาไทย</td></tr>
+<tr><td class="mono">"scheme": "mindpay"</td><td>ลิงก์ที่ขึ้นต้นด้วย mindpay:// เปิดแอปได้ (ใช้กับลิงก์ยืนยันอีเมล)</td></tr>
+<tr><td class="mono">"updates"</td><td>ที่อยู่ของเซิร์ฟเวอร์ EAS Update และให้เช็กอัปเดตทุกครั้งที่เปิดแอป</td></tr>
+<tr><td class="mono">"web": {"output": "single"}</td><td>เว็บเป็นหน้าเดียว (single page app) ให้ JavaScript เปลี่ยนหน้าเอง</td></tr>
+</tbody></table>
+<p>ไฟล์ <span class="mono">app.config.js</span> เพิ่มค่าเฉพาะตอน build เว็บ: เว็บอยู่ที่ <span class="mono">/Socrates-and-Skeletons-/</span> บน GitHub Pages จึงต้องตั้ง baseUrl แต่ห้ามใส่ค่านี้ในแอปมือถือ (แอปจะหาฟอนต์และรูปผิดที่)</p>
+</x-ch>

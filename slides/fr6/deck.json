@@ -1,0 +1,27 @@
+{
+  "v": 4,
+  "createdOnFiles": { "v": 1, "at": "2026-10-08T20:55:00Z" },
+  "lists": "css",
+  "title": "FR-6 Money Runway",
+  "cover": "cover",
+  "order": [
+    "cover", "agenda", "problem", "idea",
+    "requirement", "ingredients", "average", "newuser", "formula", "rounddown", "statuses",
+    "home", "runwaytab", "timeline", "slider", "purchase", "floorjar", "states",
+    "dataflow", "code", "edgecases",
+    "testing", "decisions", "limits", "summary"
+  ],
+  "sections": {
+    "s1": { "description": "เปิดเรื่อง: FR-6 แก้ปัญหาอะไร และแนวคิดแปลงเงินให้เป็นเวลา", "start": "cover" },
+    "s2": { "description": "สูตร: นิยามที่ทดสอบได้ วัตถุดิบ 4 อย่าง ค่าเฉลี่ย 7 วัน และการคำนวณทีละขั้น", "start": "requirement" },
+    "s3": { "description": "หน้าจอ: ผู้ใช้เห็นอะไร และลองคิดล่วงหน้าได้ยังไง", "start": "home" },
+    "s4": { "description": "เบื้องหลัง: ข้อมูลไหลยังไง โค้ดหัวใจ และกรณีพิเศษ", "start": "dataflow" },
+    "s5": { "description": "คุณภาพ: การทดสอบ เหตุผลการออกแบบ ข้อจำกัด และสรุป", "start": "testing" }
+  },
+  "faces": {
+    "anuphan": { "family": "Anuphan", "href": "https://fonts.googleapis.com/css2?family=Anuphan:wght@300..700&display=swap" },
+    "noto-serif-thai": { "family": "Noto Serif Thai", "href": "https://fonts.googleapis.com/css2?family=Noto+Serif+Thai:wght@400..800&display=swap" },
+    "jetbrains-mono": { "family": "JetBrains Mono", "href": "https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400..700&display=swap" }
+  },
+  "designSystems": []
+}

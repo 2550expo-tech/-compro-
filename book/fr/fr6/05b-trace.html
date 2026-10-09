@@ -1,0 +1,117 @@
+<x-ch title="ไล่โค้ดแบบคอมพิวเตอร์: ค่าของตัวแปรทุกบรรทัด" lead="ทำตัวเป็นคอมพิวเตอร์ รันฟังก์ชันทีละบรรทัด แล้วจดค่าที่เกิดขึ้นจริง (ทุกค่าในบทนี้ได้จากการรันโค้ดจริง วันนี้ = 8 ต.ค. 2569)">
+<p>บทที่แล้วอธิบายว่าแต่ละบรรทัด "ทำอะไร" บทนี้ตอบอีกคำถามหนึ่งที่สำคัญพอกัน: <b>"ตอนรันจริง ตัวแปรแต่ละตัวมีค่าเท่าไร"</b> โปรแกรมเมอร์เรียกวิธีนี้ว่า <b>trace</b> (ไล่รอย) ถ้าไล่ตามตารางในบทนี้ได้ด้วยดินสอกับเครื่องคิดเลข แปลว่าเข้าใจ FR-6 ลึกพอจะตอบทุกคำถามของอาจารย์แล้ว</p>
+<x-box kind="tip" title="วิธีอ่านตาราง trace">
+<p>คอลัมน์ <b>บรรทัด</b> = เลขบรรทัดในไฟล์ <code>src/domain/runway.ts</code> · <b>โค้ด</b> = สิ่งที่บรรทัดนั้นคำนวณ (ย่อ) · <b>ค่าที่ได้</b> = ค่าของตัวแปรหลังบรรทัดนั้นทำงานเสร็จ · เงินในโค้ดเป็น <b>สตางค์</b> เสมอ (100 สตางค์ = 1 บาท) เช่น 350000 = ฿3,500</p>
+</x-box>
+
+<h2>ฟังก์ชันที่ 1: averageDailyExpense กับรายการ 9 รายการ</h2>
+<p>ข้อมูลที่ส่งเข้าไป (ตั้งใจใส่ "ตัวหลอก" 3 แบบ เพื่อดูว่าโค้ดกรองถูกไหม):</p>
+<table><thead><tr><th>#</th><th>วัน (เวลาไทย)</th><th>ประเภท</th><th class="n">จำนวน</th><th>สถานะ</th><th>หมายเหตุ</th></tr></thead><tbody>
+<tr><td>1</td><td>1 ก.ย.</td><td>รายรับ</td><td class="n">฿5,000</td><td>ยืนยันแล้ว</td><td>รายการแรกสุด (วันแรกที่ใช้แอป)</td></tr>
+<tr><td>2</td><td>1 ต.ค.</td><td>รายจ่าย</td><td class="n">฿999</td><td>ยืนยันแล้ว</td><td><b>ตัวหลอก</b>: อยู่นอกหน้าต่าง 7 วัน</td></tr>
+<tr><td>3</td><td>2 ต.ค.</td><td>รายจ่าย</td><td class="n">฿120</td><td>ยืนยันแล้ว</td><td></td></tr>
+<tr><td>4</td><td>4 ต.ค.</td><td>รายจ่าย</td><td class="n">฿85</td><td>ยืนยันแล้ว</td><td></td></tr>
+<tr><td>5</td><td>5 ต.ค.</td><td>รายจ่าย</td><td class="n">฿300</td><td>ยืนยันแล้ว</td><td></td></tr>
+<tr><td>6</td><td>6 ต.ค.</td><td>รายรับ</td><td class="n">฿1,000</td><td>ยืนยันแล้ว</td><td><b>ตัวหลอก</b>: รายรับไม่นับในค่าเฉลี่ย</td></tr>
+<tr><td>7</td><td>7 ต.ค.</td><td>รายจ่าย</td><td class="n">฿450</td><td>ยืนยันแล้ว</td><td></td></tr>
+<tr><td>8</td><td>8 ต.ค.</td><td>รายจ่าย</td><td class="n">฿60</td><td>ยืนยันแล้ว</td><td></td></tr>
+<tr><td>9</td><td>8 ต.ค.</td><td>รายจ่าย</td><td class="n">฿5,000</td><td>แบบร่าง</td><td><b>ตัวหลอก</b>: สลิปที่ยังไม่ยืนยัน</td></tr>
+</tbody></table>
+<x-code src="src/domain/runway.ts" lines="36-55"></x-code>
+<table class="walk"><thead><tr><th>บรรทัด</th><th>โค้ด</th><th>ค่าที่ได้</th><th>อธิบาย</th></tr></thead><tbody>
+<tr><td>37</td><td class="mono">today = bkkDayKey(now)</td><td class="mono">"2026-10-08"</td><td>วันนี้ตามเวลาไทย</td></tr>
+<tr><td>38</td><td class="mono">windowStart = addDays(today, −6)</td><td class="mono">"2026-10-02"</td><td>หน้าต่างคือ 2–8 ต.ค. (7 วัน)</td></tr>
+<tr><td>39</td><td class="mono">confirmed = confirmedOnly(txs)</td><td>8 รายการ (จาก 9)</td><td>รายการที่ 9 (แบบร่าง ฿5,000) <b>หลุดตรงนี้</b></td></tr>
+<tr><td>40</td><td class="mono">confirmed.length === 0 ?</td><td>false</td><td>มีรายการ จึงไปต่อ</td></tr>
+<tr><td>42</td><td class="mono">firstDay = …sort()[0]</td><td class="mono">"2026-09-01"</td><td>รายการแรกสุดคือรายรับ 1 ก.ย. (นับรายรับด้วย เพราะหา "วันแรกที่ใช้แอป")</td></tr>
+<tr><td>43</td><td class="mono">trackedDays = max(1, daysBetween + 1)</td><td>37 + 1 = <b>38</b></td><td>ใช้แอปมาแล้ว 38 วัน (นับทั้ง 1 ก.ย. และ 8 ต.ค.)</td></tr>
+<tr><td>44</td><td class="mono">daysCounted = min(7, 38)</td><td><b>7</b></td><td>ไม่ใช่ผู้ใช้ใหม่ จึงหาร 7</td></tr>
+<tr><td>47</td><td class="mono">.filter(kind === 'expense')</td><td>6 รายการ: 1, 2, 4, 5, 7, 8 ต.ค.</td><td>รายรับ 2 รายการ (#1, #6) <b>หลุดตรงนี้</b></td></tr>
+<tr><td>48–51</td><td class="mono">.filter(windowStart ≤ d ≤ today)</td><td>5 รายการ: 2, 4, 5, 7, 8 ต.ค.</td><td>฿999 ของ 1 ต.ค. <b>หลุดตรงนี้</b> ("2026-10-01" &lt; "2026-10-02")</td></tr>
+<tr><td>52</td><td class="mono">.reduce((s, t) =&gt; s + t.amountSatang, 0)</td><td class="mono">0 → 12000 → 20500 → 50500 → 95500 → <b>101500</b></td><td>บวกทีละรายการ เริ่มจาก 0</td></tr>
+<tr><td>54</td><td class="mono">Math.round(101500 / 7)</td><td class="mono"><b>14500</b> (= ฿145)</td><td>101500 ÷ 7 = 14500 พอดี จึงไม่ต้องปัด</td></tr>
+</tbody></table>
+<x-box kind="note" title="ผลจริงที่ฟังก์ชันคืนมา">
+<p><span class="mono">{"totalSatang":101500,"daysCounted":7,"averageSatang":14500}</span> ตรงกับที่ไล่ด้วยมือทุกช่อง ตัวหลอกทั้ง 3 ตัวถูกกรองออกคนละบรรทัด: แบบร่างหลุดที่บรรทัด 39 รายรับหลุดที่บรรทัด 47 และรายการเก่าหลุดที่บรรทัด 48–51</p>
+</x-box>
+
+<h2>ฟังก์ชันที่ 2: computeRunway ทีละบรรทัด (ยอด ฿3,500 สำรอง ฿500 เฉลี่ย ฿145)</h2>
+<x-code src="src/domain/runway.ts" lines="72-94"></x-code>
+<table class="walk"><thead><tr><th>บรรทัด</th><th>โค้ด</th><th>ค่าที่ได้</th><th>อธิบาย</th></tr></thead><tbody>
+<tr><td>78</td><td class="mono">{ balanceSatang, floorSatang, averageSatang } = params</td><td class="mono">350000, 50000, 14500</td><td>แกะค่าจากอ็อบเจกต์ที่ส่งเข้ามา</td></tr>
+<tr><td>79</td><td class="mono">today = bkkDayKey(params.now ?? new Date())</td><td class="mono">"2026-10-08"</td><td>เทสต์ส่ง now มา จึงไม่ใช้เวลาจริง</td></tr>
+<tr><td>80</td><td class="mono">spendable = 350000 − 50000</td><td class="mono"><b>300000</b></td><td>เงินที่ใช้ได้จริง ฿3,000</td></tr>
+<tr><td>81</td><td class="mono">base = { …, spendableSatang: max(0, 300000) }</td><td class="mono">{350000, 50000, 14500, 300000}</td><td>ส่วนที่ผลทุกแบบมีเหมือนกัน</td></tr>
+<tr><td>83</td><td class="mono">300000 &lt;= 0 ?</td><td>false</td><td>ไม่ใช่ below_floor ข้ามบรรทัด 84</td></tr>
+<tr><td>86</td><td class="mono">14500 &lt;= 0 ?</td><td>false</td><td>ไม่ใช่ no_spending ข้ามบรรทัด 87</td></tr>
+<tr><td>89</td><td class="mono">raw = Math.floor(300000 / 14500)</td><td>floor(20.6896…) = <b>20</b></td><td>ปัดลง ทิ้ง 0.69</td></tr>
+<tr><td>90</td><td class="mono">capped = 20 &gt; 365</td><td>false</td><td>ไม่ถึงเพดาน</td></tr>
+<tr><td>91</td><td class="mono">days = capped ? 365 : raw</td><td><b>20</b></td><td>ใช้ค่า raw</td></tr>
+<tr><td>92</td><td class="mono">20 &lt; 7 ? … : 20 &lt; 14 ? … : 'healthy'</td><td class="mono"><b>'healthy'</b></td><td>ไม่น้อยกว่า 7 และไม่น้อยกว่า 14</td></tr>
+<tr><td>93</td><td class="mono">depletionDay = addDays("2026-10-08", 20)</td><td class="mono"><b>"2026-10-28"</b></td><td>คืนผลทั้งหมด</td></tr>
+</tbody></table>
+<h3>ทางที่โค้ดเดิน ในสถานการณ์อื่น (ผลจริง)</h3>
+<table><thead><tr><th>สถานการณ์</th><th>spendable (บ.80)</th><th>ออกที่บรรทัด</th><th>ผลลัพธ์</th></tr></thead><tbody>
+<tr><td>ยอด ฿500 · สำรอง ฿500</td><td class="mono">0</td><td>84 (ด่าน 1)</td><td>below_floor · 0 วัน · วันที่ = วันนี้ (8 ต.ค.)</td></tr>
+<tr><td>ยอด ฿3,500 · ค่าเฉลี่ย ฿0</td><td class="mono">300000</td><td>87 (ด่าน 2)</td><td>no_spending · days = null · วันที่ = null</td></tr>
+<tr><td>ยอด ฿600 · สำรอง ฿500 · เฉลี่ย ฿145</td><td class="mono">10000</td><td>93</td><td>floor(0.69) = 0 วัน · <b>critical</b> (ยังเหนือเส้น จึงไม่ใช่ below_floor)</td></tr>
+<tr><td>ยอด ฿100,000 · เฉลี่ย ฿10</td><td class="mono">9950000</td><td>93</td><td>raw = 9,950 → capped = true → 365 วัน · ถึง 8 ต.ค. 2570</td></tr>
+</tbody></table>
+
+<h2>ฟังก์ชันที่ 3 และ 4: safeDailySpend กับ endOfMonthDay</h2>
+<x-code src="src/domain/runway.ts" lines="100-117"></x-code>
+<table class="walk"><thead><tr><th>บรรทัด</th><th>โค้ด</th><th>ค่าที่ได้</th><th>อธิบาย</th></tr></thead><tbody>
+<tr><td>115</td><td class="mono">[y, m] = "2026-10-08".split('-').map(Number)</td><td class="mono">y = 2026, m = 10</td><td>"2026-10-08" → ["2026","10","08"] → [2026, 10, 8] เอาแค่ 2 ตัวแรก</td></tr>
+<tr><td>116</td><td class="mono">Date.UTC(2026, 10, 0) → toISOString().slice(0, 10)</td><td class="mono">"2026-10-31"</td><td>เดือน 10 ของ JavaScript คือพฤศจิกายน และวันที่ 0 = วันสุดท้ายของเดือนก่อน</td></tr>
+<tr><td>106</td><td class="mono">today</td><td class="mono">"2026-10-08"</td><td></td></tr>
+<tr><td>107</td><td class="mono">days = max(1, daysBetween(today, "2026-10-31") + 1)</td><td>23 + 1 = <b>24</b></td><td>8 ถึง 31 ต.ค. นับวันนี้ด้วย</td></tr>
+<tr><td>108</td><td class="mono">spendable = 350000 − 50000</td><td class="mono">300000</td><td></td></tr>
+<tr><td>109</td><td class="mono">300000 &lt;= 0 ?</td><td>false</td><td></td></tr>
+<tr><td>110</td><td class="mono">Math.floor(300000 / 24 / 100) * 100</td><td>floor(125) × 100 = <b>12500</b></td><td>฿125 ต่อวัน (ปัดลงเป็นบาทเต็ม)</td></tr>
+</tbody></table>
+<p>ทดสอบ endOfMonthDay กับเดือนอื่นจริง: ก.พ. 2028 (ปีอธิกสุรทิน) → <span class="mono">"2028-02-29"</span> · ก.พ. 2027 → <span class="mono">"2027-02-28"</span> · 31 ธ.ค. 2026 เวลา 23:30 น. ไทย → <span class="mono">"2026-12-31"</span> ถูกทุกกรณีโดยไม่ต้องจำว่าเดือนไหนมีกี่วัน</p>
+
+<h2>ฟังก์ชันที่ 5 และ 6: เช็กก่อนจ่าย และลองปรับ</h2>
+<x-code src="src/domain/runway.ts" lines="119-141"></x-code>
+<table class="walk"><thead><tr><th>บรรทัด</th><th>โค้ด</th><th>ค่าที่ได้</th><th>อธิบาย</th></tr></thead><tbody>
+<tr><td>124–129</td><td class="mono">computeRunway({ balance: 350000 − 60000, … })</td><td>290000 → spendable 240000 → 16.55 → <b>16 วัน</b> ถึง 24 ต.ค.</td><td>ซื้อของ ฿600</td></tr>
+<tr><td>124–129</td><td class="mono">computeRunway({ balance: 350000 − 400000, … })</td><td>−50000 → spendable −100000 → <b>below_floor</b></td><td>ซื้อของ ฿4,000 (แพงกว่าเงินที่ใช้ได้)</td></tr>
+<tr><td>134</td><td class="mono">factor = min(100, max(0, 30)) / 100</td><td class="mono">0.3</td><td>ลด 30%</td></tr>
+<tr><td>138</td><td class="mono">Math.round(14500 × (1 − 0.3))</td><td class="mono">10150</td><td>ค่าเฉลี่ยใหม่ ฿101.50</td></tr>
+<tr><td>135–140</td><td class="mono">computeRunway({ average: 10150 })</td><td>300000 ÷ 10150 = 29.56 → <b>29 วัน</b> ถึง 6 พ.ย.</td><td>เพิ่มจาก 20 วัน 9 วัน</td></tr>
+<tr><td>134</td><td class="mono">min(100, max(0, 150)) / 100</td><td class="mono">1</td><td>ถ้ามีใครส่ง 150% มา ถูกบีบเหลือ 100%</td></tr>
+<tr><td>138</td><td class="mono">Math.round(14500 × 0)</td><td class="mono">0</td><td>ค่าเฉลี่ย 0 → computeRunway ตอบ no_spending (ไม่พัง)</td></tr>
+</tbody></table>
+<table><thead><tr><th>ลองปรับ (ผลจริง)</th><th class="n">0%</th><th class="n">10%</th><th class="n">20%</th><th class="n">30%</th><th class="n">40%</th><th class="n">50%</th></tr></thead><tbody>
+<tr><td>ค่าเฉลี่ยใหม่ (สตางค์)</td><td class="n">14500</td><td class="n">13050</td><td class="n">11600</td><td class="n">10150</td><td class="n">8700</td><td class="n">7250</td></tr>
+<tr><td>จำนวนวัน</td><td class="n">20</td><td class="n">22</td><td class="n">25</td><td class="n">29</td><td class="n">34</td><td class="n">41</td></tr>
+<tr><td>ถึงวันที่</td><td class="n">28 ต.ค.</td><td class="n">30 ต.ค.</td><td class="n">2 พ.ย.</td><td class="n">6 พ.ย.</td><td class="n">11 พ.ย.</td><td class="n">18 พ.ย.</td></tr>
+</tbody></table>
+
+<h2>ลองรันเองใน VS Code (5 นาที)</h2>
+<p>วิธีที่ดีที่สุดในการเข้าใจโค้ดคือ <b>เปลี่ยนตัวเลขแล้วดูผล</b> สร้างไฟล์ทดลองนี้ในโฟลเดอร์ <code>src/domain/__tests__/</code> (ชื่ออะไรก็ได้ที่ลงท้าย .test.ts)</p>
+<x-snip lang="ts" title="src/domain/__tests__/my-runway.test.ts (ไฟล์ทดลอง ไม่ต้อง commit)">
+import { describe, expect, it } from 'vitest';
+import { averageDailyExpense, computeRunway } from '../runway';
+
+describe('ลองของฉัน', () => {
+  it('ยอด 3,500 สำรอง 500 เฉลี่ย 145 ได้ 20 วัน', () => {
+    const r = computeRunway({
+      balanceSatang: 350_000,   // ลองเปลี่ยนเป็น 50_000 แล้วดู status
+      floorSatang: 50_000,
+      averageSatang: 14_500,    // ลองเปลี่ยนเป็น 0
+      now: new Date('2026-10-08T05:00:00Z'),
+    });
+    console.log(r);             // พิมพ์ผลทั้งหมดออกมาดู
+    expect(r.days).toBe(20);
+    expect(r.depletionDay).toBe('2026-10-28');
+  });
+});
+</x-snip>
+<ol>
+<li>เปิด Terminal ใน VS Code (<span class="key">Ctrl</span> + <span class="key">`</span>) แล้วพิมพ์ <span class="mono">npx vitest run src/domain/__tests__/my-runway.test.ts --reporter=verbose</span> (ต้องมี <span class="mono">--reporter=verbose</span> เพราะ Vitest รุ่นที่โปรเจกต์ใช้ซ่อนข้อความ console.log ของเทสต์ที่ผ่าน)</li>
+<li>จะเห็นอ็อบเจกต์ที่ <span class="mono">console.log</span> พิมพ์ออกมา (<span class="mono">days: 20</span>, <span class="mono">status: 'healthy'</span>, <span class="mono">depletionDay: '2026-10-28'</span>) ตามด้วย <b>✓</b> และ <b>Tests 1 passed (1)</b> ฉันรันจริงแล้วได้แบบนี้</li>
+<li>ลองเปลี่ยน <span class="mono">balanceSatang</span> เป็น <span class="mono">50_000</span> แล้วรันใหม่ เทสต์จะ <b>ไม่ผ่าน</b> พร้อมข้อความ <span class="mono">AssertionError: expected +0 to be 20</span> (ได้ 0 วันเพราะกลายเป็น below_floor แต่เทสต์คาดว่า 20) นี่คือวิธีที่เทสต์ช่วยจับความผิดพลาด</li>
+<li>ทดลองเสร็จแล้วลบไฟล์ทิ้ง (ไฟล์นี้มีไว้ฝึก ไม่ต้องเพิ่มเข้าโปรเจกต์)</li>
+</ol>
+</x-ch>

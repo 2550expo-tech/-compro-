@@ -1,0 +1,84 @@
+<x-ch title="อ่านโค้ด: ฟังเสียงบนมือถือ speech.ts ทั้งไฟล์" lead="96 บรรทัด ห่อโมดูล expo-speech-recognition ให้ใช้ง่ายและไม่ทำให้แอปพัง">
+<x-box kind="analogy" title="ใครแปลงเสียงเป็นข้อความ">
+<p>MindPay <b>ไม่ได้</b> แปลงเสียงเอง เราขอให้ "ล่าม" ที่มากับเครื่องทำ: Android ใช้บริการของ Google, iPhone ใช้ของ Apple, เว็บใช้ของเบราว์เซอร์ (Chrome/Edge/Safari) ไฟล์นี้คือ "คนประสานงานกับล่าม" บอกว่าฟังภาษาไทย ช่วยด้วยคำศัพท์เรื่องเงิน และส่งข้อความกลับมาให้หน้าจอ</p>
+</x-box>
+<h2>ส่วนที่ 1: หาโมดูลแบบไม่บังคับ (บรรทัด 1–33)</h2>
+<x-code src="src/services/speech.ts" lines="1-33"></x-code>
+<table class="walk"><thead><tr><th>บรรทัด</th><th>ความหมาย</th></tr></thead><tbody>
+<tr><td>1–3</td><td>คอมเมนต์: แปลงเสียงเป็นข้อความบนมือถือ ภาษาไทย ด้วยตัวแปลงของระบบ (Google บน Android, Apple บน iOS) ผ่าน expo-speech-recognition</td></tr>
+<tr><td>5–8</td><td><b>เหตุผลสำคัญ</b>: โมดูลถูกหา "แบบไม่บังคับ" เพราะแอปที่ build ก่อนเพิ่มโมดูลนี้ไม่มีมัน และการอัปเดตแบบ over-the-air (EAS Update ส่งแต่โค้ด JavaScript) ต้องไม่ทำให้แอปเหล่านั้นพัง — ในเครื่องแบบนั้นหน้าพูดจดจะเสนอให้พิมพ์แทน · เวอร์ชันเว็บอยู่ใน speech.web.ts</td></tr>
+<tr><td>10</td><td><span class="mono">requireOptionalNativeModule</span> จาก expo: หาโมดูลเนทีฟ ถ้าไม่มี คืน null (ไม่โยนข้อผิด)</td></tr>
+<tr><td>12–14</td><td>ชนิด Subscription: สิ่งที่ได้จากการสมัครฟังเหตุการณ์ มีคำสั่ง remove() ยกเลิก</td></tr>
+<tr><td>15–22</td><td>ชนิด NativeSpeech = คำสั่งที่โมดูลเนทีฟมี: เริ่ม, หยุด, ยกเลิก, ขอสิทธิ์ (ได้ granted และถามซ้ำได้ไหม), มีตัวแปลงไหม, ฟังเหตุการณ์</td></tr>
+<tr><td>24</td><td><b>Speech</b> = โมดูลชื่อ 'ExpoSpeechRecognition' หรือ null</td></tr>
+<tr><td>26–33</td><td><b>ListenHandlers</b> สัญญาที่หน้าจอส่งมา: onText (ข้อความที่ได้ยินถึงตอนนี้ และจบประโยคหรือยัง), onError (รหัสข้อผิด), onEnd (ฟังจบ), onVolume (ความดัง 0–1 สำหรับแอนิเมชัน ไม่บังคับ)</td></tr>
+</tbody></table>
+
+<h2>ส่วนที่ 2: คำช่วย มีตัวฟังไหม และขอสิทธิ์ (บรรทัด 35–55)</h2>
+<x-code src="src/services/speech.ts" lines="35-55"></x-code>
+<table class="walk"><thead><tr><th>บรรทัด</th><th>ความหมาย</th></tr></thead><tbody>
+<tr><td>35–36</td><td><b>HINTS</b> คำที่ช่วยตัวแปลงเสียงฟังเรื่องเงินแม่นขึ้น: บาท ค่ารถ ค่าข้าว ข้าว กาแฟ ชานม ค่าหอ ค่าเน็ต เงินเดือน ได้เงินจากแม่ เซเว่น</td></tr>
+<tr><td>38–44</td><td><b>speechAvailable</b>: มีโมดูล และระบบบอกว่ามีบริการแปลงเสียง ถ้าเกิดข้อผิดใด ๆ ตอบ false (ปลอดภัยไว้ก่อน)</td></tr>
+<tr><td>46–47</td><td><b>askMicPermission</b>: ไม่มีโมดูล → denied</td></tr>
+<tr><td>48–50</td><td>ขอสิทธิ์ (ระบบแสดงหน้าต่างถามผู้ใช้) ได้ → 'granted'</td></tr>
+<tr><td>51</td><td>ไม่ได้: ถ้าระบบบอกว่า "ถามซ้ำไม่ได้แล้ว" (ผู้ใช้เลือกไม่ต้องถามอีก) → 'blocked' (ต้องไปเปิดในการตั้งค่า) ไม่งั้น 'denied'</td></tr>
+<tr><td>52–54</td><td>ข้อผิด → denied</td></tr>
+</tbody></table>
+
+<h2>ส่วนที่ 3: listen — เริ่มฟัง (บรรทัด 57–96)</h2>
+<x-code src="src/services/speech.ts" lines="57-96"></x-code>
+<table class="walk"><thead><tr><th>บรรทัด</th><th>ความหมาย</th></tr></thead><tbody>
+<tr><td>57–58</td><td>เริ่มฟัง คืนฟังก์ชันสำหรับหยุด (ข้อความที่ได้ยินแล้วเก็บไว้)</td></tr>
+<tr><td>59–62</td><td>ไม่มีโมดูล → แจ้งข้อผิด 'unavailable' คืนฟังก์ชันว่าง</td></tr>
+<tr><td>63–64</td><td>รายการการสมัครฟังเหตุการณ์ และ done() = ยกเลิกทั้งหมด (splice(0) เอาออกทั้งหมดแล้ววน remove)</td></tr>
+<tr><td>65–68</td><td>เหตุการณ์ <b>result</b>: เอาข้อความของผลลัพธ์แรก ส่งให้ onText พร้อมบอกว่าจบประโยคหรือยัง</td></tr>
+<tr><td>69</td><td>เหตุการณ์ <b>error</b>: ส่งรหัส (ไม่มี = 'unknown')</td></tr>
+<tr><td>70</td><td>เหตุการณ์ <b>volumechange</b>: ระบบให้ค่าประมาณ −2 ถึง 10 แปลงเป็น 0–1 ด้วย (ค่า + 2) ÷ 12 และบีบให้อยู่ระหว่าง 0–1</td></tr>
+<tr><td>71–74</td><td>เหตุการณ์ <b>end</b>: ยกเลิกการฟังเหตุการณ์ทั้งหมด แล้วแจ้ง onEnd</td></tr>
+<tr><td>76–84</td><td><b>เริ่มฟัง</b>: ภาษา th-TH, ส่งผลระหว่างพูด (interim) ด้วย, ฟังประโยคเดียวแล้วหยุดเอง (continuous: false), ขอคำตอบแบบเดียว, คำช่วย HINTS, ส่งความดังทุก 120 มิลลิวินาที</td></tr>
+<tr><td>85–88</td><td>เริ่มไม่ได้ → ยกเลิกและแจ้ง 'unavailable'</td></tr>
+<tr><td>89–95</td><td>ฟังก์ชันหยุดที่คืนไป: สั่ง stop (ถ้าหยุดไปแล้วก็ไม่เป็นไร)</td></tr>
+</tbody></table>
+</x-ch>
+
+<x-ch title="อ่านโค้ด: ฟังเสียงบนเว็บ speech.web.ts ทั้งไฟล์" lead="70 บรรทัด ใช้ Web Speech API ของเบราว์เซอร์ ส่งข้อมูลรูปแบบเดียวกับเวอร์ชันมือถือ หน้าจอจึงไม่ต้องรู้ว่ารันที่ไหน">
+<x-code src="src/services/speech.web.ts" lines="1-35"></x-code>
+<table class="walk"><thead><tr><th>บรรทัด</th><th>ความหมาย</th></tr></thead><tbody>
+<tr><td>1–5</td><td>คอมเมนต์: Web Speech API ภาษาไทย (Chrome และ Edge บนคอม/Android; Safari บน iPhone ขอใช้ไมค์และใช้ตัวแปลงของ Siri) เบราว์เซอร์ที่ไม่มีก็พิมพ์แทน</td></tr>
+<tr><td>6</td><td>ใช้ชนิด ListenHandlers จากไฟล์มือถือ (สัญญาเดียวกัน)</td></tr>
+<tr><td>8–18</td><td>ชนิด Recognition = หน้าตาของวัตถุฟังเสียงของเบราว์เซอร์: ภาษา, ผลระหว่างพูด, ฟังต่อเนื่อง, จำนวนคำตอบ, ตัวรับผล/ข้อผิด/จบ, เริ่ม/หยุด</td></tr>
+<tr><td>20–24</td><td><b>Ctor</b> = ตัวสร้างของเบราว์เซอร์: ถ้าไม่มี window (ตอนสร้างหน้าเว็บล่วงหน้า) → undefined ไม่งั้นใช้ SpeechRecognition หรือ webkitSpeechRecognition (ชื่อเก่าของ Chrome/Safari)</td></tr>
+<tr><td>26</td><td>ส่งชนิดต่อให้ไฟล์อื่นใช้</td></tr>
+<tr><td>28–30</td><td>มีตัวสร้าง = ฟังได้</td></tr>
+<tr><td>32–35</td><td>บนเว็บ เบราว์เซอร์ขอสิทธิ์ไมค์เองตอนเริ่มฟัง จึงตอบ granted ถ้ามีตัวสร้าง</td></tr>
+</tbody></table>
+<x-code src="src/services/speech.web.ts" lines="37-70"></x-code>
+<table class="walk"><thead><tr><th>บรรทัด</th><th>ความหมาย</th></tr></thead><tbody>
+<tr><td>37–41</td><td>ไม่มีตัวสร้าง → unavailable</td></tr>
+<tr><td>42–46</td><td>สร้างตัวฟัง ตั้งภาษาไทย ผลระหว่างพูด ประโยคเดียว คำตอบเดียว</td></tr>
+<tr><td>47–55</td><td><b>ได้ผล</b>: ต่อข้อความทุกช่วงเข้าด้วยกัน (เบราว์เซอร์อาจแบ่งเป็นหลายช่วง) ถ้ามีช่วงไหนยังไม่จบ final = false แล้วส่ง onText</td></tr>
+<tr><td>56</td><td><b>ข้อผิด</b>: รวม not-allowed และ service-not-allowed เป็น 'not-allowed' (ข้อความเดียวกัน) ที่เหลือส่งรหัสตรง ๆ</td></tr>
+<tr><td>57</td><td>จบ → onEnd</td></tr>
+<tr><td>58–62</td><td>เริ่ม ถ้าพัง → unavailable</td></tr>
+<tr><td>63–69</td><td>ฟังก์ชันหยุด</td></tr>
+</tbody></table>
+<x-box kind="tip" title="Expo เลือกไฟล์ให้เองยังไง">
+<p>หน้าจอเขียน <span class="mono">import ... from '../services/speech'</span> ไม่มี .web ตอน build เว็บ เครื่องมือ (Metro) จะหาไฟล์ <span class="mono">speech.web.ts</span> ก่อน ตอน build แอปจะใช้ <span class="mono">speech.ts</span> (บท A7) สองไฟล์จึงต้อง export ชื่อเดียวกัน (speechAvailable, askMicPermission, listen) และส่งข้อมูลรูปแบบเดียวกัน</p>
+</x-box>
+<x-box kind="note" title="E2E ทดสอบเสียงยังไงทั้งที่ไม่มีไมค์">
+<p>เทสต์ใส่ "ตัวฟังเสียงจำลอง" (FakeRecognition) แทน webkitSpeechRecognition ก่อนเปิดหน้า: เมื่อ start() มันจำภาษาที่ตั้งไว้ ส่ง "ข้าวมันไก่" (ยังไม่จบ) ที่ 0.3 วินาที และ "ข้าวมันไก่ 50 บาท" (จบ) ที่ 0.9 วินาที แล้วจบ เทสต์จึงตรวจได้ทั้งว่า speech.web.ts ตั้งภาษา th-TH และหน้าจอได้รายการ ฿50 (<code>e2e/web-auth.mjs:826</code>)</p>
+</x-box>
+</x-ch>
+
+<x-ch title="อ่านโค้ด: การตั้งค่าใน app.json" lead="ปลั๊กอินที่ทำให้แอป Android/iOS มีสิทธิ์ใช้ไมโครโฟนและตัวแปลงเสียง">
+<x-code src="app.json" lines="71-80"></x-code>
+<table class="walk"><thead><tr><th>บรรทัด</th><th>ความหมาย</th></tr></thead><tbody>
+<tr><td>71–72</td><td>ใช้ปลั๊กอิน expo-speech-recognition (ตอน build แอปจะใส่โค้ดเนทีฟและสิทธิ์ให้)</td></tr>
+<tr><td>74</td><td>ข้อความที่ระบบแสดงตอนขอใช้ไมโครโฟน: "MindPay ใช้ไมโครโฟนเมื่อคุณแตะปุ่มไมค์เพื่อพูดจดรายการ เช่น “ข้าว 50 บาท”" (บอกเหตุผลชัดเจน ผู้ใช้จะกล้ากดอนุญาต)</td></tr>
+<tr><td>75</td><td>ข้อความขอใช้การแปลงเสียง (iOS): "MindPay แปลงเสียงที่คุณพูดเป็นรายการรายรับรายจ่าย"</td></tr>
+<tr><td>76–78</td><td>Android: ระบุแพ็กเกจบริการแปลงเสียงของ Google</td></tr>
+</tbody></table>
+<x-box kind="warn" title="ทำไม APK เก่าไม่มีเสียง">
+<p>โมดูลเนทีฟต้องถูก build ลงไปในแอป แต่ EAS Update ส่งได้แค่ JavaScript แอปที่ build ก่อนเพิ่มโมดูลนี้ (ก่อน commit c0359d8 วันที่ 29 ก.ย.) จึงได้หน้าพูดจดใหม่แต่ไม่มีโมดูล — speech.ts จึงหาโมดูลแบบไม่บังคับ และหน้าจอเสนอให้พิมพ์แทน (MT-12: "APK เก่าแสดงช่องพิมพ์แทน ไม่ crash") ผู้ใช้ต้องติดตั้ง APK ใหม่จาก GitHub Releases เพื่อใช้ไมค์ในแอป</p>
+</x-box>
+</x-ch>

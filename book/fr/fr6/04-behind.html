@@ -1,0 +1,53 @@
+<x-ch title="เบื้องหลัง: ข้อมูลไหลยังไง" lead="จากฐานข้อมูลบนคลาวด์ จนเป็นตัวเลข &quot;16 วัน&quot; บนหน้าจอ">
+<div class="flow">
+<div class="st"><b>ฐานข้อมูล Supabase</b> (PostgreSQL + RLS)<small>ตาราง profiles (ยอดเริ่มต้น, runway_floor_satang), transactions (ประเภท, สถานะ, จำนวนเงินเป็นสตางค์, เวลา), savings_goals (เงินในกระปุก) · RLS ทำให้แต่ละบัญชีอ่านได้เฉพาะข้อมูลของตัวเอง</small></div>
+<div class="ar">↓</div>
+<div class="st"><b>ชั้นดึงข้อมูล</b> <code>src/data/repo.ts</code><small>โหลดและบันทึกข้อมูล มีสองโหมด: บัญชีจริง (คลาวด์) และโหมดทดลอง (เก็บในเครื่อง ใช้ข้อมูลตัวอย่าง)</small></div>
+<div class="ar">↓</div>
+<div class="st"><b>ที่เก็บข้อมูลกลางของแอป</b> <code>src/data/AppProvider.tsx</code><small>ถือ txs, profile, goals, carrySatang และ today ให้ทุกหน้าใช้ร่วมกัน และตั้งนาฬิกาให้ today เปลี่ยนตอนเที่ยงคืนเวลาไทย</small></div>
+<div class="ar">↓</div>
+<div class="st gold"><b>useMoney()</b> ใน AppProvider.tsx<small>คิด balance, average, reserved แล้วเรียก computeRunway · ใช้ useMemo คือคิดใหม่เฉพาะตอนข้อมูลที่เกี่ยวข้องเปลี่ยน ไม่เปลืองแบตเตอรี่</small></div>
+<div class="ar">↓</div>
+<div class="st dark"><b>สูตรล้วน (pure functions)</b> <code>src/domain/runway.ts</code><small>รับตัวเลขเข้า ส่งตัวเลขออก ไม่ยุ่งกับหน้าจอ ฐานข้อมูล หรืออินเทอร์เน็ต จึงทดสอบได้ง่ายและได้คำตอบเดิมเสมอเมื่อใส่ข้อมูลเดิม</small></div>
+<div class="ar">↓</div>
+<div class="st"><b>หน้าจอ</b> src/app/(tabs)/…<small>หน้าหลัก (index.tsx), แท็บเงินพอถึง (runway.tsx), โค้ช (coach.tsx), การ์ดสิ่งที่ควรรู้ (insights.ts), คำพูดน้องกล้า (buddy.ts)</small></div>
+</div>
+<h2>ทำไม Runway ไม่เก็บในฐานข้อมูล</h2>
+<p>เพราะมันขึ้นกับ "วันนี้" และข้อมูลทุกอย่างที่เปลี่ยนได้ตลอด ถ้าเก็บไว้จะต้องคอยอัปเดตและเสี่ยงไม่ตรงกัน ฉันจึงให้คิดสดในเครื่องทุกครั้ง ซึ่งเร็วมาก (ข้อมูลไม่กี่ร้อยรายการ) Runway จะคิดใหม่เมื่อ:</p>
+<ul>
+<li>เพิ่ม/แก้/ลบรายการ (FR-1), พูดจด (FR-3), ยืนยันสลิปหรือสลิปเข้ายอดเอง (FR-4)</li>
+<li>แก้เงินสำรองหรือยอดเริ่มต้นในหน้าตั้งค่า</li>
+<li>หยอด/ถอน/ลบกระปุกออม</li>
+<li>ข้ามเที่ยงคืนตามเวลาไทย (หน้าต่าง 7 วันเลื่อน)</li>
+</ul>
+<h2>เทคนิคที่ 1: เก็บเงินเป็น "สตางค์" (จำนวนเต็ม)</h2>
+<p>คอมพิวเตอร์เก็บทศนิยมแบบเลขฐานสอง ซึ่งเก็บบางค่าได้ไม่เป๊ะ ใน JavaScript ถ้าพิมพ์ <span class="mono">0.1 + 0.2</span> จะได้ <span class="mono">0.30000000000000004</span> ถ้าบวกเงินเป็นพัน ๆ รายการ เศษเล็ก ๆ จะสะสมจนยอดเพี้ยน ทางแก้คือเก็บเป็นสตางค์ทั้งหมด เช่น ฿85.50 เก็บเป็น 8550 สตางค์ จำนวนเต็มบวกลบกันได้แม่นยำ 100% แล้วค่อยแปลงเป็นบาทตอนแสดงผล ในโค้ดทุกตัวแปรเงินจึงลงท้ายด้วย Satang เช่น <span class="mono">balanceSatang</span>, <span class="mono">floorSatang</span> และค่าเริ่มต้นเงินสำรองเขียนว่า <span class="mono">50_000</span> (= ฿500)</p>
+<h2>เทคนิคที่ 2: นับวันตามเวลาไทย</h2>
+<p>เวลาในฐานข้อมูลเก็บเป็นเวลาสากล (UTC) ซึ่งช้ากว่าไทย 7 ชั่วโมง ถ้าผู้ใช้โอนเงินตอน 06:00 น. ของวันที่ 8 ต.ค. เวลาไทย ในเวลา UTC จะยังเป็น 23:00 น. ของวันที่ 7 ต.ค. ถ้านับวันแบบ UTC รายการนี้จะไปอยู่ผิดวัน หน้าต่าง 7 วันก็จะผิด ฉันจึงแปลงทุกเวลาเป็น "วันแบบไทย" ด้วยฟังก์ชัน <span class="mono">bkkDayKey</span> (บวก 7 ชั่วโมงก่อนตัดเอาแค่วันที่) ได้ข้อความรูปแบบ "2026-10-08" ซึ่งเอามาเรียงหรือเทียบกันได้เลย</p>
+<h2>เทคนิคที่ 3: เริ่มวันใหม่ตอนเที่ยงคืน</h2>
+<p>ถ้าเปิดแอปค้างไว้ข้ามคืน "วันนี้" ต้องเปลี่ยน หน้าต่าง 7 วันต้องเลื่อน และวันที่เงินพอถึงต้องคิดใหม่ AppProvider คำนวณว่าอีกกี่มิลลิวินาทีจะถึงเที่ยงคืนไทย (<span class="mono">msUntilNextBkkMidnight</span>) แล้วตั้งเวลาไว้ พอถึงเวลาค่า <span class="mono">today</span> เปลี่ยน <span class="mono">useMoney</span> ก็คิดใหม่เอง และเมื่อกลับมาเปิดแอปจากพื้นหลังก็เช็กวันใหม่อีกครั้ง (อ่านโค้ดทีละบรรทัดในบท A6)</p>
+</x-ch>
+
+<x-ch title="แผนที่โค้ดของ FR-6" lead="ถ้าอาจารย์ถามว่า &quot;โค้ดส่วนนี้อยู่ตรงไหน&quot; ตอบจากตารางนี้ (แตะชื่อไฟล์เพื่อเปิดใน VS Code)">
+<table><thead><tr><th>ไฟล์</th><th>หน้าที่ใน FR-6</th></tr></thead><tbody>
+<tr><td><code>src/domain/runway.ts</code></td><td><b>สูตรทั้งหมด</b>: averageDailyExpense, computeRunway, safeDailySpend, endOfMonthDay, runwayAfterPurchase, runwayWithReduction และค่าคงที่ (฿500, 7 วัน, 365 วัน)</td></tr>
+<tr><td><code>src/domain/summary.ts</code></td><td>computeBalance (ยอดคงเหลือ), confirmedOnly (กรองเฉพาะที่ยืนยันแล้ว)</td></tr>
+<tr><td><code>src/domain/goals.ts</code></td><td>reservedSatang (รวมเงินในกระปุกออม), goalProgress, perDayToReach, applyDeposit, goalLine</td></tr>
+<tr><td><code>src/domain/dates.ts</code></td><td>bkkDayKey, addDays, daysBetween, formatThaiDay (วันที่แบบไทย พ.ศ.)</td></tr>
+<tr><td><code>src/data/AppProvider.tsx</code></td><td>useMoney() รวมทุกอย่างแล้วส่งให้ทุกหน้า, depositToGoal</td></tr>
+<tr><td><code>src/app/(tabs)/runway.tsx</code></td><td>แท็บเงินพอถึงทั้งหน้า</td></tr>
+<tr><td><code>src/app/(tabs)/index.tsx</code></td><td>การ์ดเขียวบนหน้าหลัก ป้ายสถานะ และ "วันนี้ใช้ได้ประมาณ"</td></tr>
+<tr><td><code>src/app/(tabs)/coach.tsx</code></td><td>แนบ purchaseCheck ไปกับคำถาม</td></tr>
+<tr><td><code>src/domain/insights.ts</code></td><td>การ์ดเตือน Runway เป็นข้อแรก และข้อมูลที่ส่งให้โค้ช (buildCoachContext)</td></tr>
+<tr><td><code>src/domain/buddy.ts</code></td><td>คำพูดของน้องกล้าตามสถานะ และคำอธิบายต้นไม้ (treeLine)</td></tr>
+<tr><td><code>src/ui/art.tsx</code>, <code>src/ui/Slider.tsx</code></td><td>ต้นไม้เงิน วงแหวน treeHealth และแถบเลื่อน</td></tr>
+<tr><td><code>src/app/settings.tsx</code>, <code>src/app/onboarding.tsx</code></td><td>ช่องเงินสำรองขั้นต่ำ</td></tr>
+<tr><td><code>src/app/goals.tsx</code>, <code>src/app/goal.tsx</code>, <code>src/ui/Jar.tsx</code></td><td>หน้ากระปุกออม หน้าตั้งกระปุก และภาพโหลแก้ว</td></tr>
+<tr><td><code>supabase/migrations/20260927000000_init.sql</code></td><td>คอลัมน์ runway_floor_satang (ค่าเริ่มต้น 50000, ต้อง ≥ 0)</td></tr>
+<tr><td><code>supabase/migrations/20260929000000_savings_goals.sql</code></td><td>ตาราง savings_goals และ RLS</td></tr>
+<tr><td><code>src/domain/__tests__/domain.test.ts</code></td><td>เทสต์ TC-12 ถึง TC-18</td></tr>
+<tr><td><code>src/domain/__tests__/goals.test.ts</code>, <code>src/domain/__tests__/sample.test.ts</code></td><td>TC-71 กระปุกออม, TC-33 ข้อมูลตัวอย่าง</td></tr>
+<tr><td><code>e2e/web-auth.mjs</code></td><td>เทสต์ในเบราว์เซอร์ (แถบเลื่อน เช็กก่อนจ่าย ถามโค้ช กระปุกออม)</td></tr>
+<tr><td><code>docs/TRACEABILITY.md</code></td><td>ตารางโยง FR-6 → โค้ด → เทสต์</td></tr>
+</tbody></table>
+</x-ch>

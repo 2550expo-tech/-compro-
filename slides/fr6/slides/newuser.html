@@ -1,0 +1,26 @@
+<section id="newuser" data-transition="fade" style="background:#E9EFE8;color:#3D5047;font-family:'Anuphan', Tahoma, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:32px">
+<div style="display:flex;flex-direction:column;gap:8px">
+<p style="font-size:26px;font-weight:600;letter-spacing:2px;color:#8A6A14">กฎผู้ใช้ใหม่</p>
+<h2 style="font-family:'Noto Serif Thai', Tahoma, serif;font-size:60px;font-weight:700;line-height:1.25;color:#0E3B2C">ผู้ใช้ใหม่: หารด้วยจำนวนวันที่ใช้มาจริง</h2>
+</div>
+<p style="font-size:30px;line-height:1.5;color:#3D5047">ตัวอย่าง: เริ่มใช้แอป 6 ต.ค. จดไว้ 3 วัน <b>฿90 + ฿150 + ฿60 = ฿300</b> (เงินที่ใช้ได้จริง ฿3,000)</p>
+<div style="display:flex;gap:32px">
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;background:#FDFDFB;border:3px solid #C98B7E;border-radius:28px;padding:32px 36px">
+<p style="font-size:26px;font-weight:600;color:#A63A26">แบบที่ผิด: หาร 7 ตรง ๆ</p>
+<p style="font-family:'Noto Serif Thai', Tahoma, serif;font-size:56px;font-weight:700;color:#5A2418">฿42.86 / วัน</p>
+<p style="font-family:'Noto Serif Thai', Tahoma, serif;font-size:40px;font-weight:700;color:#5A2418">→ 69 วัน</p>
+<p style="font-size:26px;line-height:1.45;color:#5A2418">สบายเกินจริง เพราะ 4 วันแรกเขายังไม่ได้ใช้แอปเลย</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:12px;background:#FDFDFB;border:3px solid #1F7A52;border-radius:28px;padding:32px 36px">
+<p style="font-size:26px;font-weight:600;color:#1F7A52">แบบที่ฉันทำ: หาร 3 วันที่ใช้จริง</p>
+<p style="font-family:'Noto Serif Thai', Tahoma, serif;font-size:56px;font-weight:700;color:#0E3B2C">฿100 / วัน</p>
+<p style="font-family:'Noto Serif Thai', Tahoma, serif;font-size:40px;font-weight:700;color:#0E3B2C">→ 30 วัน</p>
+<p style="font-size:26px;line-height:1.45;color:#1F3B2C">ใกล้ความจริง ผู้ใช้เชื่อแอปได้ตั้งแต่สัปดาห์แรก</p>
+</div>
+</div>
+<div style="display:flex;align-items:center;justify-content:center;background:#0E3B2C;border-radius:24px;padding:20px 32px">
+<p style="font-size:32px;font-weight:600;color:#F3F0E4">จำนวนวันที่หาร = ค่าที่น้อยกว่าระหว่าง <span style="color:#E2B64A">7</span> กับ <span style="color:#E2B64A">จำนวนวันตั้งแต่รายการแรก</span> (TC-13)</p>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6B7C73">MindPay · FR-6 Money Runway · 08</p>
+<aside>กฎข้อที่สองสำหรับผู้ใช้ใหม่ สมมติเพิ่งเริ่มใช้แอปเมื่อ 6 ต.ค. จดไว้ 3 วันรวม ฿300 ถ้าหาร 7 ตรง ๆ จะได้ ฿42.86 ต่อวัน แล้ว Runway จะบอกว่าอยู่ได้ 69 วัน ซึ่งสบายเกินจริง เพราะ 4 วันแรกในหน้าต่าง เขายังไม่ได้ใช้แอปเลย ไม่ใช่ว่าไม่ได้ใช้เงิน ฉันจึงหารด้วยจำนวนวันที่ใช้มาจริง คือ 3 วัน ได้ ฿100 ต่อวัน และ 30 วัน ใกล้ความจริงกว่ามาก วันแรกที่ใช้แอปคือวันของรายการที่ยืนยันแล้วรายการแรกสุด จะเป็นรายรับหรือรายจ่ายก็ได้ สัปดาห์แรกสำคัญมาก เพราะเป็นช่วงที่ผู้ใช้ตัดสินว่าจะเชื่อแอปนี้หรือไม่ กฎนี้มีเทสต์ TC-13</aside>
+</section>

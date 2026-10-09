@@ -1,0 +1,158 @@
+<x-ch title="เครื่องมือ: เขียนโค้ดที่ไหน ใช้โปรแกรมอะไร และ VS Code ตั้งแต่ศูนย์" lead="ทุกอย่างที่ต้องมีในเครื่อง วิธีเอาโค้ด MindPay มาเปิด รันแอป และใช้ VS Code อ่านโค้ดอย่างมืออาชีพ">
+
+<h2>กล่องเครื่องมือของทีมเรา</h2>
+<table><thead><tr><th>เครื่องมือ</th><th>คืออะไร</th><th>ใช้ทำอะไรใน MindPay</th></tr></thead><tbody>
+<tr><td><b>VS Code</b></td><td>โปรแกรมเขียนโค้ด (code editor) ฟรีจาก Microsoft</td><td>เปิด อ่าน แก้โค้ดทุกไฟล์ และรันคำสั่งผ่าน terminal ในตัว</td></tr>
+<tr><td><b>Node.js</b> (เวอร์ชัน 22 ขึ้นไป)</td><td>ตัวรันภาษา JavaScript นอกเบราว์เซอร์</td><td>รันเครื่องมือทั้งหมด: Expo, เทสต์, สคริปต์ build</td></tr>
+<tr><td><b>npm</b></td><td>ตัวจัดการ "แพ็กเกจ" (โค้ดสำเร็จรูปที่คนอื่นเขียนไว้) มากับ Node.js</td><td>ติดตั้งไลบรารี 38 ตัวที่แอปใช้ (<span class="mono">npm install</span>) และรันคำสั่งใน package.json</td></tr>
+<tr><td><b>Git</b></td><td>ระบบเก็บประวัติการแก้โค้ด ย้อนเวอร์ชันได้</td><td>บันทึกการเปลี่ยนแปลงทุกครั้งเป็น "commit"</td></tr>
+<tr><td><b>GitHub</b></td><td>เว็บที่เก็บโค้ดของ Git บนคลาวด์ ทำงานเป็นทีมได้</td><td>เก็บโค้ดที่ <span class="mono">github.com/2550expo-tech/Socrates-and-Skeletons-</span> และ build แอปให้อัตโนมัติ (บท A13)</td></tr>
+<tr><td><b>Expo</b></td><td>ชุดเครื่องมือทำแอปมือถือด้วย React Native</td><td>รันแอประหว่างพัฒนา (<span class="mono">npx expo start</span>), ทำเว็บ, build APK, ส่งอัปเดต</td></tr>
+<tr><td><b>Expo Go</b></td><td>แอปบนมือถือสำหรับลองแอปที่กำลังเขียน</td><td>สแกน QR จากคอมแล้วเห็นแอปบนมือถือทันที</td></tr>
+<tr><td><b>Supabase Dashboard</b></td><td>หน้าเว็บจัดการเซิร์ฟเวอร์ที่ supabase.com</td><td>ดูตาราง รัน SQL ใส่กุญแจ AI ดู log ของ Edge Functions</td></tr>
+<tr><td><b>เบราว์เซอร์ Chrome</b></td><td>-</td><td>เปิดเว็บเวอร์ชัน และใช้ DevTools (F12) ดู error</td></tr>
+</tbody></table>
+
+<h2>ติดตั้งเครื่องมือ (ทำครั้งเดียว)</h2>
+<ol>
+<li><b>VS Code:</b> ดาวน์โหลดจาก code.visualstudio.com ติดตั้งแบบค่าเริ่มต้น (Windows ติ๊ก "Add to PATH" และ "Open with Code" ไว้ด้วย)</li>
+<li><b>Node.js:</b> ดาวน์โหลดรุ่น LTS (22 ขึ้นไป) จาก nodejs.org แล้วเปิด terminal พิมพ์ <span class="mono">node -v</span> ต้องขึ้น v22 หรือสูงกว่า</li>
+<li><b>Git:</b> ดาวน์โหลดจาก git-scm.com (Mac มีมาให้แล้ว) ตรวจด้วย <span class="mono">git --version</span></li>
+<li><b>บัญชี GitHub:</b> สมัครที่ github.com และขอให้เจ้าของ repo เพิ่มเป็นสมาชิกถ้าต้องแก้โค้ด (อ่านอย่างเดียวไม่ต้องขอ เพราะ repo เป็นสาธารณะ)</li>
+<li><b>Expo Go</b> บนมือถือ (ไม่บังคับ): ดาวน์โหลดจาก Play Store หรือ App Store</li>
+</ol>
+
+<h2>เอาโค้ด MindPay มาไว้ในเครื่อง</h2>
+<p>เปิด terminal (Windows: PowerShell, Mac: Terminal หรือใช้ terminal ใน VS Code) แล้วพิมพ์ทีละบรรทัด</p>
+<x-snip lang="sh" title="Terminal" note="คำสั่งที่พิมพ์จริง">
+git clone https://github.com/2550expo-tech/Socrates-and-Skeletons-.git
+cd Socrates-and-Skeletons-
+npm install
+cp .env.example .env
+code .
+</x-snip>
+<table class="walk"><thead><tr><th>บรรทัด</th><th>ความหมาย</th></tr></thead><tbody>
+<tr><td>1</td><td><b>clone</b> = คัดลอกโค้ดทั้งหมดพร้อมประวัติจาก GitHub มาไว้ในโฟลเดอร์ใหม่ชื่อ Socrates-and-Skeletons-</td></tr>
+<tr><td>2</td><td><b>cd</b> (change directory) = เข้าไปในโฟลเดอร์นั้น</td></tr>
+<tr><td>3</td><td>อ่านรายชื่อแพ็กเกจใน <span class="mono">package.json</span> แล้วดาวน์โหลดทั้งหมดลงโฟลเดอร์ <span class="mono">node_modules</span> (ประมาณ 1–3 นาที ใช้พื้นที่หลายร้อย MB)</td></tr>
+<tr><td>4</td><td>คัดลอกไฟล์ตั้งค่าตัวอย่างเป็น <span class="mono">.env</span> ซึ่งบอกแอปว่าเซิร์ฟเวอร์ Supabase อยู่ที่ไหน (Windows PowerShell ใช้ <span class="mono">copy .env.example .env</span>)</td></tr>
+<tr><td>5</td><td>เปิด VS Code ที่โฟลเดอร์นี้ (จุด <span class="mono">.</span> แปลว่า "โฟลเดอร์ปัจจุบัน")</td></tr>
+</tbody></table>
+<h3>ไฟล์ .env มีอะไร</h3>
+<x-code src=".env.example" lines="1-6"></x-code>
+<table class="walk"><thead><tr><th>บรรทัด</th><th>ความหมาย</th></tr></thead><tbody>
+<tr><td>1–4</td><td>คอมเมนต์ (บรรทัดที่ขึ้นต้นด้วย <span class="mono">#</span> คอมพิวเตอร์ไม่อ่าน) บอกว่าให้ใส่เฉพาะกุญแจ "publishable" ห้ามใส่กุญแจลับหรือกุญแจ AI ในแอปเด็ดขาด</td></tr>
+<tr><td>5</td><td>ที่อยู่ของเซิร์ฟเวอร์ Supabase ของทีม</td></tr>
+<tr><td>6</td><td>กุญแจสาธารณะ (publishable key) ใช้บอกว่า "แอปนี้เป็นของโปรเจกต์ไหน" ปลอดภัยที่จะอยู่ในแอป เพราะฐานข้อมูลใช้ RLS กันไว้ (บท A9) ชื่อที่ขึ้นต้นด้วย <span class="mono">EXPO_PUBLIC_</span> คือค่าที่ Expo ยอมใส่เข้าไปในแอป</td></tr>
+</tbody></table>
+
+<h2>ไฟล์ package.json: บัตรประชาชนของโปรเจกต์</h2>
+<p>ไฟล์นี้บอกว่าโปรเจกต์ชื่ออะไร ใช้แพ็กเกจอะไร และมีคำสั่งลัดอะไรบ้าง</p>
+<x-code src="package.json" lines="1-59" hl="4,47-57"></x-code>
+<table class="walk"><thead><tr><th>บรรทัด</th><th>ความหมาย</th></tr></thead><tbody>
+<tr><td>2–3</td><td>ชื่อโปรเจกต์ <span class="mono">mindpay</span> และเวอร์ชัน</td></tr>
+<tr><td>4</td><td>จุดเริ่มต้นของแอป: ให้ Expo Router เป็นคนเริ่ม แล้วมันจะไปหาหน้าจอในโฟลเดอร์ <span class="mono">src/app</span> เอง</td></tr>
+<tr><td>5–38</td><td><b>dependencies</b> แพ็กเกจที่แอปต้องใช้ตอนทำงานจริง ตัวเลขหลังชื่อคือเวอร์ชัน (<span class="mono">^</span> = ยอมรุ่นย่อยที่ใหม่กว่า, <span class="mono">~</span> = ยอมเฉพาะรุ่นแก้บั๊ก)</td></tr>
+<tr><td>6–7</td><td>ฟอนต์ไทย Anuphan (ข้อความทั่วไป) และ Noto Serif Thai (ตัวเลขเงินและหัวข้อ)</td></tr>
+<tr><td>8</td><td>ไอคอนสำเร็จรูป (Ionicons) เช่น รูปบ้าน รูปใบไม้ในแถบล่าง</td></tr>
+<tr><td>9</td><td>ตัวเลือกวันที่และเวลาแบบของมือถือ (FR-1)</td></tr>
+<tr><td>10</td><td>ตัวเชื่อมต่อ Supabase (ฐานข้อมูล, เข้าสู่ระบบ, Edge Functions)</td></tr>
+<tr><td>11</td><td>Expo ตัวหลัก เวอร์ชัน 57</td></tr>
+<tr><td>12</td><td>expo-camera ใช้ <b>อ่าน QR จากรูป</b> (ไม่ได้ใช้ถ่ายรูป แอปบล็อกสิทธิ์กล้องไว้)</td></tr>
+<tr><td>14</td><td>expo-crypto ทำ "ลายนิ้วมือ" (hash) ของรูปสลิป กันสแกนซ้ำ (FR-4)</td></tr>
+<tr><td>15, 18</td><td>อ่านไฟล์ และย่อ/ตัดรูปก่อนส่งให้ AI</td></tr>
+<tr><td>17</td><td>expo-haptics สั่นเบา ๆ เวลากดปุ่ม</td></tr>
+<tr><td>19, 22</td><td>เลือกรูปเอง และเข้าถึงแกลเลอรีทั้งหมด (FR-4)</td></tr>
+<tr><td>20</td><td>สีไล่ระดับ (gradient) ของการ์ดเขียว</td></tr>
+<tr><td>21</td><td>เปิดลิงก์ เช่น ลิงก์ยืนยันอีเมลที่พาเข้าแอป</td></tr>
+<tr><td>23</td><td>Expo Router ระบบเปลี่ยนหน้าจอ (บท A7)</td></tr>
+<tr><td>24–25</td><td>expo-speech ให้น้องกล้าพูดออกเสียง (FR-5), expo-speech-recognition ฟังเสียงพูดจด (FR-3)</td></tr>
+<tr><td>26</td><td>หน้าจอแรกตอนเปิดแอป (splash)</td></tr>
+<tr><td>27</td><td>expo-sqlite ฐานข้อมูลเล็ก ๆ ในเครื่อง ใช้เก็บการตั้งค่าและข้อมูลโหมดทดลอง</td></tr>
+<tr><td>30</td><td>expo-updates รับอัปเดตโค้ดใหม่โดยไม่ต้องลงแอปใหม่ (EAS Update)</td></tr>
+<tr><td>31–33</td><td>React (ตัววาดหน้าจอ), react-dom (สำหรับเว็บ), React Native (สำหรับมือถือ)</td></tr>
+<tr><td>34–35</td><td>จัดการขอบจอ (รอยบาก แถบสถานะ) และหน้าจอแบบ native</td></tr>
+<tr><td>36</td><td>วาดภาพเวกเตอร์ (SVG) เช่น ต้นไม้เงิน น้องกล้า กราฟ</td></tr>
+<tr><td>37</td><td>react-native-web แปลงชิ้นส่วนของมือถือเป็น HTML ให้แสดงบนเว็บได้</td></tr>
+<tr><td>39–46</td><td><b>devDependencies</b> ใช้ตอนพัฒนาเท่านั้น ไม่ได้อยู่ในแอปที่ผู้ใช้ลง: ตัวตรวจภาษา TypeScript, ESLint (ตรวจรูปแบบโค้ด), Playwright (ควบคุมเบราว์เซอร์อัตโนมัติสำหรับ E2E), Vitest (รัน unit test)</td></tr>
+<tr><td>47–57</td><td><b>scripts</b> คำสั่งลัด พิมพ์ <span class="mono">npm run ชื่อ</span> (หรือ <span class="mono">npm test</span>, <span class="mono">npm start</span>) แทนคำสั่งยาว ๆ ทางขวา</td></tr>
+<tr><td>58</td><td><span class="mono">private</span> = ไม่เผยแพร่เป็นแพ็กเกจให้คนอื่นติดตั้ง</td></tr>
+</tbody></table>
+
+<h2>คำสั่งที่ใช้บ่อย</h2>
+<table><thead><tr><th>คำสั่ง</th><th>ทำอะไร</th><th>ผลที่ควรเห็น</th></tr></thead><tbody>
+<tr><td class="mono">npm run web</td><td>เปิดแอปเวอร์ชันเว็บในเบราว์เซอร์ แก้โค้ดแล้วหน้าเว็บเปลี่ยนเอง</td><td>เบราว์เซอร์เปิด localhost:8081</td></tr>
+<tr><td class="mono">npx expo start</td><td>เปิด "dev server" มี QR ให้สแกนด้วย Expo Go</td><td>QR ใน terminal กด <span class="mono">w</span> = เปิดเว็บ, <span class="mono">r</span> = โหลดใหม่</td></tr>
+<tr><td class="mono">npm test</td><td>รัน unit test ทั้งหมด</td><td>"Tests 157 passed (157)"</td></tr>
+<tr><td class="mono">npm run typecheck</td><td>ให้ TypeScript ตรวจชนิดข้อมูลทั้งโปรเจกต์</td><td>ไม่มีข้อความ = ไม่มีปัญหา</td></tr>
+<tr><td class="mono">npx expo lint</td><td>ตรวจรูปแบบโค้ดตามกฎ ESLint</td><td>ไม่มี error</td></tr>
+<tr><td class="mono">npm run e2e:web</td><td>build เว็บแล้วรันเทสต์ในเบราว์เซอร์ 145 ข้อ ถ่ายภาพหน้าจอเก็บใน e2e-shots</td><td>"145/145 checks passed"</td></tr>
+</tbody></table>
+<x-box kind="warn" title="ถ้าเจอ error ตอนติดตั้ง">
+<p><b>"node: command not found"</b> = ยังไม่ได้ติดตั้ง Node.js หรือต้องปิดแล้วเปิด terminal ใหม่ · <b>npm install ช้าหรือค้าง</b> = รอได้ หรือลบโฟลเดอร์ node_modules แล้วลองใหม่ · <b>แอปขึ้นแต่เข้าสู่ระบบไม่ได้</b> = ลืมสร้างไฟล์ .env (บรรทัด 4) · ห้ามใช้ <span class="mono">npm install ชื่อแพ็กเกจ</span> ตรง ๆ ในโปรเจกต์ Expo ให้ใช้ <span class="mono">npx expo install ชื่อแพ็กเกจ</span> เพื่อให้ได้รุ่นที่เข้ากับ Expo 57 (กฎใน <span class="mono">AGENTS.md</span>)</p>
+</x-box>
+
+<h2>รู้จักหน้าจอ VS Code</h2>
+<table><thead><tr><th>ส่วน</th><th>อยู่ตรงไหน</th><th>ใช้ทำอะไร</th></tr></thead><tbody>
+<tr><td>Activity Bar</td><td>แถบไอคอนซ้ายสุด</td><td>สลับระหว่าง Explorer, Search, Source Control, Run, Extensions</td></tr>
+<tr><td>Explorer</td><td>ไอคอนรูปกระดาษ (Ctrl+Shift+E)</td><td>ต้นไม้โฟลเดอร์และไฟล์ทั้งโปรเจกต์ คลิกเพื่อเปิดไฟล์</td></tr>
+<tr><td>Editor</td><td>พื้นที่ใหญ่ตรงกลาง</td><td>อ่านและแก้โค้ด เปิดหลายไฟล์เป็นแท็บได้ ลากแท็บไปข้าง ๆ เพื่อดู 2 ไฟล์คู่กัน</td></tr>
+<tr><td>Search</td><td>ไอคอนแว่นขยาย (Ctrl+Shift+F)</td><td>ค้นคำในทุกไฟล์ เช่นค้น <span class="mono">computeRunway</span> จะเห็นทุกที่ที่ใช้</td></tr>
+<tr><td>Source Control</td><td>ไอคอนกิ่งไม้ (Ctrl+Shift+G)</td><td>ดูไฟล์ที่แก้ไป, commit, push (บท A13)</td></tr>
+<tr><td>Terminal</td><td>ด้านล่าง (Ctrl+` ปุ่มตัวหนอนใต้ Esc)</td><td>พิมพ์คำสั่ง npm, git ได้โดยไม่ต้องออกจาก VS Code</td></tr>
+<tr><td>Problems</td><td>แท็บข้าง Terminal (Ctrl+Shift+M)</td><td>รวม error จาก TypeScript และ ESLint คลิกแล้วกระโดดไปบรรทัดที่ผิด</td></tr>
+<tr><td>Status Bar</td><td>แถบล่างสุด</td><td>บอก branch ของ Git, บรรทัด/คอลัมน์ที่เคอร์เซอร์อยู่, ภาษาของไฟล์</td></tr>
+</tbody></table>
+
+<h2>คีย์ลัดที่ทำให้อ่านโค้ดเร็วขึ้น 10 เท่า</h2>
+<p>Mac ใช้ Cmd แทน Ctrl และ Option แทน Alt</p>
+<table><thead><tr><th>คีย์</th><th>ทำอะไร</th><th>ลองกับ MindPay</th></tr></thead><tbody>
+<tr><td class="mono">Ctrl+P</td><td>เปิดไฟล์จากชื่อ พิมพ์ <span class="mono">:เลขบรรทัด</span> ต่อท้ายเพื่อกระโดดไปบรรทัดนั้น</td><td>พิมพ์ <span class="mono">runway.ts:72</span> แล้ว Enter</td></tr>
+<tr><td class="mono">Ctrl+G</td><td>ไปบรรทัดที่ต้องการในไฟล์ที่เปิดอยู่</td><td>Ctrl+G แล้วพิมพ์ 89</td></tr>
+<tr><td class="mono">F12</td><td><b>Go to Definition</b> ไปดูว่าฟังก์ชันหรือตัวแปรนี้ถูกสร้างไว้ที่ไหน (หรือ Ctrl+คลิก)</td><td>ใน <span class="mono">AppProvider.tsx</span> คลิกที่ <span class="mono">computeRunway</span> แล้วกด F12</td></tr>
+<tr><td class="mono">Alt+F12</td><td>Peek Definition: ดูโค้ดปลายทางในกล่องเล็ก ๆ โดยไม่ต้องเปลี่ยนไฟล์</td><td>-</td></tr>
+<tr><td class="mono">Shift+F12</td><td><b>Find All References</b> หาทุกที่ที่เรียกใช้สิ่งนี้</td><td>ที่ <span class="mono">computeRunway</span> จะเห็นทั้งในแอปและในเทสต์</td></tr>
+<tr><td class="mono">Alt+← / Alt+→</td><td>ย้อนกลับ/ไปข้างหน้า หลังกระโดดไปมาด้วย F12</td><td>-</td></tr>
+<tr><td>เอาเมาส์ชี้ (hover)</td><td>เห็นชนิดข้อมูลและคอมเมนต์อธิบายของสิ่งนั้น</td><td>ชี้ที่ <span class="mono">Transaction</span> จะเห็นทุกช่องของรายการ</td></tr>
+<tr><td class="mono">Ctrl+Shift+O</td><td>รายการฟังก์ชันทั้งหมดในไฟล์นี้ (outline)</td><td>ใน <span class="mono">runway.ts</span> จะเห็น 6 ฟังก์ชัน</td></tr>
+<tr><td class="mono">Ctrl+T</td><td>ค้นหาชื่อฟังก์ชันทั้งโปรเจกต์</td><td>พิมพ์ <span class="mono">parseSpokenEntry</span></td></tr>
+<tr><td class="mono">Ctrl+Shift+F</td><td>ค้นข้อความในทุกไฟล์</td><td>ค้น "เงินพอใช้อีก" เพื่อหาว่าข้อความบนจอมาจากไฟล์ไหน</td></tr>
+<tr><td class="mono">Ctrl+F</td><td>ค้นในไฟล์นี้</td><td>-</td></tr>
+<tr><td class="mono">F2</td><td>เปลี่ยนชื่อตัวแปรทุกที่พร้อมกันอย่างปลอดภัย</td><td>-</td></tr>
+<tr><td class="mono">Ctrl+/</td><td>เปลี่ยนบรรทัดเป็นคอมเมนต์ (ปิดชั่วคราว) หรือกลับคืน</td><td>-</td></tr>
+<tr><td class="mono">Ctrl+Shift+P</td><td>Command Palette เรียกคำสั่งทุกอย่างของ VS Code</td><td>พิมพ์ "Format Document"</td></tr>
+<tr><td class="mono">Ctrl+B</td><td>ซ่อน/แสดงแถบด้านข้าง ให้มีที่อ่านโค้ดมากขึ้น</td><td>-</td></tr>
+</tbody></table>
+<x-box kind="tip" title="เทคนิคหาว่าข้อความบนจอมาจากโค้ดตรงไหน">
+<p>เห็นคำว่า "เงินพอใช้อีก 16 วัน" บนหน้าหลัก แล้วอยากรู้ว่าโค้ดอยู่ไหน: กด <b>Ctrl+Shift+F</b> พิมพ์ "เงินพอใช้อีก" จะเจอไฟล์ที่มีข้อความนี้ทั้งหมด คลิกผลลัพธ์แล้วจะไปที่บรรทัดนั้นทันที วิธีนี้ใช้ได้กับทุกข้อความภาษาไทยในแอป เพราะข้อความทั้งหมดเขียนอยู่ในโค้ดตรง ๆ</p>
+</x-box>
+
+<h2>ส่วนเสริม (Extensions) ที่แนะนำ</h2>
+<p>กด Ctrl+Shift+X แล้วค้นชื่อ กด Install</p>
+<table><thead><tr><th>ชื่อ</th><th>ช่วยอะไร</th></tr></thead><tbody>
+<tr><td>ESLint (Microsoft)</td><td>ขีดเส้นใต้โค้ดที่ผิดกฎทันทีที่พิมพ์ ใช้กฎเดียวกับ <span class="mono">npx expo lint</span></td></tr>
+<tr><td>Expo Tools</td><td>ช่วยเติมคำและตรวจไฟล์ app.json / eas.json</td></tr>
+<tr><td>Vitest</td><td>มีปุ่ม ▶ ข้างเทสต์แต่ละข้อ กดรันทีละข้อได้</td></tr>
+<tr><td>GitLens (ไม่บังคับ)</td><td>ชี้บรรทัดไหนก็เห็นว่าใครแก้ล่าสุด เมื่อไร ใน commit อะไร</td></tr>
+<tr><td>Error Lens (ไม่บังคับ)</td><td>แสดงข้อความ error ท้ายบรรทัดเลย ไม่ต้องเอาเมาส์ชี้</td></tr>
+</tbody></table>
+<p>ส่วน TypeScript ไม่ต้องลงเพิ่ม VS Code รองรับในตัวอยู่แล้ว และใช้ TypeScript รุ่นในโปรเจกต์ (<span class="mono">node_modules/typescript</span>) ตามไฟล์ <span class="mono">tsconfig.json</span></p>
+
+<h2>ไม่อยากติดตั้งอะไร: ใช้ VS Code บนเว็บ</h2>
+<p>มี 2 ทางที่เปิดโค้ด MindPay ด้วย VS Code ได้ทันทีในเบราว์เซอร์</p>
+<ul>
+<li><b>ลิงก์ในเล่มนี้</b> แตะชื่อไฟล์บนหัวโค้ดก้อนไหนก็ได้ จะเปิด <b>vscode.dev</b> ที่ไฟล์และบรรทัดนั้น</li>
+<li><b>จากหน้า GitHub</b> เปิด repo บน github.com แล้วกดปุ่ม <span class="mono">.</span> (จุด) บนคีย์บอร์ด หน้าเว็บจะกลายเป็น VS Code (github.dev)</li>
+</ul>
+<p>VS Code บนเว็บอ่านโค้ด ค้นหา (Ctrl+Shift+F) กด F12 ไปดูฟังก์ชัน และแก้ไขได้ แต่ <b>รันคำสั่งไม่ได้</b> (ไม่มี terminal จึงรัน npm test หรือเปิดแอปไม่ได้) ถ้าจะรันแอปต้องโคลนลงเครื่องตามขั้นตอนด้านบน</p>
+
+<h2>ฝึกใช้: ตามรอย Money Runway ใน 5 นาที</h2>
+<ol>
+<li>Ctrl+P พิมพ์ <span class="mono">index.tsx</span> เลือกไฟล์ใน <span class="mono">src/app/(tabs)</span> (หน้าหลัก)</li>
+<li>Ctrl+F ค้น <span class="mono">useMoney</span> แล้วกด F12 ที่คำนั้น จะเด้งไป <code>src/data/AppProvider.tsx</code> บรรทัด 443</li>
+<li>ที่บรรทัด 453 คลิก <span class="mono">computeRunway</span> แล้วกด F12 จะไปที่ <code>src/domain/runway.ts</code> บรรทัด 72 ซึ่งเป็นสูตรของ FR-6</li>
+<li>กด Shift+F12 ที่ชื่อฟังก์ชัน จะเห็นว่ามีเทสต์เรียกใช้ใน <code>src/domain/__tests__/domain.test.ts</code> ด้วย</li>
+<li>กด Alt+← สองครั้ง ย้อนกลับไปหน้าหลัก</li>
+</ol>
+<p>ทำแบบนี้ได้ แปลว่าพร้อมอ่านโค้ดส่วนไหนของแอปก็ได้แล้ว</p>
+</x-ch>

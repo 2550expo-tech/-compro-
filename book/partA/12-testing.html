@@ -1,0 +1,102 @@
+<x-ch title="การทดสอบ: พิสูจน์ว่าระบบทำงานถูก" lead="ทีมเรามีการทดสอบ 3 ระดับ: unit test 157 ข้อ, E2E ในเบราว์เซอร์ 145 ข้อ และแผนทดสอบบนมือถือจริง 12 ข้อ บทนี้สอนอ่านและเขียนเทสต์">
+
+<h2>ทำไมต้องเขียนเทสต์</h2>
+<p>เวลาแก้โค้ดจุดหนึ่ง อาจทำให้อีกจุดพังโดยไม่รู้ตัว (เรียกว่า <b>regression</b>) ถ้าต้องกดทดสอบทุกหน้าเองทุกครั้งที่แก้ จะใช้เวลาหลายชั่วโมงและลืมบางจุดแน่นอน เทสต์อัตโนมัติคือ "โปรแกรมที่ตรวจโปรแกรม" รันเสร็จในไม่กี่วินาที และทีมตั้งไว้ว่าถ้าเทสต์ไม่ผ่าน GitHub จะไม่ปล่อยเว็บและ APK ให้ผู้ใช้</p>
+<div class="cols3">
+<div class="stat"><div class="v">157</div><div class="k">Unit test (Vitest)<br>ตรวจฟังก์ชันทีละตัว · รันไม่ถึง 2 วินาที</div></div>
+<div class="stat"><div class="v">145</div><div class="k">E2E (Playwright)<br>เปิดเว็บจริงแล้วกดเหมือนคน · ประมาณ 3 นาที</div></div>
+<div class="stat"><div class="v">12</div><div class="k">Manual test (MT-01–12)<br>คนทดสอบบนมือถือจริง</div></div>
+</div>
+
+<h2>Unit test: ตรวจฟังก์ชันทีละตัว</h2>
+<p>ไฟล์เทสต์อยู่ในโฟลเดอร์ <span class="mono">__tests__</span> ชื่อลงท้าย <span class="mono">.test.ts</span> รันด้วยคำสั่ง <span class="mono">npm test</span> ใช้เครื่องมือ <b>Vitest</b> ตัวอย่างจากเทสต์ของ FR-6:</p>
+<x-code src="src/domain/__tests__/domain.test.ts" lines="35-58"></x-code>
+<table class="walk"><thead><tr><th>บรรทัด</th><th>ความหมาย</th></tr></thead><tbody>
+<tr><td>35–36</td><td><b>ล็อก "วันนี้" ให้ตายตัว</b> เป็นวันอาทิตย์ที่ 27 ก.ย. 2569 เวลา 14:00 น. ไม่ว่ารันเทสต์วันไหน ผลก็เหมือนเดิม (ถ้าใช้วันจริง เทสต์จะผ่านบ้างไม่ผ่านบ้างตามวันที่)</td></tr>
+<tr><td>38–58</td><td>ฟังก์ชันช่วยสร้างรายการปลอม <span class="mono">tx({ day, amount })</span> ใส่แค่วันกับจำนวนบาท ที่เหลือใช้ค่าตั้งต้น (รายจ่าย หมวดอาหาร ยืนยันแล้ว) <span class="mono">...rest</span> ท้ายสุดให้เปลี่ยนช่องอื่นได้ เช่น <span class="mono">tx({ day, amount, status: 'draft' })</span></td></tr>
+</tbody></table>
+<x-code src="src/domain/__tests__/domain.test.ts" lines="184-210"></x-code>
+<table class="walk"><thead><tr><th>บรรทัด</th><th>ความหมาย</th></tr></thead><tbody>
+<tr><td>184</td><td><span class="mono">it('ชื่อเทสต์', () =&gt; {...})</span> = เทสต์ 1 ข้อ ชื่อขึ้นต้นด้วยรหัส TC ที่ตรงกับเอกสาร Traceability</td></tr>
+<tr><td>185</td><td><b>Arrange + Act</b>: เตรียมข้อมูล (ยอด ฿3,500, เส้นสำรอง ฿500, ใช้วันละ ฿200) แล้วเรียกฟังก์ชันจริง</td></tr>
+<tr><td>186–188</td><td><b>Assert</b>: <span class="mono">expect(ค่าจริง).toBe(ค่าที่ต้องได้)</span> ตรวจว่าได้ 15 วัน, วันที่ 12 ต.ค. 2569 และสถานะ healthy ถ้าไม่ตรงข้อใดข้อหนึ่ง เทสต์ล้มพร้อมบอกว่าได้อะไรแทน</td></tr>
+<tr><td>191–196</td><td>TC-15 ทดสอบ <b>กรณีพิเศษ</b>: ค่าเฉลี่ยเป็น 0 ต้องไม่หารด้วยศูนย์ ต้องได้ no_spending และวันเป็น null</td></tr>
+<tr><td>198–202</td><td>TC-16 ทดสอบ <b>ขอบ</b>: ยอดเท่ากับเส้นสำรองพอดี ต้องนับว่า "ต่ำกว่าเงินสำรอง"</td></tr>
+<tr><td>204–210</td><td>TC-17 ทดสอบ <b>ขอบของเกณฑ์</b>: 6 วัน critical, 7 วัน watch, 14 วัน healthy ถ้ามีคนเผลอแก้ <span class="mono">&lt;</span> เป็น <span class="mono">&lt;=</span> เทสต์นี้จะจับได้ทันที</td></tr>
+</tbody></table>
+<x-box kind="tip" title="เขียนเทสต์ที่ดี: ทดสอบขอบ ไม่ใช่แค่ค่ากลาง ๆ">
+<p>บั๊กชอบซ่อนอยู่ตรงขอบ เช่น 0, ค่าเท่ากันพอดี, ค่าว่าง, วันแรกของเดือน, เที่ยงคืน, ข้อมูลภาษาไทยแปลก ๆ เทสต์ของทีมจึงมีทั้งกรณีปกติ กรณีพิเศษ และกรณีขอบ อาจารย์มักถามว่า "ทดสอบกรณีไหนบ้าง" ให้ตอบเป็น 3 กลุ่มนี้</p>
+</x-box>
+<h3>ไฟล์ unit test หลัก (มีทั้งหมด 18 ไฟล์)</h3>
+<table><thead><tr><th>ไฟล์</th><th>ทดสอบ</th></tr></thead><tbody>
+<tr><td class="mono">domain.test.ts</td><td>เงิน, วันที่ไทย, ยอดคงเหลือ (FR-2), Runway (FR-6), สลิป (FR-4), คำแนะนำโค้ช (FR-5), หมวด</td></tr>
+<tr><td class="mono">voice.test.ts</td><td>แยกประโยคพูดเป็นรายการ ตัวเลขคำไทย (FR-3)</td></tr>
+<tr><td class="mono">slipAccuracy.test.ts, autoScan.test.ts</td><td>ความแม่นยำการอ่านสลิป และสแกนอัตโนมัติ (FR-4)</td></tr>
+<tr><td class="mono">recurring.test.ts, recap.test.ts</td><td>รายการประจำเดือน (FR-1) และสรุปเดือน ปฏิทิน (FR-2)</td></tr>
+<tr><td class="mono">goals.test.ts</td><td>กระปุกออม (FR-6)</td></tr>
+<tr><td class="mono">buddy.test.ts, klaTalk.test.ts</td><td>คำพูดน้องกล้า และการตัดซับไตเติลอ่านออกเสียง (FR-5)</td></tr>
+<tr><td class="mono">auth.test.ts</td><td>ลิงก์อีเมลและข้อความ error ภาษาไทย</td></tr>
+<tr><td class="mono">audit.test.ts</td><td>บั๊กที่เจอตอนตรวจทั้ง repo (1–3 ต.ค.) กันไม่ให้กลับมาอีก</td></tr>
+<tr><td class="mono">ui/__tests__/theme.test.ts</td><td>สีทุกธีมอ่านง่าย (TC-78)</td></tr>
+<tr><td class="mono">supabase/functions/_shared/__tests__/helpers.test.ts</td><td>ตัวช่วยของเซิร์ฟเวอร์: เลือก AI, ทำความสะอาดผลอ่านสลิป, รวมผลอ่าน 2 ครั้ง</td></tr>
+</tbody></table>
+
+<h2>E2E: ทดสอบทั้งแอปเหมือนคนใช้จริง</h2>
+<p><b>End-to-End (E2E)</b> test เปิดเว็บเวอร์ชันจริงในเบราว์เซอร์อัตโนมัติ (เครื่องมือ <b>Playwright</b>) แล้วกด พิมพ์ เลื่อน ตามขั้นตอนเหมือนคน และตรวจว่าเห็นสิ่งที่ควรเห็น ไฟล์หลักคือ <code>e2e/web-auth.mjs</code> (ยาวกว่า 1,000 บรรทัด)</p>
+<x-box kind="analogy" title="ไม่แตะบัญชีจริง: เซิร์ฟเวอร์ปลอม">
+<p>ถ้า E2E ใช้ Supabase จริง จะสร้างบัญชีขยะ ส่งอีเมลจริง และเปลืองโควตา AI ทีมเราจึงเขียน <code>e2e/fake-backend.mjs</code> เป็น "Supabase ปลอม" ที่ตอบเหมือนของจริงแต่อยู่ในหน่วยความจำ ทุกคำขอที่ไปที่อยู่ของ Supabase จะถูกดักมาตอบด้วยตัวปลอมนี้ (<span class="mono">page.route</span>) เหมือนซ้อมละครกับนักแสดงแทน</p>
+</x-box>
+<x-code src="e2e/web-auth.mjs" lines="29-60"></x-code>
+<table class="walk"><thead><tr><th>บรรทัด</th><th>ความหมาย</th></tr></thead><tbody>
+<tr><td>30–36</td><td><span class="mono">check(ชื่อ, ผ่านไหม, รายละเอียด)</span> บันทึกผลแต่ละข้อ พิมพ์ PASS หรือ FAIL ถ้ารันบน GitHub และไม่ผ่าน จะขึ้นเป็นป้าย error บนหน้า Actions</td></tr>
+<tr><td>37–42</td><td>เปิดเบราว์เซอร์ Chromium (หรือ WebKit แบบ Safari) โหมดสว่างหรือมืด</td></tr>
+<tr><td>43–53</td><td><span class="mono">freshPage</span>: เปิดแท็บใหม่ขนาดมือถือ (390×844) ภาษาไทย ดักคำขอไป Supabase ให้ตัวปลอมตอบ และพิมพ์ error ของหน้าเว็บถ้ามี</td></tr>
+<tr><td>54</td><td><span class="mono">shot</span>: ถ่ายภาพหน้าจอเก็บไว้ (ภาพหน้าจอหลายภาพในเล่มนี้มาจากตรงนี้)</td></tr>
+<tr><td>55–56</td><td><span class="mono">visible</span> / <span class="mono">gone</span>: รอจนเห็นข้อความ (หรือข้อความหายไป) ภายใน 6 วินาที</td></tr>
+<tr><td>58</td><td><span class="mono">button</span>: หาปุ่มจากชื่อที่โปรแกรมอ่านหน้าจออ่าน (accessibilityLabel) แอปที่ทำ accessibility ดีจึงเขียนเทสต์ง่าย</td></tr>
+</tbody></table>
+<h3>ตัวอย่าง: ทดสอบแถบ "ลองปรับ" ของ FR-6</h3>
+<x-code src="e2e/web-auth.mjs" lines="572-627"></x-code>
+<table class="walk"><thead><tr><th>บรรทัด</th><th>ความหมาย</th></tr></thead><tbody>
+<tr><td>574–579</td><td>เปิดแท็บใหม่ ไปหน้าต้อนรับ รอแอนิเมชันเปิดแอปหาย แตะ "ลองใช้ด้วยข้อมูลตัวอย่าง" แล้วรอเห็นคำว่า "ยอดคงเหลือ"</td></tr>
+<tr><td>580</td><td>ไปที่หน้าเงินพอถึง</td></tr>
+<tr><td>583</td><td>หาแถบเลื่อนจากชื่อ "ใช้น้อยลงวันละกี่เปอร์เซ็นต์"</td></tr>
+<tr><td>589–597</td><td>รอจนหน้าจอหยุดขยับ (การ์ดค่อย ๆ เลื่อนเข้ามา) ไม่งั้นจะลากพลาด</td></tr>
+<tr><td>604–611</td><td>จำลองเมาส์: กดที่ปุ่มกลมของแถบ ลากไป 30% แล้ว 60% ของความกว้าง แล้วปล่อย</td></tr>
+<tr><td>612–615</td><td>อ่านค่าปัจจุบันของแถบ ถ่ายภาพ และตรวจว่าได้ 30 และมีคำว่า "เพิ่มขึ้น"</td></tr>
+<tr><td>617–620</td><td>ทดสอบคีย์บอร์ด: กดลูกศรขวา ค่าต้องเพิ่ม 5</td></tr>
+<tr><td>622–623</td><td>พิมพ์ราคา 2000 ในเช็กก่อนจ่าย ต้องเห็น "ถ้าซื้อ ฿2,000" และ "ตอนนี้"</td></tr>
+<tr><td>624–626</td><td>กด "ถามโค้ชเรื่องนี้" ช่องพิมพ์ในหน้าโค้ชต้องมีคำถามที่มี "฿2,000" รออยู่ (เชื่อม FR-6 กับ FR-5)</td></tr>
+</tbody></table>
+<p>ผลล่าสุด: <b>145/145 ข้อผ่าน</b> ทั้งโหมดสว่างและมืด (รันซ้ำตอนทำเล่มนี้ วันที่ 9 ต.ค. 2569 ก็ได้ 145/145 และ unit test 157/157) และมี workflow รันชุดเดียวกันบน WebKit (เอนจินของ Safari) แบบ iPhone โหมดมืดด้วย</p>
+
+<h2>Manual test: ทดสอบบนมือถือจริง</h2>
+<p>บางอย่างทดสอบอัตโนมัติไม่ได้ เช่น ไมโครโฟนจริง แกลเลอรีจริง สลิปจริงจากธนาคาร ทีมจึงมีแผน MT-01 ถึง MT-12 ใน <code>docs/TRACEABILITY.md</code> ให้สมาชิกทดสอบบนมือถือแล้วกรอกผล</p>
+<table><thead><tr><th>ID</th><th>ขั้นตอน</th><th>ผลที่คาดหวัง</th></tr></thead><tbody>
+<tr><td>MT-02</td><td>จดรายจ่าย ฿85 หมวดอาหาร</td><td>ยอดคงเหลือลด ฿85, หมวดอาหารเพิ่ม, Runway เปลี่ยน</td></tr>
+<tr><td>MT-03</td><td>ลบรายการ แล้วกด "เลิกทำ"</td><td>รายการกลับมา ยอดเท่าเดิม</td></tr>
+<tr><td>MT-08</td><td>ถามโค้ช "ซื้อของ 500 บาทวันนี้ได้ไหม"</td><td>ตอบไทย อ้าง Runway ก่อน/หลัง ไม่ตำหนิ</td></tr>
+<tr><td>MT-10</td><td>บัญชี A ไม่เห็นรายการของบัญชี B</td><td>RLS กันไว้</td></tr>
+<tr><td>MT-11</td><td>บันทึกสลิปจริงลงแกลเลอรี แล้วเปิดแอป</td><td>ภายในไม่กี่วินาทีขึ้น "เพิ่ม 1 รายการจากสลิปใหม่"</td></tr>
+<tr><td>MT-12</td><td>พูด "ข้าว 50 บาท น้ำ 15"</td><td>เห็น 2 รายการ บันทึกแล้วยอดลด ฿65</td></tr>
+</tbody></table>
+<x-box kind="warn" title="ตรวจก่อนนำเสนอ">
+<p>ในเอกสาร Traceability ช่อง "ผล" ของ MT ทุกข้อยังเป็น ⬜ (ยังไม่ได้กรอก) และในบันทึกการใช้ AI ช่อง "Human verification" ยังเป็น ☐ หลายข้อ ทีมควรทดสอบจริงและกรอกผลก่อนส่งงาน เพราะอาจารย์อาจถามว่า "ทดสอบบนมือถือจริงหรือยัง"</p>
+</x-box>
+
+<h2>Traceability: ผูก Requirement → โค้ด → เทสต์</h2>
+<p>วิชา Software Engineering เน้น "Golden Thread" คือทุก requirement ต้องโยงไปหาโค้ดที่ทำ และเทสต์ที่พิสูจน์ได้ ทีมเราเก็บไว้ใน <code>docs/TRACEABILITY.md</code> เป็นตาราง 3 คอลัมน์: Acceptance criteria | Code | Test เช่น</p>
+<table><thead><tr><th>Acceptance criteria (FR-6)</th><th>Code</th><th>Test</th></tr></thead><tbody>
+<tr><td>ค่าเฉลี่ยนับวันที่ไม่ได้ใช้เงินด้วย</td><td class="mono">averageDailyExpense</td><td>TC-12</td></tr>
+<tr><td>ยอด ≤ เส้นสำรอง → สถานะ below_floor</td><td class="mono">computeRunway</td><td>TC-16</td></tr>
+</tbody></table>
+<p>แต่ละเล่มในภาค ข มีตารางแบบนี้ครบทุกข้อของ FR นั้น</p>
+
+<h2>ตรวจคุณภาพอื่น ๆ</h2>
+<table><thead><tr><th>คำสั่ง</th><th>ตรวจอะไร</th></tr></thead><tbody>
+<tr><td class="mono">npm run typecheck</td><td>TypeScript ตรวจชนิดข้อมูลทั้งโปรเจกต์ (0 error)</td></tr>
+<tr><td class="mono">npx expo lint</td><td>ESLint ตรวจรูปแบบโค้ดและกฎของ React Hooks</td></tr>
+<tr><td>Supabase Advisors</td><td>ตัวตรวจความปลอดภัยและประสิทธิภาพของฐานข้อมูล (แก้จนเหลือ 0 ปัญหาเรื่องตาราง)</td></tr>
+<tr><td>ผู้ตรวจอิสระ</td><td>ตอนตรวจทั้ง repo (1–3 ต.ค.) ให้ผู้ตรวจที่ไม่ได้เห็นงานเทียบพฤติกรรมก่อน/หลังแก้ (เช่น ประโยคพูด 260 ประโยค ชื่อผู้รับ 120 ชื่อ) เจอ regression 10 ข้อ แก้ครบพร้อมเทสต์</td></tr>
+</tbody></table>
+</x-ch>

@@ -1,0 +1,117 @@
+<x-ch title="แผนที่ระบบ: ชิ้นส่วนทั้งหมดต่อกันยังไง" lead="ภาพใหญ่ของ MindPay ตั้งแต่นิ้วแตะจอ จนข้อมูลไปถึงฐานข้อมูลบนคลาวด์และกลับมาเป็นตัวเลขบนหน้าจอ">
+
+<h2>ระบบมี 4 ส่วนใหญ่</h2>
+<div class="flow">
+<div class="st dark"><b>① แอปบนมือถือหรือเว็บ</b> (โค้ดในโฟลเดอร์ <span class="mono">src/</span>)<small>สร้างด้วย Expo + React Native ภาษา TypeScript โค้ดชุดเดียวได้ทั้งแอป Android, iPhone และเว็บ ทำหน้าที่แสดงหน้าจอ รับการแตะ คำนวณตัวเลขทั้งหมด (ยอดคงเหลือ, Runway) อ่าน QR บนสลิป และแปลงเสียงพูดเป็นรายการ</small></div>
+<div class="ar">⇅ <span>อินเทอร์เน็ต (HTTPS) ด้วย "publishable key" ซึ่งเป็นกุญแจสาธารณะ</span></div>
+<div class="st"><b>② Supabase: ฐานข้อมูล + ระบบบัญชีผู้ใช้</b> (โค้ดใน <span class="mono">supabase/migrations/</span>)<small>ฐานข้อมูล PostgreSQL เก็บตาราง profiles, transactions, savings_goals, ai_usage ทุกตารางเปิด Row Level Security (RLS) ทำให้แต่ละคนอ่านและแก้ได้เฉพาะแถวของตัวเอง ระบบ Auth จัดการสมัคร เข้าสู่ระบบ ยืนยันอีเมล</small></div>
+<div class="ar">⇅ <span>เฉพาะงานที่ต้องใช้ AI</span></div>
+<div class="st"><b>③ Supabase Edge Functions: โค้ดฝั่งเซิร์ฟเวอร์</b> (โค้ดใน <span class="mono">supabase/functions/</span>)<small>ฟังก์ชัน 2 ตัว: <b>parse-slip</b> (อ่านสลิป, FR-4) และ <b>coach</b> (โค้ชน้องกล้า, FR-5) ตรวจว่าผู้ใช้เข้าสู่ระบบจริง นับโควตาต่อวัน แล้วถือ "กุญแจลับ" ของ AI ไว้เรียกแทนแอป</small></div>
+<div class="ar">⇅ <span>API key ลับ (อยู่บนเซิร์ฟเวอร์เท่านั้น)</span></div>
+<div class="st gold"><b>④ AI ภายนอก: Claude (Anthropic) หรือ Gemini (Google)</b><small>อ่านรูปสลิปแล้วตอบเป็น JSON และเขียนคำอธิบายของโค้ช ระบบเลือกใช้ตัวที่มีกุญแจ ถ้ามีทั้งสองตัวจะใช้ Claude ก่อน</small></div>
+</div>
+<x-box kind="tip" title="จำให้ได้: 4 กฎของสถาปัตยกรรม (จาก README)">
+<ol>
+<li><b>เงินเก็บเป็นสตางค์ (จำนวนเต็ม)</b> ไม่มีปัญหาทศนิยมเพี้ยน</li>
+<li><b>เวลาอิงเวลาไทย (UTC+7) ทุกจุด</b> ทั้งการจัดกลุ่มรายวันและการอ่านวันที่บนสลิป</li>
+<li><b>สลิปที่ AI อ่านได้ไม่ชัดเป็น "แบบร่าง"</b> จนกว่าผู้ใช้จะยืนยัน ไม่เข้ายอดเงินก่อน</li>
+<li><b>กุญแจ AI อยู่บนเซิร์ฟเวอร์เท่านั้น</b> ในแอปไม่มีกุญแจลับเลยสักตัว</li>
+</ol>
+</x-box>
+
+<h2>ข้างในแอป: แบ่งโค้ดเป็น 5 ชั้น</h2>
+<p>ถ้าเอาโค้ดทุกอย่างไปกองในไฟล์เดียว จะแก้ยากและทดสอบไม่ได้ ทีมเราจึงแยกตามหน้าที่ แต่ละโฟลเดอร์ใน <span class="mono">src/</span> มีหน้าที่ชัดเจน และมีกฎว่าใครเรียกใครได้</p>
+<table><thead><tr><th>ชั้น</th><th>โฟลเดอร์</th><th>หน้าที่</th><th>ตัวอย่างไฟล์</th></tr></thead><tbody>
+<tr><td><b>หน้าจอ</b></td><td class="mono">src/app/</td><td>แต่ละไฟล์คือ 1 หน้า (Expo Router) วางชิ้นส่วน รับการแตะ แล้วเรียกชั้นอื่นทำงาน</td><td><code>src/app/transaction.tsx</code> หน้าจดรายการ</td></tr>
+<tr><td><b>ชิ้นส่วนหน้าตา</b></td><td class="mono">src/ui/</td><td>ปุ่ม การ์ด ช่องกรอก สี ตัวอักษร กราฟ ภาพวาด ใช้ซ้ำได้ทุกหน้า</td><td><code>src/ui/components.tsx</code>, <code>src/ui/theme.ts</code></td></tr>
+<tr><td><b>กฎและการคำนวณ</b></td><td class="mono">src/domain/</td><td>"สมอง" ของแอป เป็นฟังก์ชันล้วน รับตัวเลขเข้า ส่งตัวเลขออก ไม่ยุ่งกับหน้าจอหรืออินเทอร์เน็ต จึงทดสอบได้ง่าย มี unit test ทุกไฟล์</td><td><code>src/domain/runway.ts</code>, <code>src/domain/money.ts</code></td></tr>
+<tr><td><b>ข้อมูล</b></td><td class="mono">src/data/</td><td>โหลดและบันทึกข้อมูล ทั้งบนคลาวด์ (Supabase) และในเครื่อง (โหมดทดลอง) และเก็บ "สถานะกลาง" ที่ทุกหน้าใช้ร่วมกัน</td><td><code>src/data/repo.ts</code>, <code>src/data/AppProvider.tsx</code></td></tr>
+<tr><td><b>บริการภายนอก</b></td><td class="mono">src/services/</td><td>งานที่คุยกับโลกนอกแอป: แกลเลอรีรูป ไมโครโฟน เสียงอ่าน และเรียก Edge Functions</td><td><code>src/services/slips.ts</code>, <code>src/services/coach.ts</code></td></tr>
+</tbody></table>
+<div class="flow">
+<div class="st"><b>src/app (หน้าจอ)</b><small>เรียกใช้ได้ทุกชั้นด้านล่าง</small></div>
+<div class="ar">↓</div>
+<div class="cols" style="margin:0"><div class="st"><b>src/ui</b><small>หน้าตา</small></div><div class="st"><b>src/services</b><small>โลกภายนอก</small></div></div>
+<div class="ar">↓</div>
+<div class="st"><b>src/data</b><small>ข้อมูลและสถานะกลาง (AppProvider, Repo)</small></div>
+<div class="ar">↓</div>
+<div class="st gold"><b>src/domain</b><small>ฟังก์ชันล้วน ไม่ import อะไรจากชั้นบนเลย ทุกชั้นเรียกใช้ได้</small></div>
+</div>
+<x-box kind="analogy" title="ทำไมแยก domain ออกมา">
+<p>เหมือนแยก "สูตรคำนวณภาษี" ออกจาก "แบบฟอร์มกรอกภาษี" ถ้าสูตรเปลี่ยน แก้ที่เดียว แบบฟอร์มทุกฉบับได้ผลใหม่ทันที และเราตรวจสูตรได้ด้วยการใส่ตัวเลขทดลองโดยไม่ต้องกรอกแบบฟอร์มจริง โค้ดใน <span class="mono">src/domain</span> ก็เช่นกัน มีเทสต์ 157 ข้อที่รันจบในไม่ถึง 2 วินาทีโดยไม่ต้องเปิดแอป</p>
+</x-box>
+
+<h2>ตามข้อมูล 1 รายการ: ตั้งแต่กดบันทึก จนตัวเลขบนหน้าหลักเปลี่ยน</h2>
+<p>วิธีที่ดีที่สุดในการเข้าใจระบบ คือเลือกการกระทำหนึ่งอย่าง แล้วตามดูว่ามันวิ่งผ่านไฟล์ไหนบ้าง สมมติผู้ใช้จด "ข้าวมันไก่ ฿85" แล้วกด "บันทึกรายการ"</p>
+<div class="flow">
+<div class="st"><b>1. หน้าจดรายการ</b> <code>src/app/transaction.tsx</code><small>ฟังก์ชัน <span class="mono">save()</span> แปลง "85" เป็น 8,500 สตางค์ ด้วย <span class="mono">parseBahtToSatang</span> แล้วเรียก <span class="mono">addTx(...)</span></small></div>
+<div class="ar">↓</div>
+<div class="st"><b>2. สถานะกลาง</b> <code>src/data/AppProvider.tsx</code><small><span class="mono">addTx</span> ส่งต่อให้ Repo บันทึก รอผลกลับมา แล้วเพิ่มรายการใหม่เข้าไปในรายการทั้งหมด (<span class="mono">setTxs</span>)</small></div>
+<div class="ar">↓</div>
+<div class="st"><b>3. Repo</b> <code>src/data/repo.ts</code><small>บัญชีจริง: แปลงชื่อช่องเป็นแบบฐานข้อมูล (amountSatang → amount_satang) แล้วส่งคำสั่ง insert ไปที่ Supabase · โหมดทดลอง: เก็บลงเครื่องแทน</small></div>
+<div class="ar">↓ <span>อินเทอร์เน็ต</span></div>
+<div class="st"><b>4. ฐานข้อมูล Supabase</b> <code>supabase/migrations/20260927000000_init.sql</code><small>ตรวจกฎ: จำนวนเงินต้อง &gt; 0, ผู้บันทึกต้องเป็นเจ้าของแถว (RLS) แล้วเพิ่มแถวใหม่ในตาราง transactions ส่งแถวที่บันทึกแล้วกลับไป</small></div>
+<div class="ar">↓ <span>ข้อมูลกลับมาที่แอป</span></div>
+<div class="st gold"><b>5. คำนวณใหม่อัตโนมัติ</b> <span class="mono">useMoney()</span> ใน <code>src/data/AppProvider.tsx</code><small>เพราะรายการเปลี่ยน React จึงคำนวณยอดคงเหลือ (FR-2) และ Money Runway (FR-6) ใหม่ด้วยฟังก์ชันใน <span class="mono">src/domain</span> แล้ววาดหน้าหลักใหม่ ตัวเลขลดลง ฿85 ทันที</small></div>
+</div>
+<p>ดูโค้ดจริงของแต่ละขั้น (ยังไม่ต้องเข้าใจทุกคำ บท A4–A9 จะสอนทีละอย่าง ตอนนี้ดูแค่ว่ามันต่อกันยังไง)</p>
+<h3>ขั้น 1: หน้าจดรายการเรียก addTx</h3>
+<x-code src="src/app/transaction.tsx" lines="87-124" hl="89,113"></x-code>
+<table class="walk"><thead><tr><th>บรรทัด</th><th>ความหมาย</th></tr></thead><tbody>
+<tr><td>87</td><td>ประกาศฟังก์ชัน <span class="mono">save</span> ซึ่งทำงานเมื่อกดปุ่มบันทึก คำว่า <span class="mono">async</span> แปลว่าข้างในมีงานที่ต้องรอ (เช่น รออินเทอร์เน็ต)</td></tr>
+<tr><td>88</td><td>ถ้ากำลังบันทึกอยู่แล้ว (<span class="mono">busy</span>) ให้ออกเลย กันคนกดปุ่มรัว ๆ แล้วได้รายการซ้ำ</td></tr>
+<tr><td>89–93</td><td>แปลงข้อความในช่องเงินเป็นสตางค์ ถ้าแปลงไม่ได้ (เช่น พิมพ์ "abc" หรือ 0) จะได้ <span class="mono">null</span> แล้วขึ้นข้อความเตือนใต้ช่อง และหยุดไม่บันทึก</td></tr>
+<tr><td>95</td><td>ถ้าวันที่หรือเวลาที่พิมพ์ (บนเว็บ) ผิดรูปแบบ ก็ไม่บันทึก</td></tr>
+<tr><td>96–103</td><td>รวมค่าจากทุกช่องในฟอร์มเป็นก้อนเดียวชื่อ <span class="mono">input</span>: ประเภท จำนวนเงิน หมวด ชื่อ บันทึก และเวลา (แปลงวันและเวลาไทยเป็นรูปแบบสากลด้วย <span class="mono">bkkToIso</span>)</td></tr>
+<tr><td>104</td><td>ตั้ง <span class="mono">busy</span> เป็นจริง ปุ่มจะหมุนรอและกดซ้ำไม่ได้</td></tr>
+<tr><td>106–111</td><td>ถ้าเป็นการแก้รายการเดิม เรียก <span class="mono">updateTx</span> แทน</td></tr>
+<tr><td>113–121</td><td>ถ้าเป็นรายการใหม่ เรียก <span class="mono">addTx</span> พร้อมบอกว่ามาจากการจดเอง (<span class="mono">manual</span>) และยืนยันแล้ว (<span class="mono">confirmed</span>) จึงนับในยอดเงินทันที</td></tr>
+<tr><td>122</td><td>ขึ้นข้อความสั้น ๆ ด้านล่าง (toast) ว่า "บันทึกรายการแล้ว"</td></tr>
+<tr><td>124</td><td>ปิดหน้าฟอร์มกลับไปหน้าก่อน</td></tr>
+</tbody></table>
+<h3>ขั้น 2: AppProvider ส่งต่อให้ Repo แล้วอัปเดตรายการ</h3>
+<x-code src="src/data/AppProvider.tsx" lines="385-392"></x-code>
+<table class="walk"><thead><tr><th>บรรทัด</th><th>ความหมาย</th></tr></thead><tbody>
+<tr><td>386</td><td>หยิบ Repo ตัวที่ใช้อยู่ (บัญชีจริงหรือโหมดทดลอง) ถ้ายังไม่ได้เข้าสู่ระบบ <span class="mono">need()</span> จะโยน error</td></tr>
+<tr><td>387</td><td>สั่ง Repo บันทึก แล้วรอผล (<span class="mono">await</span>) ได้รายการที่มี id จริงกลับมา</td></tr>
+<tr><td>388</td><td>ถ้าระหว่างรอ ผู้ใช้สลับบัญชีไปแล้ว ไม่ต้องเอารายการนี้ไปใส่ในบัญชีใหม่</td></tr>
+<tr><td>389</td><td>จดไว้ว่ามีการเปลี่ยนแปลงในเครื่อง (กันรายการหายถ้ากำลังโหลดข้อมูลชุดใหม่พร้อมกัน)</td></tr>
+<tr><td>390</td><td>เอารายการใหม่ไปไว้หน้าสุดของรายการทั้งหมด การเรียก <span class="mono">setTxs</span> ทำให้ React วาดทุกหน้าที่ใช้รายการนี้ใหม่</td></tr>
+</tbody></table>
+<h3>ขั้น 3: Repo ส่งคำสั่งไป Supabase</h3>
+<x-code src="src/data/repo.ts" lines="217-222"></x-code>
+<table class="walk"><thead><tr><th>บรรทัด</th><th>ความหมาย</th></tr></thead><tbody>
+<tr><td>218</td><td>อ่านเหมือนประโยคภาษาอังกฤษ: "จากตาราง transactions, เพิ่ม (insert) แถวนี้, แล้วเลือก (select) แถวที่เพิ่ง เพิ่มกลับมา 1 แถว (single)" <span class="mono">toRow</span> แปลงชื่อช่องให้ตรงกับฐานข้อมูล</td></tr>
+<tr><td>219</td><td>ถ้าฐานข้อมูลตอบว่า "ซ้ำ" (รหัส 23505) แปลว่าสลิปนี้เคยบันทึกแล้ว โยน error แบบพิเศษให้หน้าจอบอกผู้ใช้ว่า "มีรายการจากสลิปนี้อยู่แล้ว"</td></tr>
+<tr><td>220</td><td>error อื่น ๆ (เช่น อินเทอร์เน็ตหลุด) โยนต่อให้หน้าจอขึ้น "บันทึกไม่สำเร็จ ลองอีกครั้ง"</td></tr>
+<tr><td>221</td><td>แปลงแถวจากฐานข้อมูลกลับเป็นรูปแบบที่แอปใช้ (amount_satang → amountSatang) แล้วส่งคืน</td></tr>
+</tbody></table>
+<h3>ขั้น 5: ตัวเลขคำนวณใหม่เอง</h3>
+<x-code src="src/data/AppProvider.tsx" lines="442-459" hl="449,453"></x-code>
+<table class="walk"><thead><tr><th>บรรทัด</th><th>ความหมาย</th></tr></thead><tbody>
+<tr><td>443</td><td><span class="mono">useMoney</span> คือ "hook" ที่ทุกหน้าเรียกใช้เมื่ออยากได้ตัวเลขเงิน (บท A6 อธิบายว่า hook คืออะไร)</td></tr>
+<tr><td>444</td><td>ดึงข้อมูลดิบจากสถานะกลาง: โปรไฟล์ รายการ ยอดยกมา กระปุกออม และวันนี้</td></tr>
+<tr><td>445</td><td><span class="mono">useMemo</span> แปลว่า "คำนวณแล้วจำไว้" คำนวณใหม่เฉพาะเมื่อข้อมูลในบรรทัด 458 เปลี่ยน</td></tr>
+<tr><td>446–447</td><td>ยอดเงินตอนเริ่มใช้แอป และเส้นเงินสำรอง (ถ้ายังไม่ตั้ง ใช้ 50,000 สตางค์ = ฿500)</td></tr>
+<tr><td>449</td><td>คำนวณยอดคงเหลือ (FR-2) จากรายการทั้งหมด</td></tr>
+<tr><td>450–453</td><td>คำนวณค่าเฉลี่ยรายจ่าย เงินในกระปุก และ Money Runway (FR-6)</td></tr>
+<tr><td>454</td><td>หารายการแบบร่างที่รอตรวจ (FR-4)</td></tr>
+<tr><td>455</td><td>ส่งตัวเลขทั้งหมดออกไปให้หน้าจอใช้</td></tr>
+<tr><td>458</td><td>รายการ "สิ่งที่ต้องจับตา" ถ้า <span class="mono">txs</span> เปลี่ยน (เพิ่งเพิ่มข้าวมันไก่) จะคำนวณใหม่ทั้งหมด และ <span class="mono">today</span> ทำให้คำนวณใหม่ตอนเที่ยงคืน</td></tr>
+</tbody></table>
+<x-box kind="tip" title="จำให้ได้: ตัวเลขบนหน้าจอไม่ได้เก็บไว้ แต่คิดใหม่ทุกครั้ง">
+<p>ยอดคงเหลือ ค่าเฉลี่ย และ Runway <b>ไม่ได้เก็บในฐานข้อมูล</b> ฐานข้อมูลเก็บแค่ "รายการ" แล้วแอปคำนวณตัวเลขทั้งหมดสด ๆ จากรายการทุกครั้งที่มีอะไรเปลี่ยน ข้อดีคือตัวเลขไม่มีทางขัดกันเอง (ไม่มีกรณียอดในฐานข้อมูลบอกอย่างหนึ่ง แต่รายการบอกอีกอย่าง) คอมเมนต์บนสุดของ <code>src/data/AppProvider.tsx</code> เขียนไว้ว่า "Numbers shown on screen are always derived from this state … never stored twice"</p>
+</x-box>
+
+<h2>ตามข้อมูลที่ใช้ AI: สแกนสลิป 1 ใบ</h2>
+<div class="flow">
+<div class="st"><b>1. มือถือหารูปใหม่ในแกลเลอรี</b> <code>src/services/AutoScanProvider.tsx</code><small>อ่าน QR บนรูปในเครื่องก่อน (ฟรี ไม่ใช้อินเทอร์เน็ต) รูปไหนไม่มี QR ของสลิปธนาคารจะไม่ถูกส่งไปไหนเลย</small></div>
+<div class="ar">↓ <span>เฉพาะรูปที่เป็นสลิป</span></div>
+<div class="st"><b>2. ส่งรูปไป Edge Function</b> <code>src/services/slips.ts</code> → <code>supabase/functions/parse-slip/index.ts</code><small>เซิร์ฟเวอร์ตรวจว่าเข้าสู่ระบบจริง ตรวจโควตา (300 ใบต่อวัน) แล้วส่งรูปให้ AI อ่าน 2 ครั้งพร้อมกันด้วย 2 รุ่น</small></div>
+<div class="ar">↓</div>
+<div class="st gold"><b>3. AI ตอบเป็น JSON</b><small>ยอดเงิน วันที่ ชื่อผู้รับ ธนาคาร และ "ความมั่นใจ" ของแต่ละช่อง เซิร์ฟเวอร์รวมผลสองครั้ง ถ้าไม่ตรงกันจะให้ผู้ใช้ตรวจ</small></div>
+<div class="ar">↓</div>
+<div class="st"><b>4. แอปบันทึกรายการ</b><small>AI อ่านตรงกันทั้ง 2 ครั้งและมั่นใจทุกช่อง ≥ 80% → เข้ายอดเงินเลย (ผู้ใช้ปิดตัวเลือกนี้ได้ในหน้าตั้งค่า) · ไม่มั่นใจหรืออ่านไม่ตรงกัน → เป็นแบบร่าง รอผู้ใช้ตรวจ แล้วตัวเลขทั้งแอปคำนวณใหม่เหมือนขั้น 5 ด้านบน</small></div>
+</div>
+<p>รายละเอียดของ AI อยู่ในบท A10 และรายละเอียดเต็มของการสแกนสลิปอยู่ในเล่ม FR-4</p>
+</x-ch>

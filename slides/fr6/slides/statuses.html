@@ -1,0 +1,29 @@
+<section id="statuses" data-transition="fade" style="background:#F5F7F2;color:#3D5047;font-family:'Anuphan', Tahoma, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:28px">
+<div style="display:flex;flex-direction:column;gap:8px">
+<p style="font-size:26px;font-weight:600;letter-spacing:2px;color:#8A6A14">สถานะ</p>
+<h2 style="font-family:'Noto Serif Thai', Tahoma, serif;font-size:60px;font-weight:700;line-height:1.25;color:#0E3B2C">5 สถานะ: บอกทั้งตัวเลข และ “ควรรู้สึกยังไง”</h2>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px">
+<div style="display:flex;border-radius:16px;overflow:hidden">
+<div style="width:259px;background:#A63A26;padding:14px 16px"><p style="font-size:26px;font-weight:700;color:#FFF8F0;text-align:center">ใกล้เส้นสำรอง</p></div>
+<div style="width:259px;background:#8F5B0A;padding:14px 16px"><p style="font-size:26px;font-weight:700;color:#FFF8F0;text-align:center">เริ่มต้องระวัง</p></div>
+<div style="flex:1;background:#26704A;padding:14px 16px"><p style="font-size:26px;font-weight:700;color:#F3FBF6;text-align:center">สบาย ๆ (14 วันขึ้นไป · ต้นไม้เต็มที่ 45 วัน)</p></div>
+</div>
+<div style="display:flex">
+<p style="width:259px;font-size:24px;color:#6B7C73">0 – 6 วัน</p>
+<p style="width:259px;font-size:24px;color:#6B7C73">7 – 13 วัน</p>
+<p style="flex:1;font-size:24px;color:#6B7C73">14 วันขึ้นไป (สูงสุดแสดง 365+)</p>
+</div>
+</div>
+<table style="width:1664px;font-size:28px;color:#0E3B2C">
+<tr style="background:#0E3B2C"><th style="width:24%;color:#F3F0E4">สถานะในโค้ด</th><th style="width:38%;color:#F3F0E4">เงื่อนไข</th><th style="width:38%;color:#F3F0E4">ป้ายในแอป</th></tr>
+<tr><td>healthy</td><td>14 วันขึ้นไป</td><td>สบาย ๆ</td></tr>
+<tr><td>watch</td><td>7 – 13 วัน</td><td>เริ่มต้องระวัง</td></tr>
+<tr><td>critical</td><td>0 – 6 วัน (ยังเหนือเส้น)</td><td>ใกล้เส้นสำรอง</td></tr>
+<tr><td>below_floor</td><td>เงินที่ใช้ได้ ≤ 0</td><td>ต่ำกว่าเงินสำรอง</td></tr>
+<tr><td>no_spending</td><td>ค่าเฉลี่ย = 0 (7 วันไม่มีรายจ่าย)</td><td>รอข้อมูลรายจ่าย</td></tr>
+</table>
+<p style="font-size:24px;line-height:1.45;color:#4B5F55">สีเป็นแค่ตัวช่วย ทุกสถานะมีข้อความกำกับเสมอ คนที่แยกสีไม่ออกก็อ่านเข้าใจ · น้องกล้าพูดสถานะเป็นประโยคสุภาพ ไม่ดุ ไม่ทำให้รู้สึกผิด</p>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6B7C73">MindPay · FR-6 Money Runway · 11</p>
+<aside>ตัวเลขอย่างเดียวไม่พอ ผู้ใช้ต้องรู้ด้วยว่าควรรู้สึกยังไง ฉันจึงแปลงจำนวนวันเป็นสถานะ ถ้าน้อยกว่า 7 วันคือใกล้เส้นสำรอง ควรรีบปรับ 7 ถึง 13 วันคือเริ่มต้องระวัง และตั้งแต่ 14 วันขึ้นไปคือสบาย ๆ เกณฑ์เป็นสัปดาห์จะเข้าใจง่าย ไม่ถึงสัปดาห์ต้องรีบ ไม่ถึงสองสัปดาห์ซึ่งประมาณครึ่งเดือนเริ่มระวัง และยังมีอีกสองกรณีพิเศษ คือเงินต่ำกว่าเส้นสำรองแล้ว กับยังไม่มีรายจ่ายเลยจึงยังคำนวณไม่ได้ สีเป็นแค่ตัวช่วย ทุกสถานะมีข้อความกำกับเสมอ เพื่อคนที่แยกสีไม่ออก และน้องกล้าจะพูดสถานะเป็นประโยคสุภาพ เช่น ค่อย ๆ ไปด้วยกัน ไม่ดุผู้ใช้</aside>
+</section>

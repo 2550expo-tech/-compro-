@@ -1,0 +1,32 @@
+<section id="testing" data-transition="fade" style="background:#E9EFE8;color:#3D5047;font-family:'Anuphan', Tahoma, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:28px">
+<div style="display:flex;flex-direction:column;gap:8px">
+<p style="font-size:26px;font-weight:600;letter-spacing:2px;color:#8A6A14">การทดสอบ</p>
+<h2 style="font-family:'Noto Serif Thai', Tahoma, serif;font-size:60px;font-weight:700;line-height:1.25;color:#0E3B2C">พิสูจน์ว่าสูตรถูก และหน้าจอทำงานจริง</h2>
+</div>
+<div style="display:flex;gap:28px">
+<div style="flex:1;display:flex;flex-direction:column;gap:4px;background:#0E3B2C;border-radius:24px;padding:20px 28px">
+<p style="font-family:'Noto Serif Thai', Tahoma, serif;font-size:48px;font-weight:700;color:#E2B64A">157 / 157</p>
+<p style="font-size:24px;color:#C9DCD2">unit test ทั้งโปรเจกต์ผ่าน (Vitest)</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:4px;background:#0E3B2C;border-radius:24px;padding:20px 28px">
+<p style="font-family:'Noto Serif Thai', Tahoma, serif;font-size:48px;font-weight:700;color:#E2B64A">TC-12 – 18</p>
+<p style="font-size:24px;color:#C9DCD2">เทสต์สูตร FR-6 โดยตรง (+ TC-33, TC-71)</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:4px;background:#0E3B2C;border-radius:24px;padding:20px 28px">
+<p style="font-family:'Noto Serif Thai', Tahoma, serif;font-size:48px;font-weight:700;color:#E2B64A">E2E</p>
+<p style="font-size:24px;color:#C9DCD2">เบราว์เซอร์จริง: ลากแถบ 30% · ซื้อ ฿2,000 · ถามโค้ช · กระปุก</p>
+</div>
+</div>
+<table style="width:1664px;font-size:25px;color:#0E3B2C">
+<tr style="background:#0E3B2C"><th style="width:12%;color:#F3F0E4">เทสต์</th><th style="width:48%;color:#F3F0E4">ใส่ข้อมูล</th><th style="width:40%;color:#F3F0E4">ต้องได้</th></tr>
+<tr><td>TC-12</td><td>รายจ่าย ฿700 + ฿700 ใน 7 วัน และ ฿5,000 นอกหน้าต่าง</td><td>หาร 7 → ฿200 (ไม่นับ ฿5,000)</td></tr>
+<tr><td>TC-13</td><td>ผู้ใช้ใหม่ รายการแรก 3 วันก่อน ฿300</td><td>หาร 3 → ฿100</td></tr>
+<tr><td>TC-14</td><td>ยอด ฿3,500 · สำรอง ฿500 · เฉลี่ย ฿200</td><td>15 วัน · ถึง 12 ต.ค. · healthy</td></tr>
+<tr><td>TC-15</td><td>ค่าเฉลี่ย ฿0</td><td>no_spending · ไม่พังเพราะหารศูนย์</td></tr>
+<tr><td>TC-16</td><td>ยอด ฿500 · สำรอง ฿500 (เท่ากันพอดี)</td><td>below_floor · 0 วัน</td></tr>
+<tr><td>TC-17</td><td>ตั้งให้ได้ 6, 7 และ 14 วันพอดี (ทดสอบที่ขอบ)</td><td>critical · watch · healthy</td></tr>
+<tr><td>TC-18</td><td>ซื้อของ ฿1,000 · ใช้ได้วันละถึงสิ้นเดือน</td><td>10 วัน · ฿750 / วัน</td></tr>
+</table>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6B7C73">MindPay · FR-6 Money Runway · 22</p>
+<aside>ฉันพิสูจน์ว่าสูตรถูกด้วย unit test ซึ่งทั้งโปรเจกต์ผ่านครบ 157 จาก 157 เทสต์ของ FR-6 โดยตรงคือ TC-12 ถึง TC-18 ในเทสต์ฉันกำหนดวันนี้ตายตัวเป็น 27 ก.ย. 2569 ผลจึงเหมือนเดิมทุกครั้งไม่ว่ารันวันไหน TC-12 ตรวจว่าวันที่ไม่ได้ใช้เงินถูกนับ และรายการนอกหน้าต่างไม่ถูกนับ TC-13 ตรวจกฎผู้ใช้ใหม่ TC-14 ตรวจจำนวนวันและวันที่ TC-15 ตรวจว่าค่าเฉลี่ยศูนย์ไม่ทำให้แอปพัง TC-16 ลองยอดเท่ากับเส้นสำรองพอดี TC-17 ลองที่ขอบของเกณฑ์ 6 7 และ 14 วัน เพราะบั๊กชอบซ่อนตรงขอบ เช่นเผลอเขียนน้อยกว่าหรือเท่ากับแทนน้อยกว่า และ TC-18 ตรวจเช็กก่อนจ่ายกับใช้ได้วันละ นอกจากนี้มีเทสต์ E2E ที่เปิดเบราว์เซอร์จริงแล้วกดเหมือนคน เช่นลากแถบไป 30% ใส่ราคา ฿2,000 และกดถามโค้ช</aside>
+</section>

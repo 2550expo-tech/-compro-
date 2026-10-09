@@ -1,0 +1,168 @@
+<x-ch title="TypeScript: ภาษาที่ทีมเราใช้ และชนิดข้อมูลของ MindPay" lead="TypeScript คือ JavaScript ที่บังคับให้บอกว่าข้อมูลแต่ละตัวเป็นชนิดอะไร ทำให้จับผิดได้ตั้งแต่ตอนพิมพ์ ก่อนผู้ใช้จะเจอ">
+
+<h2>ทำไมต้อง TypeScript</h2>
+<p>ใน JavaScript ธรรมดา ถ้าพิมพ์ <span class="mono">tx.amountSatnag</span> (สะกดผิด) โปรแกรมจะรันได้ แต่ได้ค่า undefined แล้วยอดเงินเพี้ยนตอนผู้ใช้กำลังใช้ ส่วน TypeScript จะขีดเส้นแดงใน VS Code ทันทีว่า "ไม่มีช่องชื่อนี้" ทีมเราเปิดโหมดเข้มงวดที่สุด (<span class="mono">"strict": true</span> ในไฟล์ <span class="mono">tsconfig.json</span>) และรัน <span class="mono">npm run typecheck</span> ก่อน build APK ทุกครั้ง</p>
+<x-box kind="analogy" title="เปรียบเทียบ">
+<p>TypeScript เหมือนแบบฟอร์มราชการที่มีช่องบังคับว่า "ช่องนี้ต้องเป็นตัวเลข 13 หลัก" กรอกผิดเจ้าหน้าที่ตีกลับทันทีที่โต๊ะ ดีกว่าไปรู้ตอนเอกสารเข้าระบบแล้ว เมื่อ build แอป ชนิดข้อมูลทั้งหมดจะถูกลบออก เหลือ JavaScript ธรรมดา ชนิดข้อมูลจึงช่วยเราตอนเขียนโค้ดเท่านั้น ไม่ทำให้แอปช้าลง</p>
+</x-box>
+
+<h2>การบอกชนิดข้อมูล (type annotation)</h2>
+<x-snip title="บอกชนิดด้วย :">
+const days: number = 16;
+const title: string = 'ข้าวมันไก่';
+let slipRef: string | null = null;   // เป็น string หรือ null ก็ได้
+function toBaht(satang: number): number { return satang / 100; }
+</x-snip>
+<p>หลายครั้งไม่ต้องเขียนชนิดเอง TypeScript เดาเองได้ (type inference) เช่น <span class="mono">const days = 16</span> รู้เองว่าเป็น number เอาเมาส์ชี้ใน VS Code จะเห็นชนิดที่มันเดา</p>
+
+<h2>ไฟล์ชนิดข้อมูลกลาง: src/domain/types.ts</h2>
+<p>ไฟล์นี้สำคัญที่สุดไฟล์หนึ่ง เพราะกำหนดว่า "รายการเงิน" และ "โปรไฟล์ผู้ใช้" หน้าตาเป็นยังไง ทุก FR ใช้ร่วมกัน</p>
+<x-code src="src/domain/types.ts" lines="1-55"></x-code>
+<table class="walk"><thead><tr><th>บรรทัด</th><th>ความหมาย</th></tr></thead><tbody>
+<tr><td>1–7</td><td>คอมเมนต์อธิบายกฎสำคัญ: เงินเก็บเป็นจำนวนเต็มสตางค์เสมอ (1 บาท = 100 สตางค์) เพราะใน JavaScript <span class="mono">0.1 + 0.2</span> ไม่เท่ากับ 0.3</td></tr>
+<tr><td>9</td><td><b>union type</b>: ชนิด <span class="mono">TxKind</span> เป็นได้แค่ 2 ค่า คือข้อความ <span class="mono">'income'</span> (รายรับ) หรือ <span class="mono">'expense'</span> (รายจ่าย) เครื่องหมาย <span class="mono">|</span> แปลว่า "หรือ" ถ้าพิมพ์ <span class="mono">'incom'</span> จะขึ้นเส้นแดงทันที</td></tr>
+<tr><td>11–12</td><td>สถานะของรายการ: <span class="mono">'draft'</span> (แบบร่าง ยังไม่นับ) หรือ <span class="mono">'confirmed'</span> (ยืนยันแล้ว นับในยอด) คอมเมนต์อ้างถึง Charter ของทีมว่าผลจากสลิปเป็นแบบร่างก่อน</td></tr>
+<tr><td>14</td><td>รายการมาจากไหน: จดเอง (<span class="mono">'manual'</span>) หรือจากสลิป (<span class="mono">'slip'</span>) รายการที่พูดจด (FR-3) นับเป็น manual</td></tr>
+<tr><td>16</td><td><b>interface</b> = พิมพ์เขียวของ object บอกว่า "รายการ 1 รายการ ต้องมีช่องอะไรบ้าง และแต่ละช่องชนิดอะไร"</td></tr>
+<tr><td>17</td><td><span class="mono">id</span> รหัสไม่ซ้ำของรายการ (ฐานข้อมูลสร้างให้)</td></tr>
+<tr><td>18</td><td><span class="mono">kind</span> ใช้ชนิด TxKind จากบรรทัด 9</td></tr>
+<tr><td>19</td><td><span class="mono">amountSatang</span> จำนวนเงินเป็นสตางค์ (บวกเสมอ ส่วนเข้าหรือออกดูจาก kind)</td></tr>
+<tr><td>20</td><td><span class="mono">categoryKey</span> รหัสหมวด เช่น <span class="mono">'food'</span>, <span class="mono">'transport'</span> (รายชื่อหมวดอยู่ใน <code>src/domain/categories.ts</code>)</td></tr>
+<tr><td>21–22</td><td>ชื่อรายการ และบันทึกเพิ่มเติม (<span class="mono">string | null</span> = ไม่มีบันทึกก็ได้)</td></tr>
+<tr><td>23–24</td><td>เวลาที่เกิดรายการ เก็บแบบสากล ISO 8601 เช่น <span class="mono">"2026-09-27T01:15:00.000Z"</span> (Z = เวลา UTC ซึ่งช้ากว่าไทย 7 ชั่วโมง ตัวอย่างนี้คือ 08:15 น. เวลาไทย)</td></tr>
+<tr><td>25–26</td><td>ที่มาและสถานะ ใช้ชนิดจากบรรทัด 14 และ 12</td></tr>
+<tr><td>27–30</td><td>เลขอ้างอิงจากสลิป และ "ลายนิ้วมือ" ของรูป (SHA-256) ใช้กันสลิปซ้ำ 2 ชั้น (FR-4)</td></tr>
+<tr><td>31–32</td><td>ความมั่นใจต่ำสุดที่ AI อ่านได้ (0 ถึง 1) รายการที่จดเองเป็น null</td></tr>
+<tr><td>33–34</td><td>รายชื่อช่องที่ AI ไม่แน่ใจ เช่น <span class="mono">['amount']</span> ให้หน้าตรวจสลิปไฮไลต์ช่องนั้น <span class="mono">string[]</span> = array ของข้อความ</td></tr>
+<tr><td>35</td><td>เวลาที่สร้างแถวในระบบ</td></tr>
+<tr><td>38–39</td><td><span class="mono">TransactionInput</span> = Transaction ที่ <b>ไม่มี</b> id และ createdAt (<span class="mono">Omit</span> = ตัดช่องออก) ใช้ตอนสร้างรายการใหม่ เพราะสองช่องนี้ฐานข้อมูลเป็นคนสร้าง</td></tr>
+<tr><td>41</td><td>โทนโค้ช 3 แบบเดิม (ไม่ได้ใช้แล้ว เพราะ 29 ก.ย. เปลี่ยนเป็นน้องกล้าเสียงเดียว แต่ยังเก็บชนิดไว้ให้ตรงกับคอลัมน์ในฐานข้อมูล)</td></tr>
+<tr><td>43–53</td><td><span class="mono">Profile</span> ข้อมูลผู้ใช้ 1 คน: ชื่อ, เงินตอนเริ่มใช้แอป (บรรทัด 47), เส้นเงินสำรองของ FR-6 (บรรทัด 49), งบต่อเดือน (ไม่ตั้งก็ได้ = null), โทนโค้ช และตั้งค่าครั้งแรกเสร็จหรือยัง</td></tr>
+<tr><td>55</td><td>ช่วงเวลาที่เลือกดูได้ในหน้าหลัก: วันนี้, 7 วัน, 1 เดือน, 6 เดือน, 1 ปี (FR-2)</td></tr>
+</tbody></table>
+
+<h2>ชนิดข้อมูลแบบพิเศษที่เจอบ่อย</h2>
+<table><thead><tr><th>เขียนว่า</th><th>ความหมาย</th><th>ตัวอย่างใน MindPay</th></tr></thead><tbody>
+<tr><td class="mono">A | B</td><td>เป็น A หรือ B (union)</td><td class="mono">'draft' | 'confirmed'</td></tr>
+<tr><td class="mono">ชื่อ?: ชนิด</td><td>ช่องนี้ไม่ใส่ก็ได้ (optional)</td><td class="mono">now?: Date</td></tr>
+<tr><td class="mono">ชนิด[]</td><td>array ของชนิดนั้น</td><td class="mono">Transaction[]</td></tr>
+<tr><td class="mono">Omit&lt;T, 'a'&gt;</td><td>T ที่ตัดช่อง a ออก</td><td class="mono">Omit&lt;Transaction, 'id' | 'createdAt'&gt;</td></tr>
+<tr><td class="mono">Partial&lt;T&gt;</td><td>T ที่ทุกช่องไม่บังคับ ใช้ตอน "แก้บางช่อง"</td><td class="mono">updateTx(id, patch: Partial&lt;TransactionInput&gt;)</td></tr>
+<tr><td class="mono">Pick&lt;T, 'a' | 'b'&gt;</td><td>T ที่เอาเฉพาะช่อง a และ b</td><td class="mono">Pick&lt;TxRow, 'kind' | 'amount_satang'&gt;</td></tr>
+<tr><td class="mono">Record&lt;K, V&gt;</td><td>object ที่ชื่อช่องเป็นชนิด K ค่าเป็นชนิด V</td><td class="mono">Record&lt;string, unknown&gt;</td></tr>
+<tr><td class="mono">Promise&lt;T&gt;</td><td>"สัญญาว่าจะได้ T ในอนาคต" (งานที่ต้องรอ)</td><td class="mono">getProfile(): Promise&lt;Profile&gt;</td></tr>
+<tr><td class="mono">type X = ...</td><td>ตั้งชื่อเล่นให้ชนิด</td><td class="mono">type TxKind = 'income' | 'expense'</td></tr>
+<tr><td class="mono">x as Y</td><td>บอก TypeScript ว่า "เชื่อฉัน x เป็นชนิด Y" (ใช้น้อย ๆ)</td><td class="mono">data as TxRow[]</td></tr>
+<tr><td class="mono">'confirmed' as const</td><td>ให้ถือว่าเป็นค่าตายตัว ไม่ใช่ string ทั่วไป</td><td class="mono">status: 'confirmed' as const</td></tr>
+<tr><td class="mono">unknown</td><td>ยังไม่รู้ชนิด ต้องตรวจก่อนใช้ (ปลอดภัยกว่า any)</td><td class="mono">context: unknown</td></tr>
+</tbody></table>
+
+<h2>import และ export: แชร์โค้ดระหว่างไฟล์</h2>
+<x-code src="src/data/AppProvider.tsx" lines="6-17"></x-code>
+<table class="walk"><thead><tr><th>บรรทัด</th><th>ความหมาย</th></tr></thead><tbody>
+<tr><td>6</td><td>นำ <span class="mono">Storage</span> มาจากไฟล์ <span class="mono">./storage</span> (จุด = โฟลเดอร์เดียวกัน ไม่ต้องใส่นามสกุลไฟล์)</td></tr>
+<tr><td>7</td><td>นำเครื่องมือของ React มาใช้ ชื่อที่ไม่มีจุดนำหน้า เช่น <span class="mono">'react'</span> คือแพ็กเกจใน node_modules</td></tr>
+<tr><td>9–13</td><td><span class="mono">../domain/...</span> = ถอยออกไป 1 โฟลเดอร์ (จาก data ไป src) แล้วเข้า domain นำฟังก์ชันคำนวณมาใช้</td></tr>
+<tr><td>14</td><td><span class="mono">import type</span> = นำมาเฉพาะชนิดข้อมูล (หายไปตอน build ไม่เพิ่มขนาดแอป)</td></tr>
+<tr><td>11</td><td><span class="mono">type GoalInput</span> ในวงเล็บปีกกา = import ทั้งฟังก์ชันและชนิดจากไฟล์เดียวกันในบรรทัดเดียว</td></tr>
+</tbody></table>
+<p>ฝั่งไฟล์ต้นทางต้องเขียน <span class="mono">export</span> หน้าสิ่งที่ยอมให้คนอื่นใช้ ส่วน <span class="mono">export default</span> ใช้กับ "ของหลัก" ของไฟล์ เช่นหน้าจอแต่ละหน้า (Expo Router หาหน้าจอจาก default export)</p>
+
+<h2>งานที่ต้องรอ: async, await และ Promise</h2>
+<p>การคุยกับอินเทอร์เน็ตใช้เวลา (อาจครึ่งวินาทีหรือหลายวินาที) ถ้าแอปหยุดรอเฉย ๆ หน้าจอจะค้าง JavaScript จึงใช้ <b>Promise</b> คือ "ใบรับของ" ที่บอกว่าเดี๋ยวผลจะมา</p>
+<x-snip title="async / await">
+async function save() {             // async = ฟังก์ชันนี้มีงานที่ต้องรอ
+  const tx = await repo.insert(input);   // await = รอตรงนี้จนได้ผล แต่หน้าจอไม่ค้าง
+  setTxs((list) => [tx, ...list]);  // ทำต่อเมื่อได้ผลแล้ว
+}
+</x-snip>
+<p>ถ้ามีหลายงานที่ไม่ต้องรอกัน ใช้ <span class="mono">Promise.all</span> ทำพร้อมกัน เช่น ตอนโหลดข้อมูลครั้งแรก แอปโหลดโปรไฟล์ รายการ และกระปุกออม พร้อมกันทั้ง 3 อย่าง</p>
+<x-code src="src/data/AppProvider.tsx" lines="131-133"></x-code>
+<p>บรรทัด 133: เรียก 3 งานพร้อมกัน แล้วรอจนเสร็จทั้งหมด ผลออกมาเป็น array 3 ช่อง แกะใส่ตัวแปร <span class="mono">p</span>, <span class="mono">list</span>, <span class="mono">g</span> ส่วน <span class="mono">.catch(() =&gt; [])</span> ท้ายงานที่ 3 แปลว่า "ถ้าโหลดกระปุกออมไม่ได้ ให้ถือว่าไม่มีกระปุก" แอปส่วนอื่นยังใช้ได้ (Supabase ฝั่งเซิร์ฟเวอร์ ใน Edge Function ก็ใช้ <span class="mono">Promise.allSettled</span> อ่านสลิป 2 ครั้งพร้อมกันแบบเดียวกัน บท A10)</p>
+
+<h2>จัดการความผิดพลาด: try, catch, throw</h2>
+<x-snip title="try / catch / finally">
+try {
+  await addTx(input);              // ลองทำ
+  toast({ message: 'บันทึกรายการแล้ว' });
+} catch (e) {                      // ถ้ามี error ระหว่างทาง กระโดดมาที่นี่
+  toast({ message: 'บันทึกไม่สำเร็จ ลองอีกครั้ง', tone: 'error' });
+} finally {                        // ทำเสมอ ไม่ว่าสำเร็จหรือพลาด
+  setBusy(false);
+}
+</x-snip>
+<p><span class="mono">throw</span> คือ "โยน error" ออกไปให้ผู้เรียกจัดการ ทีมเราสร้าง error ชนิดของตัวเองเพื่อแยกเหตุผล เช่น <span class="mono">DuplicateSlipError</span> (สลิปซ้ำ) ใน <code>src/data/repo.ts:14</code></p>
+<x-code src="src/data/repo.ts" lines="14-19"></x-code>
+<p><span class="mono">class ... extends Error</span> = สร้างชนิด error ใหม่โดยต่อยอดจาก Error ธรรมดา <span class="mono">super(...)</span> ส่งข้อความภาษาไทยให้ Error ตัวแม่ และตั้ง <span class="mono">name</span> ไว้ให้หน้าจอเช็กได้ว่าเป็น error แบบไหน (ดู <code>src/app/transaction.tsx:126</code>)</p>
+
+<h2>ทำไมเก็บเงินเป็นสตางค์ (จำนวนเต็ม)</h2>
+<p>คอมพิวเตอร์เก็บทศนิยมเป็นเลขฐานสอง ซึ่งเก็บบางค่าได้ไม่เป๊ะ ทดลองรันใน Node.js จริง:</p>
+<pre class="plain">0.1 + 0.2      → 0.30000000000000004
+19.99 * 100    → 1998.9999999999998</pre>
+<p>ถ้าบวกเงินเป็นบาททศนิยมหลายพันรายการ เศษเล็ก ๆ จะสะสมจนยอดเพี้ยน ทางแก้คือเก็บเป็น <b>สตางค์ (จำนวนเต็ม)</b> ทั้งหมด เช่น ฿85.50 เก็บเป็น 8550 จำนวนเต็มบวกลบกันได้แม่นยำ 100% แล้วค่อยแปลงเป็นบาทตอนแสดงบนจอ ฐานข้อมูลก็เก็บเป็นจำนวนเต็ม (คอลัมน์ <span class="mono">amount_satang bigint</span>)</p>
+
+<h2>อ่านโค้ดจริง: แปลงข้อความที่ผู้ใช้พิมพ์เป็นสตางค์</h2>
+<p>ฟังก์ชัน <span class="mono">parseBahtToSatang</span> ใน <code>src/domain/money.ts</code> ใช้ทุกที่ที่ผู้ใช้กรอกจำนวนเงิน (FR-1 จดรายการ, ตั้งค่า, เช็กก่อนจ่ายของ FR-6, กระปุกออม) และใช้กับยอดเงินที่ AI อ่านจากสลิปด้วย</p>
+<x-code src="src/domain/money.ts" lines="1-40"></x-code>
+<table class="walk"><thead><tr><th>บรรทัด</th><th>ความหมาย</th></tr></thead><tbody>
+<tr><td>5–6</td><td>ค่าคงที่ <span class="mono">MAX_SATANG</span> = 100,000,000,000 สตางค์ = ฿1,000,000,000 เป็นจำนวนเงินสูงสุดที่แอปรับ (ฐานข้อมูลตั้งเพดานเดียวกัน กันค่าที่อ่านผิดใหญ่เกินจริง)</td></tr>
+<tr><td>8–11</td><td><span class="mono">toAsciiDigits</span> แปลงเลขไทย "๑๒๓" เป็น "123" คนที่ใช้แป้นพิมพ์ไทยอาจพิมพ์เลขไทยมา ทำงานโดยหาตัวอักษรในช่วงเลขไทย (รหัส U+0E50 ถึง U+0E59) แล้วลบด้วยรหัสของ "๐" (0x0e50) จะได้ 0–9</td></tr>
+<tr><td>13–20</td><td>คอมเมนต์บอกว่ารับรูปแบบไหนได้บ้าง: "1,234.50", "1234.5", "฿85", "85 บาท", เลขไทย และทศนิยมแบบคอมมาที่มือถือบางประเทศใช้ ("85,50" = 85.50) แต่ "1,23,4" ไม่รับ</td></tr>
+<tr><td>21</td><td>รับค่าเป็นข้อความหรือตัวเลขก็ได้ และมีตัวเลือก <span class="mono">allowZero</span> (ปกติ 0 ไม่ผ่าน เพราะรายการเงิน 0 บาทไม่มีความหมาย แต่ยอดเงินตั้งต้นเป็น 0 ได้) คืนค่าเป็นสตางค์ หรือ null ถ้าไม่ใช่จำนวนเงินที่ถูกต้อง</td></tr>
+<tr><td>22</td><td>ไม่มีค่าเลย คืน null</td></tr>
+<tr><td>23</td><td>ฟังก์ชันย่อย <span class="mono">ok</span> ตรวจขั้นสุดท้าย: เกินเพดานไม่ผ่าน, มากกว่า 0 ผ่าน, เท่ากับ 0 ผ่านเฉพาะเมื่อ allowZero</td></tr>
+<tr><td>24–27</td><td>ถ้าส่งเข้ามาเป็นตัวเลขอยู่แล้ว: ต้องเป็นตัวเลขจริงและไม่ติดลบ แล้วคูณ 100 ปัดเป็นจำนวนเต็ม (ปัดเพื่อแก้ปัญหา 19.99 × 100 = 1998.999…)</td></tr>
+<tr><td>28–30</td><td>ถ้าเป็นข้อความ: แปลงเลขไทย ลบสัญลักษณ์ ฿, คำว่า "บาท", THB, baht (ไม่สนตัวพิมพ์เล็กใหญ่) และลบช่องว่างทั้งหมด</td></tr>
+<tr><td>31</td><td>ถ้ารูปแบบคือ "ตัวเลข,ตัวเลข 1–2 หลัก" เช่น "85,50" ถือว่าคอมมาคือจุดทศนิยม</td></tr>
+<tr><td>32–35</td><td>ถ้ามีคอมมาแบบอื่น ต้องเป็นคอมมาคั่นหลักพันที่ถูกต้อง (เช่น 1,234 หรือ 1,234.50) ถึงจะลบคอมมาออก ไม่งั้นคืน null</td></tr>
+<tr><td>36</td><td>สุดท้ายต้องเหลือแค่ตัวเลข กับทศนิยมไม่เกิน 2 ตำแหน่ง ไม่งั้นคืน null (เช่น "85.555" หรือ "abc")</td></tr>
+<tr><td>37</td><td>แยกส่วนจำนวนเต็มกับทศนิยมที่จุด ถ้าไม่มีทศนิยมให้ <span class="mono">frac</span> เป็นข้อความว่าง</td></tr>
+<tr><td>38</td><td>เกิน 12 หลักไม่รับ (กันตัวเลขยาวผิดปกติ)</td></tr>
+<tr><td>39</td><td>คำนวณสตางค์ด้วยจำนวนเต็มล้วน: บาท × 100 + สตางค์ (เติม "00" แล้วตัด 2 ตัว ทำให้ ".5" กลายเป็น 50 สตางค์) ไม่มีการคูณทศนิยมเลย จึงไม่เพี้ยน</td></tr>
+</tbody></table>
+<h3>ผลจากการรันฟังก์ชันจริง</h3>
+<table><thead><tr><th>ผู้ใช้พิมพ์</th><th class="n">ได้สตางค์</th><th>เหตุผล</th></tr></thead><tbody>
+<tr><td class="mono">85</td><td class="n">8500</td><td>-</td></tr>
+<tr><td class="mono">85.5</td><td class="n">8550</td><td>".5" → 50 สตางค์</td></tr>
+<tr><td class="mono">1,234.50</td><td class="n">123450</td><td>คอมมาคั่นหลักพันถูกต้อง</td></tr>
+<tr><td class="mono">฿85 / 85 บาท / ๘๕</td><td class="n">8500</td><td>ลบสัญลักษณ์และแปลงเลขไทย</td></tr>
+<tr><td class="mono">85,50</td><td class="n">8550</td><td>คอมมาเป็นทศนิยม</td></tr>
+<tr><td class="mono">1,23,4</td><td class="n">null</td><td>คอมมาผิดรูปแบบ</td></tr>
+<tr><td class="mono">0</td><td class="n">null</td><td>ต้องมากกว่า 0 (เว้นแต่ allowZero)</td></tr>
+<tr><td class="mono">85.555</td><td class="n">null</td><td>ทศนิยมเกิน 2 ตำแหน่ง</td></tr>
+<tr><td class="mono">-5</td><td class="n">null</td><td>มีเครื่องหมายลบ ไม่ใช่ตัวเลขล้วน</td></tr>
+<tr><td class="mono">1000000000.01</td><td class="n">null</td><td>เกินเพดาน ฿1,000,000,000</td></tr>
+</tbody></table>
+
+<h2>Regular expression (regex) อ่านยังไง</h2>
+<p>บรรทัด 10 และ 29–36 มีของแปลก ๆ ใน <span class="mono">/ /</span> เรียกว่า <b>regular expression</b> คือ "แพตเทิร์นสำหรับค้นหาข้อความ" ไม่ต้องจำทั้งหมด แค่อ่านออก</p>
+<table><thead><tr><th>สัญลักษณ์</th><th>แปลว่า</th></tr></thead><tbody>
+<tr><td class="mono">\d</td><td>ตัวเลข 0–9 หนึ่งตัว</td></tr>
+<tr><td class="mono">\s</td><td>ช่องว่าง (space, tab, ขึ้นบรรทัด)</td></tr>
+<tr><td class="mono">+</td><td>ตัวข้างหน้ามี 1 ตัวขึ้นไป (<span class="mono">\d+</span> = ตัวเลขกี่หลักก็ได้)</td></tr>
+<tr><td class="mono">{1,3}</td><td>ตัวข้างหน้ามี 1 ถึง 3 ตัว</td></tr>
+<tr><td class="mono">?</td><td>ตัวข้างหน้ามีหรือไม่มีก็ได้</td></tr>
+<tr><td class="mono">^ และ $</td><td>ต้นข้อความ และท้ายข้อความ (ต้องตรงทั้งข้อความ ไม่ใช่แค่บางส่วน)</td></tr>
+<tr><td class="mono">( )</td><td>จับกลุ่ม</td></tr>
+<tr><td class="mono">a|b</td><td>a หรือ b</td></tr>
+<tr><td class="mono">[๐-๙]</td><td>ตัวอักษร 1 ตัวในช่วงเลขไทย ๐–๙</td></tr>
+<tr><td class="mono">g, i (ท้าย /)</td><td>g = หาทุกจุด, i = ไม่สนตัวพิมพ์เล็กใหญ่</td></tr>
+</tbody></table>
+<p>ตัวอย่าง <span class="mono">/^\d{1,3}(,\d{3})+(\.\d{1,2})?$/</span> อ่านว่า: "ขึ้นต้นด้วยตัวเลข 1–3 หลัก ตามด้วย (คอมมา + ตัวเลข 3 หลัก) อย่างน้อย 1 ชุด แล้วอาจมี (จุด + ตัวเลข 1–2 หลัก) และจบข้อความ" ซึ่งก็คือรูปแบบ 1,234 หรือ 12,345,678.50</p>
+
+<h2>แปลงสตางค์กลับเป็นข้อความบาท</h2>
+<x-code src="src/domain/money.ts" lines="42-63"></x-code>
+<table class="walk"><thead><tr><th>บรรทัด</th><th>ความหมาย</th></tr></thead><tbody>
+<tr><td>42–43</td><td><span class="mono">formatSatang</span> แปลง 123450 เป็น "1,234.50"</td></tr>
+<tr><td>44</td><td>ตัวเลือก <span class="mono">decimals</span> ถ้าไม่ส่งมาใช้ค่าเริ่มต้น true (แสดงสตางค์)</td></tr>
+<tr><td>45–46</td><td>จำไว้ว่าติดลบไหม แล้วทำงานกับค่าบวกที่ปัดเป็นจำนวนเต็มแล้ว</td></tr>
+<tr><td>47–48</td><td>ส่วนบาท: ถ้าแสดงสตางค์ด้วย ใช้ปัดลง (สตางค์จะแสดงแยก) ถ้าไม่แสดงสตางค์ ปัดตามปกติ ฿99.99 จึงแสดงเป็น ฿100 ไม่ใช่ ฿99</td></tr>
+<tr><td>49</td><td>สตางค์คือเศษจากการหาร 100</td></tr>
+<tr><td>50</td><td>ใส่คอมมาคั่นหลักพันด้วย regex (หาตำแหน่งที่ด้านหลังมีตัวเลขเป็นชุดละ 3 ตัวพอดี)</td></tr>
+<tr><td>51–52</td><td>ต่อสตางค์ 2 หลัก (5 สตางค์ → "05") และเติมเครื่องหมายลบถ้าติดลบ</td></tr>
+<tr><td>55–63</td><td><span class="mono">formatBaht</span> เติม "฿" ข้างหน้า และถ้าขอเครื่องหมาย (<span class="mono">sign</span>) จะใส่ + หรือ − เช่น <span class="mono">formatBaht(-8500, {sign: true})</span> → "−฿85.00"</td></tr>
+</tbody></table>
+<x-box kind="note" title="ผลจริง">
+<p><span class="mono">formatBaht(123450)</span> → "฿1,234.50" · <span class="mono">formatBaht(-8500, { sign: true })</span> → "−฿85.00" · <span class="mono">formatBaht(9999, { decimals: false })</span> → "฿100"</p>
+</x-box>
+</x-ch>

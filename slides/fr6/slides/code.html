@@ -1,0 +1,41 @@
+<section id="code" data-transition="fade" style="background:#E9EFE8;color:#3D5047;font-family:'Anuphan', Tahoma, sans-serif;padding:128px 128px 160px;display:flex;flex-direction:column;gap:24px">
+<div style="display:flex;flex-direction:column;gap:8px">
+<p style="font-size:26px;font-weight:600;letter-spacing:2px;color:#8A6A14">โค้ดหัวใจ · src/domain/runway.ts บรรทัด 80–93</p>
+<h2 style="font-family:'Noto Serif Thai', Tahoma, serif;font-size:60px;font-weight:700;line-height:1.25;color:#0E3B2C">computeRunway: สูตรทั้งหมดใน 13 บรรทัด</h2>
+</div>
+<div style="display:flex;flex-direction:column;background:#0B2219;border-radius:24px;padding:22px 28px;font-family:'JetBrains Mono', 'Courier New', monospace;font-size:24px;color:#DCE8E0">
+<p style="white-space:nowrap;line-height:1.4"><span style="color:#5F7D6E">80 </span>&#160;&#160;<span style="color:#E2B64A">const</span> spendable = balanceSatang - floorSatang;</p>
+<p style="white-space:nowrap;line-height:1.4"><span style="color:#5F7D6E">81 </span>&#160;&#160;<span style="color:#E2B64A">const</span> base = { balanceSatang, floorSatang, averageSatang, spendableSatang: Math.max(0, spendable) };</p>
+<p style="white-space:nowrap;line-height:1.4"><span style="color:#5F7D6E">83 </span>&#160;&#160;<span style="color:#E2B64A">if</span> (spendable &lt;= 0) {</p>
+<p style="white-space:nowrap;line-height:1.4"><span style="color:#5F7D6E">84 </span>&#160;&#160;&#160;&#160;<span style="color:#E2B64A">return</span> { ...base, status: <span style="color:#9FD3B5">'below_floor'</span>, days: 0, depletionDay: today, capped: false };</p>
+<p style="white-space:nowrap;line-height:1.4"><span style="color:#5F7D6E">85 </span>&#160;&#160;}</p>
+<p style="white-space:nowrap;line-height:1.4"><span style="color:#5F7D6E">86 </span>&#160;&#160;<span style="color:#E2B64A">if</span> (averageSatang &lt;= 0) {</p>
+<p style="white-space:nowrap;line-height:1.4"><span style="color:#5F7D6E">87 </span>&#160;&#160;&#160;&#160;<span style="color:#E2B64A">return</span> { ...base, status: <span style="color:#9FD3B5">'no_spending'</span>, days: null, depletionDay: null, capped: false };</p>
+<p style="white-space:nowrap;line-height:1.4"><span style="color:#5F7D6E">88 </span>&#160;&#160;}</p>
+<p style="white-space:nowrap;line-height:1.4"><span style="color:#5F7D6E">89 </span>&#160;&#160;<span style="color:#E2B64A">const</span> raw = Math.floor(spendable / averageSatang);</p>
+<p style="white-space:nowrap;line-height:1.4"><span style="color:#5F7D6E">90 </span>&#160;&#160;<span style="color:#E2B64A">const</span> capped = raw &gt; RUNWAY_CAP_DAYS;</p>
+<p style="white-space:nowrap;line-height:1.4"><span style="color:#5F7D6E">91 </span>&#160;&#160;<span style="color:#E2B64A">const</span> days = capped ? RUNWAY_CAP_DAYS : raw;</p>
+<p style="white-space:nowrap;line-height:1.4"><span style="color:#5F7D6E">92 </span>&#160;&#160;<span style="color:#E2B64A">const</span> status: RunwayStatus = days &lt; 7 ? <span style="color:#9FD3B5">'critical'</span> : days &lt; 14 ? <span style="color:#9FD3B5">'watch'</span> : <span style="color:#9FD3B5">'healthy'</span>;</p>
+<p style="white-space:nowrap;line-height:1.4"><span style="color:#5F7D6E">93 </span>&#160;&#160;<span style="color:#E2B64A">return</span> { ...base, status, days, depletionDay: addDays(today, days), capped };</p>
+</div>
+<div style="display:flex;gap:20px">
+<div style="flex:1;display:flex;flex-direction:column;gap:4px;background:#FDFDFB;border:1px solid #DCE5DD;border-radius:20px;padding:16px 20px">
+<p style="font-size:24px;font-weight:600;color:#8A6A14">80 · ใช้ได้จริง</p>
+<p style="font-size:24px;line-height:1.4">ยอด − เส้นสำรอง หน่วยสตางค์ทั้งคู่</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:4px;background:#FDFDFB;border:1px solid #DCE5DD;border-radius:20px;padding:16px 20px">
+<p style="font-size:24px;font-weight:600;color:#8A6A14">83–88 · 2 ด่านก่อนหาร</p>
+<p style="font-size:24px;line-height:1.4">เงินหมดก่อน แล้วค่อยเช็กค่าเฉลี่ย 0</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:4px;background:#FDFDFB;border:1px solid #DCE5DD;border-radius:20px;padding:16px 20px">
+<p style="font-size:24px;font-weight:600;color:#8A6A14">89–91 · ปัดลง</p>
+<p style="font-size:24px;line-height:1.4">Math.floor · เกิน 365 แสดง 365+</p>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:4px;background:#FDFDFB;border:1px solid #DCE5DD;border-radius:20px;padding:16px 20px">
+<p style="font-size:24px;font-weight:600;color:#8A6A14">92–93 · สถานะ + วันที่</p>
+<p style="font-size:24px;line-height:1.4">เกณฑ์ 7 / 14 · วันนี้ + จำนวนวัน</p>
+</div>
+</div>
+<p style="position:absolute;left:128px;bottom:64px;width:1664px;font-size:24px;color:#6B7C73">MindPay · FR-6 Money Runway · 20</p>
+<aside>นี่คือโค้ดจริงจากไฟล์ runway.ts ฟังก์ชัน computeRunway บรรทัด 80 ถึง 93 บรรทัด 80 คิดเงินที่ใช้ได้จริง คือยอดลบเส้นสำรอง ทุกตัวเป็นสตางค์ซึ่งเป็นจำนวนเต็ม จึงไม่มีปัญหาทศนิยมเพี้ยน บรรทัด 83 ถึง 88 คือด่านตรวจ 2 ด่านก่อนหาร ด่านแรกถ้าเงินที่ใช้ได้ไม่เหลือ ตอบว่าต่ำกว่าเงินสำรองทันที ด่านที่สองถ้าค่าเฉลี่ยเป็นศูนย์ ตอบว่ายังคำนวณไม่ได้ เพื่อไม่ให้หารด้วยศูนย์ ลำดับนี้ตั้งใจ เพราะเรื่องที่ร้ายแรงกว่าต้องเช็กก่อน บรรทัด 89 หารแล้วปัดลงด้วย Math.floor บรรทัด 90 และ 91 ตัดที่ 365 วัน บรรทัด 92 ให้สถานะด้วยเงื่อนไขซ้อน น้อยกว่า 7 คือ critical น้อยกว่า 14 คือ watch นอกนั้น healthy และบรรทัด 93 คืนผล โดยวันที่เงินพอถึงคือวันนี้บวกจำนวนวัน ทั้งไฟล์เป็น pure function คือรับข้อมูลเข้าแล้วคืนคำตอบ ไม่แตะหน้าจอหรือฐานข้อมูล จึงทดสอบได้ง่าย</aside>
+</section>

@@ -1,0 +1,110 @@
+<x-ch title="FR-4 ในหน้าเดียว" lead="ถ้ามีคนถามว่า &quot;FR-4 ของเธอทำอะไร&quot; ให้ตอบจากหน้านี้">
+<p>FR-4 <b>Automatic Gallery Slip Detection</b> คือ "ผู้ช่วยจดจากสลิป" ทุกครั้งที่โอนเงินด้วยแอปธนาคาร แอปจะเซฟสลิปไว้ในแกลเลอรี MindPay <b>หาสลิปเหล่านั้นเอง</b> อ่านยอด วันที่ และชื่อผู้รับด้วย AI แล้ว <b>บันทึกเป็นรายการให้</b> โดยมีกติกาสำคัญ 3 ข้อจาก Requirement: <b>ตรวจเมื่อผู้ใช้เริ่มสแกน</b> (และเมื่อเปิดแอป) · <b>เกณฑ์ความมั่นใจ 80%</b> · <b>ตรวจรายการซ้ำ</b></p>
+<div class="box formula"><div class="f">รูปในแกลเลอรี → มี QR สลิปไหม (บนมือถือ ฟรี) → ย่อรูป + ลายนิ้วมือ → AI อ่าน 2 ครั้ง (เซิร์ฟเวอร์) → ตรวจความมั่นใจ ≥ 0.8 และซ้ำ → บันทึก</div>
+<div class="w">อ่านชัดทุกช่อง (≥ 80%) → รวมในยอดทันที (ถ้าเปิด "รวมยอดทันทีเมื่ออ่านชัด") · ช่องใดไม่ชัด หรือ AI สองรอบเห็นไม่ตรงกัน → <b>แบบร่าง</b> รอผู้ใช้ตรวจ ไม่นับในยอดจนกว่าจะยืนยัน</div></div>
+<h2>อยู่ตรงไหนในแอป</h2>
+<table><thead><tr><th>ที่</th><th>ทำอะไร</th></tr></thead><tbody>
+<tr><td><b>เปิดแอป</b> (Android)</td><td>สแกนอัตโนมัติ: หาสลิปใหม่ตั้งแต่ครั้งล่าสุด (ครั้งแรกย้อน 30 วัน) แสดงการ์ดบนหน้าหลัก "กล้าจดให้แล้ว 3 รายการ +฿730" พร้อมปุ่ม "ยังไม่รวมยอด"</td></tr>
+<tr><td>ปุ่มลัด <b>"สแกนสลิป"</b> / ปุ่มกลางแถบเมนู</td><td>หน้าสแกน: มือถือค้นแกลเลอรี 30 วันเอง (ย้อนได้ 1 ปี) · เว็บกด "เลือกรูปสลิป" ครั้งเดียว · แสดงความคืบหน้า ผลตามช่วงเวลา และแยกตามวัน</td></tr>
+<tr><td><b>"สลิปรอยืนยัน"</b></td><td>แบบร่างทั้งหมด: กลุ่มพร้อมยืนยัน (กดทีเดียวทั้งหมด) และกลุ่มต้องตรวจ (แตะเพื่อแก้)</td></tr>
+<tr><td>หน้า <b>ตรวจสลิป</b></td><td>ฟอร์มของ FR-1 ที่ไฮไลต์ช่องไม่ชัด และให้เลือกยอดเมื่อ AI อ่านได้ 2 แบบ</td></tr>
+<tr><td><b>ตั้งค่า</b></td><td>สวิตช์ "หาสลิปใหม่ทุกครั้งที่เปิดแอป" และ "รวมยอดทันทีเมื่ออ่านชัด" · "ล้างประวัติรูปที่เคยสแกน"</td></tr>
+</tbody></table>
+<h2>4 ข้อที่ต้องจำ</h2>
+<ol>
+<li><b>รูปออกจากมือถือเฉพาะรูปที่น่าจะเป็นสลิป</b>: สลิปธนาคารไทยมี "QR ตรวจสอบสลิป" มือถือหา QR เองฟรี (ไม่ใช้เน็ต) รูปอื่น ๆ เช่น รูปเพื่อน รูปอาหาร ไม่ถูกส่งไปไหน — ประหยัดเงินค่า AI และเป็นส่วนตัว</li>
+<li><b>80% หรือรอตรวจ</b>: AI ให้ "ความมั่นใจ" 0–1 ของยอดเงิน วันที่ ผู้รับ ช่องใดต่ำกว่า 0.8 หรืออ่านไม่ได้ → ติดธง → แบบร่าง</li>
+<li><b>อ่าน 2 ครั้งด้วย AI 2 รุ่น</b> ที่ไม่เห็นคำตอบของกันและกัน ตรงกันจึงเชื่อ ไม่ตรงกันเก็บทั้ง 2 ค่าให้ผู้ใช้แตะเลือก</li>
+<li><b>กันซ้ำ 3 ชั้น + ฐานข้อมูล</b>: เลขอ้างอิงจาก QR, ลายนิ้วมือของรูป (SHA-256), ยอด+วัน+นาที+ผู้รับ และ unique index ในฐานข้อมูล</li>
+</ol>
+<div class="figs small">
+<x-fig src="shots/fr4-auto-done.png" cap="เปิดแอป: สแกนอัตโนมัติจดให้ 3 รายการ"></x-fig>
+<x-fig src="shots/fr4-scan-done.png" cap="หน้าสแกน: อ่านเสร็จ 4 รายการ รวมยอดแล้ว 2"></x-fig>
+<x-fig src="shots/fr4-review-two-reads.png" cap="ตรวจสลิป: AI อ่านได้ 2 แบบ ให้เลือกยอด"></x-fig>
+</div>
+<x-box kind="note" title="ภาพหน้าจอในเล่มนี้">
+<p>ถ่ายจากเว็บเวอร์ชันจริงที่ <b>ล็อกอินบัญชีทดสอบ</b> กับ "เซิร์ฟเวอร์จำลอง" และ "แกลเลอรีจำลอง" ตัวเดียวกับที่เทสต์ E2E ใช้ (<code>e2e/fake-backend.mjs</code>) เพราะการอ่านสลิปต้องมีเซิร์ฟเวอร์ (โหมดทดลองอ่านสลิปไม่ได้) ผลอ่านของ AI ถูกกำหนดไว้ล่วงหน้า แต่ทุกอย่างหลังจากนั้น (หา QR, ตรวจ 80%, ตรวจซ้ำ, บันทึก, หน้าจอ) เป็นโค้ดจริงทั้งหมด รูปสลิปเป็นรูปจำลอง (ไม่ใช่สลิปจริงของใคร) ที่มี QR จริงอยู่มุมขวาล่าง</p>
+</x-box>
+</x-ch>
+
+<x-ch title="ปัญหาที่ฉันอยากแก้" lead="คนโอนเงินวันละหลายครั้ง แต่ไม่มีใครอยากพิมพ์ทุกรายการ">
+<p>นักศึกษาส่วนใหญ่จ่ายเงินผ่าน mobile banking และ PromptPay ทุกครั้งที่โอน แอปธนาคาร <b>เซฟสลิปลงแกลเลอรีอยู่แล้ว</b> ข้อมูลทุกอย่างที่ต้องจด (ยอด วันเวลา ร้าน) อยู่ในรูปนั้น ปัญหาคือไม่มีใครอยากเปิดสลิปแล้วพิมพ์ตามทีละใบ FR-4 จึงให้แอป "อ่านแทน"</p>
+<h2>บทเรียนจาก prototype รุ่นแรก</h2>
+<table><thead><tr><th>ปัญหาที่เจอ</th><th>สาเหตุ</th><th>แก้ในเวอร์ชันนี้ยังไง</th><th>เทสต์ที่กัน</th></tr></thead><tbody>
+<tr><td>สลิปเดือนกันยายนอ่านวันที่ไม่ได้</td><td>OCR ทำจุดใน "ก.ย." หายหรือย้าย ("กย", "ก.ย")</td><td>เทียบชื่อเดือนแบบตัดจุดและช่องว่าง</td><td>TC-04</td></tr>
+<tr><td>เปลี่ยนช่วงเวลาระหว่างสแกนแล้วรูปถูกข้าม</td><td>คิวยังใช้ช่วงเก่า และจับคู่ผลกับรูปด้วยลำดับ</td><td>state machine ล็อกช่วงตอนสแกน ใช้ runId และจับคู่ด้วย assetId</td><td>TC-27, TC-28</td></tr>
+<tr><td>ข้อมูลตัวอย่างตายตัว (14 ก.ย.) จนเก่า</td><td>วันที่เขียนตายตัว</td><td>สร้างข้อมูลตัวอย่างย้อนจากวันนี้เสมอ</td><td>TC-33</td></tr>
+</tbody></table>
+<h2>เป้าหมายที่ฉันตั้งไว้ตอนออกแบบ</h2>
+<table><thead><tr><th>เป้าหมาย</th><th>ทำยังไงในแอป</th></tr></thead><tbody>
+<tr><td>แม่นกว่าเร็ว ("ยอดผิดแย่กว่าไม่มีคำตอบ")</td><td>เกณฑ์ 80%, AI อ่าน 2 รุ่น, ยอดเงินต้องตรงกับตัวเอง (ตัวเลข vs ที่พิมพ์บนสลิป), ไม่ใช่ค่าธรรมเนียม, วันที่อนาคตไม่เชื่อ</td></tr>
+<tr><td>ไม่ต้องแตะอะไรเลย</td><td>เปิดแอปแล้วสแกนเอง ขอสิทธิ์รูปภาพครั้งเดียวตอนเปิดแอปครั้งแรก สลิปที่ชัดรวมยอดทันที</td></tr>
+<tr><td>ผู้ใช้คุมได้</td><td>ปุ่ม "ยังไม่รวมยอด" ย้อนการนับอัตโนมัติ, ปิดการสแกนอัตโนมัติ/การรวมยอดทันทีได้ในตั้งค่า</td></tr>
+<tr><td>ไม่ซ้ำ</td><td>กัน 3 ชั้นในแอป + unique index ในฐานข้อมูล (แม้สองเครื่องสแกนพร้อมกัน)</td></tr>
+<tr><td>ประหยัดและเป็นส่วนตัว</td><td>ส่งเฉพาะรูปที่มี QR สลิป, ย่อรูปเหลือกว้าง 1,100 px, ไม่เก็บรูปบนเซิร์ฟเวอร์, โควตา 300 ใบ/วัน/บัญชี</td></tr>
+<tr><td>ไม่มีสลิปหลุด</td><td>เน็ตหลุดหยุดพร้อมบอกเหตุผล (ไม่เลื่อนช่วงเวลา), รูปที่อ่านไม่ได้ลองใหม่รอบหน้า, AI คิวเต็มรอแล้วอ่านต่อเอง</td></tr>
+</tbody></table>
+</x-ch>
+
+<x-ch title="Requirement และเงื่อนไขผ่าน" lead="จาก docs/TRACEABILITY.md: Acceptance criteria → โค้ด → เทสต์ (FR ที่มีเงื่อนไขมากที่สุดของระบบ)">
+<x-box kind="note" title="Requirement FR-4"><p>"ตรวจสลิปเมื่อผู้ใช้เริ่ม Scan Gallery, เกณฑ์ความมั่นใจ 80%, ตรวจรายการซ้ำ"</p></x-box>
+<table><thead><tr><th>Acceptance criteria (ย่อ)</th><th>โค้ด</th><th>เทสต์</th></tr></thead><tbody>
+<tr><td>ทุกช่องสำคัญมั่นใจ ≥ 0.80 → "พร้อมยืนยัน" ช่องใดต่ำกว่าหรือว่าง → "ต้องตรวจ"</td><td class="mono">slip.ts CONFIDENCE_THRESHOLD, normalizeReading</td><td>TC-19, TC-20</td></tr>
+<tr><td>เฉพาะ status = confirmed เข้ายอดเงิน ได้มา 2 ทาง: ผู้ใช้กดยืนยัน หรือ (เปิดรวมยอดทันที) ทุกช่อง ≥ 0.80</td><td class="mono">slip.ts initialStatus, transaction.tsx, drafts.tsx</td><td>TC-09, TC-37, MT-06</td></tr>
+<tr><td>อ่าน 2 ครั้งพร้อมกันด้วย AI 2 รุ่น ตรงกันจึงเข้ายอดได้ ไม่ตรงกัน → รอตรวจพร้อมแสดง 2 ค่าให้เลือก อ่านได้รอบเดียว → รอตรวจเสมอ</td><td class="mono">parse-slip, helpers.ts mergeReadings, similarName; slip.ts slipNote, amountChoices</td><td>TC-63, TC-64, E2E สองค่า</td></tr>
+<tr><td>ยอดเงินตรวจกับตัวเอง (ตัวเลข vs ตามที่พิมพ์) และต้องไม่เท่าค่าธรรมเนียม</td><td class="mono">helpers.ts normalizeReading</td><td>TC-62</td></tr>
+<tr><td>ธนาคารจากรหัสใน QR (002 กรุงเทพ, 004 กสิกร, 006 กรุงไทย, 014 SCB, ...) ไม่ใช่จากโลโก้</td><td class="mono">slip.ts BANK_BY_CODE, bankFromCode</td><td>TC-64, E2E QR</td></tr>
+<tr><td>สลิป e-wallet ที่มี QR แบบของตัวเอง: รูปขนาดหน้าจอที่มี QR ใด ๆ ส่งให้ AI ตัดสิน รูปจากกล้องไม่ส่ง</td><td class="mono">processSlip.ts, slips.ts detectSlipQr</td><td>E2E auto (6 รูป ส่ง 3)</td></tr>
+<tr><td>รายรับ/รายจ่ายจากชื่อบนสลิป: เรียนรู้ชื่อผู้ใช้จากบรรทัด "จาก" (เก็บเป็นลายนิ้วมือ) สลิปที่เพื่อนส่งมา = รายรับ โอนระหว่างบัญชีตัวเอง → รอตรวจ</td><td class="mono">slipNames.ts, services/myNames.ts</td><td>TC-65, TC-84</td></tr>
+<tr><td>เปิดแอปแล้วหาสลิปใหม่อัตโนมัติ: ครั้งแรก 30 วัน ต่อไปนับจากครั้งล่าสุด ไม่ซ้ำภายใน 5 นาที ครั้งละ ≤ 150 รูป ย้อนการรวมยอดได้</td><td class="mono">autoScan.ts, AutoScanProvider.tsx, AutoScanBanner.tsx</td><td>TC-35, TC-36, MT-11, E2E auto</td></tr>
+<tr><td>ขอสิทธิ์รูปภาพเองครั้งเดียวตอนเปิดแอปครั้งแรก ส่ง AI เฉพาะรูปที่มี QR สลิป</td><td class="mono">AutoScanProvider (askedGalleryOnce)</td><td>E2E auto</td></tr>
+<tr><td>ไม่มีสลิปหลุด: เน็ตหลุดลองใหม่ 1 ครั้งหลัง 3 วินาที แล้วหยุดบอกเหตุผล รูปอ่านไม่ได้ลองอีกรอบหน้า (รวม 2 ครั้ง)</td><td class="mono">nextAutoScanMark, MAX_AUTO_ATTEMPTS, useSlipScanner</td><td>TC-56, E2E offline</td></tr>
+<tr><td>หน้าสแกนไม่ต้องเลือกช่วงก่อน (มือถือค้น 30 วันเอง เว็บกดเลือกรูปครั้งเดียว) สลิปบันทึกตามวันที่บนสลิป (ย้อนได้ 1 ปี) แสดงตามช่วงและตามวัน</td><td class="mono">scan.tsx, useSlipScanner.ts, PeriodSummary.tsx</td><td>E2E web scan</td></tr>
+<tr><td>อ่านวันที่แบบไทย (พ.ศ. 2 หลัก, "ก.ย.") อ่านไม่ได้หรืออนาคต → ไม่เดา</td><td class="mono">dates.ts parseSlipDate</td><td>TC-04–06, TC-21, TC-85</td></tr>
+<tr><td>สลิปนอกช่วงเวลาถูกข้าม</td><td class="mono">classifyCandidate</td><td>TC-22</td></tr>
+<tr><td>กันซ้ำ 3 ชั้น: เลขอ้างอิง (QR), hash ของรูป, ยอด+เวลา+ผู้รับ และ unique index</td><td class="mono">slip.ts, migration</td><td>TC-23, TC-24, TC-83</td></tr>
+<tr><td>หา QR ให้เจอแม้เล็กอยู่มุมล่าง (ตัดดูครึ่งล่าง/มุมขวาล่าง เฉพาะรูปขนาดหน้าจอ) มือถือที่ไม่มีตัวอ่าน QR ได้ข้อความบอก</td><td class="mono">slip.ts firstSlipQr, isScreenSized, SLIP_QR_REGIONS; slips.ts detectSlipQr</td><td>TC-57, E2E QR</td></tr>
+<tr><td>ตรวจจากรูปใหม่ไปเก่า (1 วัน → 7 วัน → 1 เดือน → 6 เดือน → 1 ปี) เปลี่ยนช่วงระหว่างสแกนไม่ได้ พักและสแกนต่อได้</td><td class="mono">scanQueue.ts</td><td>TC-26–30</td></tr>
+<tr><td>ผลอ่านจาก AI ถูกทำความสะอาดบนเซิร์ฟเวอร์ (ปี พ.ศ., คอมมา, ช่องว่างต้องมีความมั่นใจ 0)</td><td class="mono">helpers.ts normalizeReading, pickProvider</td><td>TC-38–42</td></tr>
+<tr><td>key ของ AI จาก Supabase Secrets (ทนชื่อพิมพ์ผิด) Gemini ติดลิมิตลองรุ่นถัดไป แอปรอ 20/40 วินาทีแล้วอ่านต่อเอง</td><td class="mono">helpers.ts readKey, geminiStep; slips.ts readSlip</td><td>TC-54, TC-55, E2E busy</td></tr>
+</tbody></table>
+</x-ch>
+
+<x-ch title="เส้นทางของสลิป 1 ใบ" lead="จากรูปในแกลเลอรีจนเป็นรายการในยอดเงิน: 3 ที่ (มือถือ เซิร์ฟเวอร์ ฐานข้อมูล) 8 ขั้น">
+<div class="flow">
+<div class="st"><b>1. หารูป</b> <code>src/services/gallery.ts</code><small>รูปที่สร้างหลังเวลาที่กำหนด เรียงใหม่ไปเก่า ข้ามรูปแนวนอน (สลิปเป็นแนวตั้งเสมอ) ข้ามรูปที่เคยตรวจแล้ว</small></div>
+<div class="ar">↓</div>
+<div class="st"><b>2. หา QR บนมือถือ</b> <code>src/services/slips.ts</code> detectSlipQr<small>สแกนทั้งรูป ถ้าไม่เจอและเป็นรูปขนาดหน้าจอ ตัดดูครึ่งล่าง และมุมขวาล่าง · ไม่มี QR สลิป (และไม่มี QR อื่นในรูปขนาดหน้าจอ) → "ไม่ใช่สลิป" รูปไม่ออกจากมือถือ</small></div>
+<div class="ar">↓</div>
+<div class="st"><b>3. ย่อรูปและทำลายนิ้วมือ</b> prepareImage<small>กว้างไม่เกิน 1,100 px JPEG ~150 KB · SHA-256 ของรูป → เคยเห็นแล้ว = ซ้ำ (ไม่ต้องส่ง AI)</small></div>
+<div class="ar">↓ <span>ส่งรูป (base64) ผ่าน HTTPS</span></div>
+<div class="st gold"><b>4. เซิร์ฟเวอร์อ่าน 2 ครั้ง</b> <code>supabase/functions/parse-slip/index.ts</code><small>ตรวจผู้ใช้ ขนาด โควตา 300 ใบ/วัน → AI รุ่นหลัก + AI รุ่นตรวจ (พร้อมกัน) → ทำความสะอาดผลแต่ละรอบ → รวม 2 ผล (ตรงกัน = เชื่อ, ไม่ตรง = ธง + เก็บ 2 ค่า)</small></div>
+<div class="ar">↓ <span>reading + check</span></div>
+<div class="st"><b>5. แปลงเป็นผู้สมัคร</b> <code>src/domain/slip.ts</code> normalizeReading<small>สตางค์, วันไทย, เวลา, รายรับ/รายจ่ายจากชื่อ, ธนาคารจาก QR, เลขอ้างอิงจาก QR, หมวด, ความมั่นใจต่ำสุด, ธง</small></div>
+<div class="ar">↓</div>
+<div class="st"><b>6. ตัดสิน</b> classifyCandidate<small>ซ้ำ → ข้าม · เก่ากว่า 1 ปี → ข้าม · ไม่มีธง → ready · มีธง → needs_review</small></div>
+<div class="ar">↓</div>
+<div class="st"><b>7. สถานะเริ่มต้น</b> initialStatus<small>ready + เปิดรวมยอดทันที → confirmed · นอกนั้น → draft</small></div>
+<div class="ar">↓</div>
+<div class="st dark"><b>8. บันทึก</b> repo.insert (ตาราง transactions)<small>source = slip, slip_ref, slip_image_hash, ocr_confidence, review_flags, note (ธนาคาร/2 ค่า) · unique index ปฏิเสธซ้ำอีกชั้น → ยอดเงิน (FR-2) และ Runway (FR-6) อัปเดต</small></div>
+</div>
+<h2>แผนที่โค้ดของ FR-4</h2>
+<table><thead><tr><th>ไฟล์</th><th>ชั้น</th><th>หน้าที่</th></tr></thead><tbody>
+<tr><td><code>src/domain/slip.ts</code></td><td>กฎ (ฟังก์ชันล้วน)</td><td>QR, ธนาคาร, normalizeReading, ซ้ำ, ตัดสิน, บันทึกข้อความ (405 บรรทัด)</td></tr>
+<tr><td><code>src/domain/slipNames.ts</code></td><td>กฎ</td><td>ใครคือ "ฉัน" บนสลิป → รายรับ/รายจ่าย (119)</td></tr>
+<tr><td><code>src/domain/scanQueue.ts</code></td><td>กฎ</td><td>state machine ของการสแกน (173)</td></tr>
+<tr><td><code>src/domain/autoScan.ts</code></td><td>กฎ</td><td>ช่วงเวลาของการสแกนอัตโนมัติ (45)</td></tr>
+<tr><td><code>src/domain/dates.ts</code></td><td>กฎ</td><td>parseSlipDate, parseSlipTime (บรรทัด 159–261)</td></tr>
+<tr><td><code>src/services/slips.ts</code></td><td>มือถือ</td><td>หา QR, ย่อรูป, เรียกเซิร์ฟเวอร์, จำรูปที่ตรวจแล้ว (253)</td></tr>
+<tr><td><code>src/services/gallery.ts</code>, <code>src/services/gallery.web.ts</code></td><td>มือถือ/เว็บ</td><td>สิทธิ์และค้นรูปในแกลเลอรี (60, 49)</td></tr>
+<tr><td><code>src/services/processSlip.ts</code></td><td>มือถือ</td><td>ทำ 1 รูปตั้งแต่ต้นจนจบ ใช้ร่วมกันทั้งหน้าสแกนและสแกนอัตโนมัติ (108)</td></tr>
+<tr><td><code>src/services/useSlipScanner.ts</code></td><td>มือถือ</td><td>ตัวควบคุมของหน้าสแกน (240)</td></tr>
+<tr><td><code>src/services/AutoScanProvider.tsx</code></td><td>มือถือ</td><td>สแกนอัตโนมัติตอนเปิดแอป (321)</td></tr>
+<tr><td><code>src/services/myNames.ts</code>, <code>src/data/prefs.ts</code></td><td>มือถือ</td><td>เก็บลายนิ้วมือชื่อ / ตั้งค่าการสแกน (42, 48)</td></tr>
+<tr><td><code>src/app/scan.tsx</code>, <code>src/app/drafts.tsx</code></td><td>หน้าจอ</td><td>หน้าสแกน / สลิปรอยืนยัน (259, 96)</td></tr>
+<tr><td><code>src/ui/AutoScanBanner.tsx</code>, <code>src/ui/ScannerStage.tsx</code>, <code>src/ui/WaitNotice.tsx</code></td><td>หน้าจอ</td><td>การ์ดบนหน้าหลัก / เวทีแอนิเมชัน / นับถอยหลัง</td></tr>
+<tr><td><code>supabase/functions/parse-slip/index.ts</code></td><td>เซิร์ฟเวอร์</td><td>ฟังก์ชันอ่านสลิป (154)</td></tr>
+<tr><td><code>supabase/functions/_shared/helpers.ts</code>, <code>supabase/functions/_shared/common.ts</code></td><td>เซิร์ฟเวอร์</td><td>ทำความสะอาดผล รวม 2 ผล เลือก AI โควตา</td></tr>
+<tr><td><code>supabase/migrations/20260927000000_init.sql</code></td><td>ฐานข้อมูล</td><td>unique index กันซ้ำ</td></tr>
+</tbody></table>
+</x-ch>

@@ -1,0 +1,189 @@
+<x-ch title="พื้นฐานการเขียนโปรแกรม สำหรับคนที่ไม่เคยเขียนเลย" lead="ทุกอย่างที่ต้องรู้เพื่ออ่านโค้ด MindPay ออก: ค่า ตัวแปร เงื่อนไข ฟังก์ชัน array และ object พร้อมตัวอย่างจากโค้ดจริง">
+
+<h2>โปรแกรมคืออะไร</h2>
+<p>โปรแกรมคือ <b>รายการคำสั่งที่คอมพิวเตอร์ทำตามทีละบรรทัด จากบนลงล่าง</b> เหมือนสูตรทำอาหาร ทีมเราเขียนด้วยภาษา <b>TypeScript</b> ซึ่งคือภาษา <b>JavaScript</b> (ภาษาของเว็บ) ที่เพิ่ม "ชนิดข้อมูล" เข้าไป (บท A5) ไฟล์ที่ลงท้ายด้วย <span class="mono">.ts</span> เป็น TypeScript ล้วน ส่วน <span class="mono">.tsx</span> คือ TypeScript ที่มีโค้ดหน้าจอแบบ React ปนอยู่ (บท A6)</p>
+
+<h2>1. ค่า (value) และชนิดของค่า</h2>
+<table><thead><tr><th>ชนิด</th><th>ตัวอย่าง</th><th>ใช้ใน MindPay</th></tr></thead><tbody>
+<tr><td><b>number</b> ตัวเลข</td><td class="mono">8500, -3, 0.8</td><td>จำนวนเงินเป็นสตางค์ <span class="mono">8500</span> = ฿85, ความมั่นใจ 0.8 = 80%</td></tr>
+<tr><td><b>string</b> ข้อความ</td><td class="mono">'ข้าวมันไก่', "2026-10-09"</td><td>ชื่อรายการ วันที่ ข้อความบนจอ (ใส่ในเครื่องหมายคำพูด ' หรือ ")</td></tr>
+<tr><td><b>boolean</b> จริง/เท็จ</td><td class="mono">true, false</td><td>เข้าสู่ระบบแล้วหรือยัง, ตั้งค่าเสร็จหรือยัง (<span class="mono">onboarded</span>)</td></tr>
+<tr><td><b>null</b></td><td class="mono">null</td><td>"ไม่มีค่า" โดยตั้งใจ เช่น รายการที่จดเองไม่มีเลขอ้างอิงสลิป (<span class="mono">slipRef: null</span>)</td></tr>
+<tr><td><b>undefined</b></td><td class="mono">undefined</td><td>"ยังไม่ได้ใส่ค่า" เช่น ไม่ได้ส่งพารามิเตอร์นั้นมา</td></tr>
+</tbody></table>
+
+<h2>2. ตัวแปร: กล่องที่มีชื่อ</h2>
+<p>ตัวแปรคือ "กล่องที่ติดป้ายชื่อ" ไว้ใส่ค่า เพื่อเรียกใช้ทีหลัง</p>
+<x-snip title="ตัวแปร">
+const floor = 50_000;        // const = ค่าคงที่ ใส่แล้วเปลี่ยนไม่ได้
+let total = 0;               // let = เปลี่ยนค่าได้ภายหลัง
+total = total + 8500;        // ตอนนี้ total = 8500
+const title = 'ข้าวมันไก่';
+</x-snip>
+<ul>
+<li><span class="mono">const</span> ใช้บ่อยที่สุดในโค้ด MindPay เพราะค่าส่วนใหญ่ไม่ควรเปลี่ยน ใช้ <span class="mono">let</span> เฉพาะตอนต้องเปลี่ยนจริง ๆ</li>
+<li><span class="mono">50_000</span> คือ 50000 เครื่องหมาย <span class="mono">_</span> ช่วยให้อ่านง่ายเหมือนคอมมา คอมพิวเตอร์ไม่สนใจมัน</li>
+<li>ข้อความหลัง <span class="mono">//</span> คือ <b>คอมเมนต์</b> คอมพิวเตอร์ข้าม มีไว้ให้คนอ่าน ส่วน <span class="mono">/* ... */</span> และ <span class="mono">/** ... */</span> เป็นคอมเมนต์หลายบรรทัด (แบบ <span class="mono">/**</span> VS Code จะเอาไปแสดงตอนเอาเมาส์ชี้)</li>
+<li><b>ตั้งชื่อแบบ camelCase</b>: คำแรกตัวเล็ก คำต่อไปขึ้นต้นตัวใหญ่ เช่น <span class="mono">balanceSatang</span>, <span class="mono">averageDailyExpense</span> ค่าคงที่สำคัญใช้ตัวใหญ่ทั้งหมด เช่น <span class="mono">RUNWAY_CAP_DAYS</span></li>
+</ul>
+<x-box kind="tip" title="กฎการตั้งชื่อของทีมเรา: ตัวแปรเงินลงท้ายด้วย Satang">
+<p>ทุกตัวแปรที่เป็นจำนวนเงิน ลงท้ายด้วย <span class="mono">Satang</span> เสมอ เช่น <span class="mono">amountSatang</span>, <span class="mono">floorSatang</span> เห็นชื่อแล้วรู้ทันทีว่าต้องหาร 100 ก่อนแสดงเป็นบาท กันความผิดพลาดแบบเอาบาทไปบวกกับสตางค์</p>
+</x-box>
+
+<h2>3. ตัวดำเนินการ: คำนวณและเปรียบเทียบ</h2>
+<table><thead><tr><th>เขียนว่า</th><th>ความหมาย</th><th>ตัวอย่าง → ผล</th></tr></thead><tbody>
+<tr><td class="mono">+ - * /</td><td>บวก ลบ คูณ หาร</td><td class="mono">300000 / 145 → 2068.96…</td></tr>
+<tr><td class="mono">%</td><td>เศษจากการหาร</td><td class="mono">8550 % 100 → 50 (50 สตางค์)</td></tr>
+<tr><td class="mono">===  !==</td><td>เท่ากัน / ไม่เท่ากัน (แบบเคร่ง ชนิดต้องตรงด้วย)</td><td class="mono">t.kind === 'income'</td></tr>
+<tr><td class="mono">&lt;  &lt;=  &gt;  &gt;=</td><td>น้อยกว่า น้อยกว่าหรือเท่ากับ ...</td><td class="mono">days &lt; 7</td></tr>
+<tr><td class="mono">&amp;&amp;</td><td>"และ" จริงเมื่อทั้งสองข้างจริง</td><td class="mono">d &gt;= windowStart &amp;&amp; d &lt;= today</td></tr>
+<tr><td class="mono">||</td><td>"หรือ" จริงเมื่อข้างใดข้างหนึ่งจริง</td><td class="mono">event === 'SIGNED_IN' || ...</td></tr>
+<tr><td class="mono">!</td><td>"ไม่" กลับจริงเป็นเท็จ</td><td class="mono">!existing → ไม่มีรายการเดิม</td></tr>
+<tr><td class="mono">ก ? ข : ค</td><td>ถ้า ก จริง ได้ ข ไม่งั้นได้ ค (ternary)</td><td class="mono">kind === 'income' ? 'เพิ่มเงินเข้า' : 'จดรายการ'</td></tr>
+<tr><td class="mono">ก ?? ข</td><td>ใช้ ก ถ้า ก ไม่ใช่ null/undefined ไม่งั้นใช้ ข (ค่าสำรอง)</td><td class="mono">profile?.runwayFloorSatang ?? 50_000</td></tr>
+<tr><td class="mono">ก?.ข</td><td>เข้าถึง ข ใน ก แต่ถ้า ก เป็น null ไม่ต้อง error ได้ undefined</td><td class="mono">profile?.openingBalanceSatang</td></tr>
+</tbody></table>
+<p>ลองอ่านบรรทัดนี้จาก <code>src/data/AppProvider.tsx:447</code> ซึ่งใช้ทั้ง <span class="mono">?.</span> และ <span class="mono">??</span></p>
+<x-code src="src/data/AppProvider.tsx" lines="447-447"></x-code>
+<p>อ่านว่า: "เส้นเงินสำรอง = ค่าที่ผู้ใช้ตั้งไว้ในโปรไฟล์ แต่ถ้ายังไม่มีโปรไฟล์ (<span class="mono">?.</span>) หรือไม่มีค่า ให้ใช้ 50,000 สตางค์ (<span class="mono">??</span>)"</p>
+
+<h2>4. เงื่อนไข if: ถ้า... ให้ทำ...</h2>
+<x-snip title="if / else">
+if (spendable <= 0) {
+  // ทำส่วนนี้เมื่อเงื่อนไขจริง
+} else if (averageSatang <= 0) {
+  // ไม่งั้น ถ้าเงื่อนไขนี้จริง ทำส่วนนี้
+} else {
+  // ไม่ตรงอะไรเลย ทำส่วนนี้
+}
+</x-snip>
+<p>ในโค้ด MindPay จะเห็นรูปแบบ <b>"เช็กกรณีพิเศษก่อน แล้วออกเลย"</b> (early return) บ่อยมาก เช่นในสูตร Money Runway</p>
+<x-code src="src/domain/runway.ts" lines="83-88"></x-code>
+<p>อ่านว่า: "ถ้าเงินที่ใช้ได้ ≤ 0 ให้ส่งผลกลับเลยว่าต่ำกว่าเงินสำรอง · ถ้าค่าเฉลี่ย ≤ 0 ส่งกลับว่ายังไม่มีรายจ่าย" พอผ่าน 2 ด่านนี้ไปได้ โค้ดด้านล่างมั่นใจได้ว่าหารได้แน่นอน ไม่หารด้วยศูนย์</p>
+
+<h2>5. ฟังก์ชัน: เครื่องจักรรับของเข้า ส่งของออก</h2>
+<p>ฟังก์ชันคือ "ชุดคำสั่งที่ตั้งชื่อไว้" เรียกใช้ซ้ำได้ รับ <b>พารามิเตอร์</b> (ของที่ส่งเข้า) และ <b>return</b> ผลลัพธ์ออกมา</p>
+<x-snip title="ฟังก์ชัน 2 แบบ">
+// แบบที่ 1: function
+function toBaht(satang: number): number {
+  return satang / 100;
+}
+
+// แบบที่ 2: arrow function (ลูกศร =>) ทำงานเหมือนกัน เขียนสั้นกว่า
+const toBaht2 = (satang: number) => satang / 100;
+
+toBaht(8500);   // ได้ 85
+</x-snip>
+<ul>
+<li><span class="mono">(satang: number)</span> = รับ 1 พารามิเตอร์ชื่อ satang ต้องเป็นตัวเลข</li>
+<li><span class="mono">: number</span> หลังวงเล็บ = ฟังก์ชันนี้จะคืนค่าเป็นตัวเลข</li>
+<li>arrow function ที่ไม่มี <span class="mono">{ }</span> จะ return ค่าทางขวาของ <span class="mono">=&gt;</span> ให้อัตโนมัติ</li>
+<li><span class="mono">export</span> หน้าฟังก์ชัน = ให้ไฟล์อื่น import ไปใช้ได้</li>
+</ul>
+<x-box kind="tip" title="Pure function: หัวใจของ src/domain">
+<p>ฟังก์ชันใน <span class="mono">src/domain</span> ทุกตัวเป็น <b>pure function</b> คือ (1) ใส่ค่าเดิม ได้ผลเดิมทุกครั้ง และ (2) ไม่ไปแก้อะไรข้างนอก ไม่เรียกอินเทอร์เน็ต ไม่แตะหน้าจอ เหมือนเครื่องคิดเลข จึงทดสอบง่ายมาก: ใส่ตัวเลขแล้วตรวจคำตอบ อาจารย์มักถามว่า "ทำไมแยก domain" ให้ตอบเรื่องนี้</p>
+</x-box>
+
+<h2>6. Array: รายการของหลายค่า</h2>
+<p>Array คือรายการเรียงลำดับ เขียนใน <span class="mono">[ ]</span> คั่นด้วยคอมมา ตำแหน่งแรกคือ 0</p>
+<x-snip title="Array พื้นฐาน">
+const amounts = [12000, 0, 8500, 30000];
+amounts[0];        // 12000 (ตัวแรก)
+amounts.length;    // 4 (มีกี่ตัว)
+amounts.includes(0);  // true
+</x-snip>
+<p>MindPay เก็บรายการเงินทั้งหมดเป็น array ชื่อ <span class="mono">txs</span> (ย่อจาก transactions) และใช้ "เมธอด" ของ array ต่อไปนี้ตลอด ต้องจำให้ได้</p>
+<table><thead><tr><th>เมธอด</th><th>ทำอะไร</th><th>ตัวอย่าง</th></tr></thead><tbody>
+<tr><td class="mono">filter</td><td>คัดเฉพาะตัวที่ผ่านเงื่อนไข ได้ array ใหม่ที่สั้นลง</td><td class="mono">txs.filter((t) =&gt; t.status === 'confirmed')</td></tr>
+<tr><td class="mono">map</td><td>แปลงทุกตัว ได้ array ยาวเท่าเดิม</td><td class="mono">txs.map((t) =&gt; t.amountSatang)</td></tr>
+<tr><td class="mono">reduce</td><td>รวมทุกตัวให้เหลือค่าเดียว เช่น ผลรวม</td><td class="mono">list.reduce((s, t) =&gt; s + t.amountSatang, 0)</td></tr>
+<tr><td class="mono">find</td><td>หาตัวแรกที่ตรงเงื่อนไข (ไม่เจอได้ undefined)</td><td class="mono">txs.find((t) =&gt; t.id === id)</td></tr>
+<tr><td class="mono">some</td><td>มีอย่างน้อย 1 ตัวที่ตรงไหม (true/false)</td><td class="mono">list.some((t) =&gt; t.slipRef === ref)</td></tr>
+<tr><td class="mono">sort</td><td>เรียงลำดับ</td><td class="mono">days.sort()</td></tr>
+<tr><td class="mono">slice</td><td>ตัดเอาบางส่วน</td><td class="mono">list.slice(0, 5) = 5 ตัวแรก</td></tr>
+</tbody></table>
+<p>ตัว <span class="mono">(t) =&gt; ...</span> ที่ส่งเข้าไปในเมธอดเหล่านี้คือ arrow function ที่จะถูกเรียกกับสมาชิกทีละตัว <span class="mono">t</span> คือ "รายการที่กำลังดูอยู่"</p>
+
+<h3>ตัวอย่างจริง: ยอดคงเหลือคำนวณยังไง (FR-2)</h3>
+<x-code src="src/domain/summary.ts" lines="9-17"></x-code>
+<table class="walk"><thead><tr><th>บรรทัด</th><th>ความหมาย</th></tr></thead><tbody>
+<tr><td>9</td><td>สร้างฟังก์ชัน <span class="mono">confirmedOnly</span>: รับรายการทั้งหมด คืนเฉพาะรายการที่ยืนยันแล้ว (กรองแบบร่างทิ้ง) ด้วย <span class="mono">filter</span></td></tr>
+<tr><td>11</td><td>คอมเมนต์อธิบายสูตร: ยอดตอนนี้ = เงินตอนเริ่ม + รายรับที่ยืนยัน − รายจ่ายที่ยืนยัน</td></tr>
+<tr><td>12</td><td>ฟังก์ชัน <span class="mono">computeBalance</span> รับ 2 อย่าง: เงินตอนเริ่ม (สตางค์) และรายการทั้งหมด คืนค่าเป็นตัวเลข</td></tr>
+<tr><td>13</td><td>เอาเฉพาะรายการที่ยืนยันแล้ว แล้ว <span class="mono">reduce</span> รวมให้เหลือตัวเลขเดียว</td></tr>
+<tr><td>14</td><td>สำหรับแต่ละรายการ <span class="mono">t</span>: ถ้าเป็นรายรับ บวกเข้า (<span class="mono">+t.amountSatang</span>) ถ้าเป็นรายจ่าย ลบออก (<span class="mono">-t.amountSatang</span>) แล้วเก็บผลไว้ใน <span class="mono">sum</span></td></tr>
+<tr><td>15</td><td>ค่าเริ่มต้นของ <span class="mono">sum</span> คือเงินตอนเริ่มใช้แอป</td></tr>
+</tbody></table>
+<p>ลองคิดตาม: เริ่ม ฿3,000 (300,000 สตางค์) มีรายรับ ฿10,000 ที่ยืนยันแล้ว และรายจ่าย ฿85 กับแบบร่าง ฿200</p>
+<pre class="plain">sum เริ่ม           = 300,000
++ รายรับ 1,000,000  = 1,300,000
+− รายจ่าย 8,500     = 1,291,500
+(แบบร่าง 20,000 ถูกกรองทิ้งตั้งแต่บรรทัด 13)
+ผล = 1,291,500 สตางค์ = ฿12,915.00</pre>
+
+<h2>7. Object: ของ 1 ชิ้นที่มีหลายช่อง</h2>
+<p>Object คือกลุ่มของ "ชื่อช่อง: ค่า" อยู่ใน <span class="mono">{ }</span> รายการเงิน 1 รายการใน MindPay คือ object แบบนี้</p>
+<x-snip title="รายการ 1 รายการ (Transaction)">
+const tx = {
+  id: 'demo-12',
+  kind: 'expense',
+  amountSatang: 8500,
+  categoryKey: 'food',
+  title: 'ข้าวมันไก่',
+  status: 'confirmed',
+};
+tx.title;          // 'ข้าวมันไก่'  (เข้าถึงช่องด้วยจุด)
+tx.amountSatang;   // 8500
+</x-snip>
+<h3>เทคนิค object ที่เจอบ่อยในโค้ด</h3>
+<table><thead><tr><th>เขียนว่า</th><th>ชื่อเรียก</th><th>ความหมาย</th></tr></thead><tbody>
+<tr><td class="mono">const { a, b } = obj;</td><td>destructuring (แกะของ)</td><td>ดึงช่อง a และ b ออกมาเป็นตัวแปรในบรรทัดเดียว เช่น <span class="mono">const { balance, runway } = useMoney();</span></td></tr>
+<tr><td class="mono">{ ...obj, status: 'confirmed' }</td><td>spread (กระจาย)</td><td>คัดลอกทุกช่องของ obj มาเป็น object ใหม่ แล้วเปลี่ยนเฉพาะช่อง status ของเดิมไม่ถูกแก้</td></tr>
+<tr><td class="mono">[tx, ...list]</td><td>spread กับ array</td><td>array ใหม่ที่มี tx อยู่หน้าสุด ตามด้วยของเดิมทั้งหมด (ใช้ตอนเพิ่มรายการใหม่ในบท A2)</td></tr>
+<tr><td class="mono">{ kind, title }</td><td>shorthand</td><td>ย่อจาก <span class="mono">{ kind: kind, title: title }</span></td></tr>
+</tbody></table>
+<x-box kind="warn" title="ทำไมโค้ดชอบสร้าง object ใหม่แทนการแก้ของเดิม">
+<p>React (บท A6) รู้ว่าข้อมูลเปลี่ยนด้วยการดูว่า "เป็น object ตัวใหม่หรือเปล่า" ถ้าเราแก้ช่องใน object เดิมตรง ๆ React อาจไม่รู้ และหน้าจอไม่อัปเดต โค้ดจึงใช้ <span class="mono">{ ...t, status: 'confirmed' }</span> สร้างของใหม่เสมอ (ดูตัวอย่างใน <code>src/data/AppProvider.tsx:418</code>)</p>
+</x-box>
+
+<h2>8. วนซ้ำ (loop)</h2>
+<x-snip title="for ... of">
+let total = 0;
+for (const t of txs) {          // ทำซ้ำกับรายการทีละตัว
+  if (t.kind !== 'expense') continue;   // continue = ข้ามตัวนี้ ไปตัวถัดไป
+  total += t.amountSatang;      // += แปลว่า total = total + ...
+}
+</x-snip>
+<p>ส่วน <span class="mono">for (let i = 0; i &lt; 20; i++)</span> คือวนแบบนับรอบ: เริ่ม i = 0 ทำซ้ำตราบที่ i &lt; 20 และเพิ่ม i ทีละ 1 (<span class="mono">i++</span>) ส่วน <span class="mono">break</span> คือหยุดวนทันที</p>
+
+<h2>9. ข้อความ (string) ที่ใช้บ่อย</h2>
+<table><thead><tr><th>เขียนว่า</th><th>ผล</th></tr></thead><tbody>
+<tr><td class="mono">`เงินพอใช้อีก ${days} วัน`</td><td>template string (ใช้ backtick) แทรกค่าตัวแปรใน <span class="mono">${ }</span> ได้ เช่น "เงินพอใช้อีก 16 วัน"</td></tr>
+<tr><td class="mono">'2026-10-09'.slice(0, 7)</td><td>'2026-10' (ตัดตัวอักษรตำแหน่ง 0 ถึงก่อน 7)</td></tr>
+<tr><td class="mono">'a,b'.split(',')</td><td>['a', 'b'] (แยกเป็น array)</td></tr>
+<tr><td class="mono">' ข้าว '.trim()</td><td>'ข้าว' (ตัดช่องว่างหัวท้าย)</td></tr>
+<tr><td class="mono">'KFC'.toLowerCase()</td><td>'kfc'</td></tr>
+<tr><td class="mono">String(5).padStart(2, '0')</td><td>'05' (เติม 0 ข้างหน้าให้ครบ 2 ตัว ใช้กับวันที่)</td></tr>
+<tr><td class="mono">s.replace(/บาท/g, '')</td><td>ลบคำว่า "บาท" ทุกที่ (<span class="mono">/.../g</span> คือ regular expression ดูบท A5)</td></tr>
+</tbody></table>
+
+<h2>10. คณิตศาสตร์ที่ใช้</h2>
+<table><thead><tr><th>คำสั่ง</th><th>ผล</th><th>ใช้ที่ไหน</th></tr></thead><tbody>
+<tr><td class="mono">Math.floor(20.69)</td><td>20 (ปัดลงเสมอ)</td><td>จำนวนวัน Money Runway</td></tr>
+<tr><td class="mono">Math.round(680.2857)</td><td>680 (ปัดตามปกติ)</td><td>ค่าเฉลี่ยต่อวันเป็นสตางค์</td></tr>
+<tr><td class="mono">Math.max(0, -500)</td><td>0 (ตัวที่มากกว่า)</td><td>กันเงินที่ใช้ได้ติดลบ</td></tr>
+<tr><td class="mono">Math.min(7, 3)</td><td>3 (ตัวที่น้อยกว่า)</td><td>จำนวนวันที่ใช้หารค่าเฉลี่ย ไม่เกิน 7</td></tr>
+<tr><td class="mono">Math.abs(-85)</td><td>85 (ค่าสัมบูรณ์)</td><td>แสดงยอดเงินโดยไม่สนเครื่องหมาย</td></tr>
+</tbody></table>
+
+<h2>แบบฝึกหัด A4</h2>
+<ol>
+<li>ถ้า <span class="mono">profile</span> เป็น null ค่าของ <span class="mono">profile?.runwayFloorSatang ?? 50_000</span> คืออะไร</li>
+<li><span class="mono">[100, 200, 300].filter((x) =&gt; x &gt; 150).map((x) =&gt; x / 100)</span> ได้อะไร</li>
+<li>เริ่ม ฿500 มีรายการยืนยันแล้ว: รายรับ ฿1,000 รายจ่าย ฿300 และแบบร่างรายจ่าย ฿200 <span class="mono">computeBalance</span> คืนกี่สตางค์</li>
+<li><span class="mono">const t2 = { ...t, title: 'ข้าวผัด' }</span> แล้ว <span class="mono">t.title</span> เปลี่ยนไหม</li>
+</ol>
+<x-box kind="note" title="เฉลย">
+<p>1) 50000 · 2) [2, 3] (กรองเหลือ 200, 300 แล้วหาร 100) · 3) 50,000 + 100,000 − 30,000 = 120,000 สตางค์ (แบบร่างไม่นับ) · 4) ไม่เปลี่ยน t2 เป็น object ใหม่ t ยังเป็นค่าเดิม</p>
+</x-box>
+</x-ch>

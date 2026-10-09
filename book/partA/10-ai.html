@@ -1,0 +1,164 @@
+<x-ch title="การเชื่อม AI: ทำไมต้องผ่านเซิร์ฟเวอร์ และทำงานยังไง" lead="MindPay ใช้ AI 2 งาน คืออ่านสลิป (FR-4) และโค้ชน้องกล้า (FR-5) บทนี้อธิบายเส้นทางตั้งแต่แอปถามจนได้คำตอบ ทีละบรรทัด">
+
+<h2>AI ในแอปคืออะไร</h2>
+<p>AI ที่ใช้คือ <b>โมเดลภาษาขนาดใหญ่ (Large Language Model, LLM)</b> เช่น Claude ของบริษัท Anthropic และ Gemini ของ Google เราส่ง "ข้อความ" (และรูป) ไปทางอินเทอร์เน็ต มันตอบกลับเป็นข้อความ บริษัทเหล่านี้คิดเงินตามจำนวนที่ใช้ จึงต้องมี <b>API key</b> (กุญแจ) ไว้ระบุว่าใครเป็นคนจ่าย</p>
+<table><thead><tr><th>คำ</th><th>ความหมาย</th></tr></thead><tbody>
+<tr><td>API</td><td>"ประตู" ให้โปรแกรมคุยกับโปรแกรม ส่งคำขอเป็น JSON ทาง HTTPS แล้วได้คำตอบเป็น JSON</td></tr>
+<tr><td>API key</td><td>รหัสลับยาว ๆ ที่แนบไปกับคำขอ ใครได้กุญแจไป ก็ใช้ AI โดยให้เราจ่ายเงินได้</td></tr>
+<tr><td>System prompt</td><td>"คำสั่งประจำตัว" ที่บอก AI ว่าต้องเป็นใคร ตอบยังไง ห้ามอะไร (ผู้ใช้ไม่เห็น)</td></tr>
+<tr><td>Token</td><td>หน่วยนับข้อความของ AI (ประมาณคำหรือพยางค์) ใช้คิดราคาและจำกัดความยาวคำตอบ</td></tr>
+<tr><td>JSON Schema</td><td>แบบฟอร์มที่บังคับให้ AI ตอบเป็นโครงสร้างตายตัว เช่น ต้องมีช่อง amount, dateIso</td></tr>
+<tr><td>JSON</td><td>รูปแบบข้อมูลที่เขียนเหมือน object ของ JavaScript เช่น <span class="mono">{"text": "สวัสดี"}</span></td></tr>
+</tbody></table>
+
+<h2>ทำไมแอปไม่เรียก AI เอง</h2>
+<x-box kind="warn" title="ห้ามใส่กุญแจ AI ไว้ในแอปเด็ดขาด">
+<p>ไฟล์ APK หรือเว็บที่ผู้ใช้โหลดไป ใครก็แกะดูข้างในได้ ถ้ากุญแจ AI อยู่ในแอป คนแกะจะเอาไปใช้ฟรีโดยให้ทีมเราจ่าย (หรือทำให้กุญแจโดนแบน) ทีมเราจึงเก็บกุญแจไว้บนเซิร์ฟเวอร์ใน <b>Edge Functions</b> เท่านั้น แอปเรียก Edge Function แล้ว Edge Function ไปเรียก AI แทน</p>
+</x-box>
+<p>การมีเซิร์ฟเวอร์คั่นกลางให้ประโยชน์อีกหลายอย่าง</p>
+<ol>
+<li><b>ตรวจตัวตน</b>: เฉพาะผู้ใช้ที่เข้าสู่ระบบแล้วเท่านั้นที่ใช้ AI ได้</li>
+<li><b>จำกัดโควตา</b>: อ่านสลิปได้ 300 ใบ/วัน/คน ถามโค้ชได้ 60 ครั้ง/วัน/คน กันค่าใช้จ่ายบานปลาย</li>
+<li><b>เปลี่ยน AI ได้โดยไม่ต้องอัปเดตแอป</b>: สลับ Claude กับ Gemini แค่เปลี่ยน Secret บนเซิร์ฟเวอร์</li>
+<li><b>ทำความสะอาดคำตอบ</b>: ตรวจและแก้คำตอบของ AI ก่อนส่งถึงแอป (เช่น ปี พ.ศ. ที่ AI ลืมแปลง)</li>
+<li><b>ความเป็นส่วนตัว</b>: ควบคุมได้ว่าส่งอะไรให้ AI บ้าง</li>
+</ol>
+
+<h2>เส้นทางของคำถาม 1 ข้อถึงน้องกล้า</h2>
+<div class="flow">
+<div class="st"><b>1. แอป</b> <code>src/app/(tabs)/coach.tsx</code><small>ผู้ใช้พิมพ์ "ซื้อรองเท้า 1,290 ได้ไหม" แอปคำนวณ "ข้อเท็จจริง" เอง (ยอดเงิน ค่าเฉลี่ย Runway ก่อนและหลังซื้อ) ด้วยโค้ดใน src/domain</small></div>
+<div class="ar">↓ <span class="mono">askCoach()</span> ใน <span class="mono">src/services/coach.ts</span></div>
+<div class="st"><b>2. supabase.functions.invoke('coach')</b><small>ส่ง {context, question} พร้อม token การเข้าสู่ระบบของผู้ใช้ ทาง HTTPS</small></div>
+<div class="ar">↓</div>
+<div class="st dark"><b>3. Edge Function coach</b> <code>supabase/functions/coach/index.ts</code><small>ตรวจ token → ตรวจขนาดคำขอ → ตรวจโควตา → สร้างข้อความให้ AI (system prompt + DATA + QUESTION)</small></div>
+<div class="ar">↓ <span>กุญแจลับ (Secret)</span></div>
+<div class="st gold"><b>4. Claude หรือ Gemini</b><small>เขียนคำตอบภาษาไทย ไม่เกิน 90 คำ ใช้เฉพาะตัวเลขที่ได้รับ</small></div>
+<div class="ar">↑ <span>คำตอบย้อนกลับทางเดิม</span></div>
+<div class="st"><b>5. แอปแสดงและอ่านออกเสียง</b><small>น้องกล้าขยับปากพร้อมซับไตเติล (FR-5)</small></div>
+</div>
+
+<h2>ฝั่งแอป: src/services/coach.ts</h2>
+<x-code src="src/services/coach.ts" lines="1-25"></x-code>
+<table class="walk"><thead><tr><th>บรรทัด</th><th>ความหมาย</th></tr></thead><tbody>
+<tr><td>2</td><td>นำชนิด error ของ Supabase ที่บอกว่า "เซิร์ฟเวอร์ตอบกลับมาว่าผิดพลาด" มาใช้</td></tr>
+<tr><td>5</td><td>สร้าง error ชนิดของโค้ชเอง ข้อความของมันคือสิ่งที่จะแสดงให้ผู้ใช้เห็น</td></tr>
+<tr><td>7</td><td>ฟังก์ชัน <span class="mono">askCoach</span> รับข้อมูลสรุป (context) และคำถาม คืนข้อความคำตอบ</td></tr>
+<tr><td>8</td><td>ไม่มี Supabase (เช่น build ที่ไม่ได้ตั้งค่า) → บอกผู้ใช้ว่าต้องใช้บัญชีจริง</td></tr>
+<tr><td>9</td><td><b>เรียก Edge Function ชื่อ coach</b> ส่ง context และ question ไป ไลบรารีแนบ token การเข้าสู่ระบบให้เอง</td></tr>
+<tr><td>10–21</td><td>ถ้าผิดพลาด อ่านรหัส error ที่เซิร์ฟเวอร์ส่งมา แล้วแปลงเป็นข้อความภาษาไทยที่เป็นมิตร: ครบโควตา (quota), ยังไม่ใส่กุญแจ AI (not_configured), AI ไม่ว่าง (busy), หมดอายุการเข้าสู่ระบบ (unauthorized) อย่างอื่นบอกให้ลองใหม่</td></tr>
+<tr><td>22–24</td><td>ดึงข้อความคำตอบ ถ้าไม่มีก็แจ้ง ถ้ามีส่งกลับไปให้หน้าโค้ช</td></tr>
+</tbody></table>
+
+<h2>ฝั่งเซิร์ฟเวอร์: Edge Function coach ทีละบรรทัด</h2>
+<p>Edge Function เขียนด้วย TypeScript เหมือนแอป แต่รันบนเซิร์ฟเวอร์ของ Supabase ด้วยโปรแกรมชื่อ <b>Deno</b> (คล้าย Node.js) ฟังก์ชันหนึ่งตัวคือโฟลเดอร์หนึ่งใน <span class="mono">supabase/functions/</span> มีไฟล์ <span class="mono">index.ts</span> และโฟลเดอร์ <span class="mono">_shared</span> เก็บโค้ดที่ใช้ร่วมกัน</p>
+<x-code src="supabase/functions/coach/index.ts" lines="1-26"></x-code>
+<table class="walk"><thead><tr><th>บรรทัด</th><th>ความหมาย</th></tr></thead><tbody>
+<tr><td>1–4</td><td>คอมเมนต์: โค้ชคือน้องกล้า อธิบายตัวเลขที่ยืนยันแล้ว คำตอบจะถูกอ่านออกเสียงจึงเขียนแบบภาษาพูด แอปส่งเฉพาะยอดรวมตามหมวด (ไม่มีรูปสลิป ชื่อคน หรือเลขบัญชี)</td></tr>
+<tr><td>5–6</td><td>นำตัวช่วยจาก _shared มาใช้ (นามสกุล .ts ต้องเขียนเต็มใน Deno)</td></tr>
+<tr><td>8</td><td>โควตาต่อวัน อ่านจาก Secret <span class="mono">COACH_DAILY_LIMIT</span> ถ้าไม่ได้ตั้งใช้ 60</td></tr>
+<tr><td>10</td><td>ขนาดคำขอสูงสุด 64,000 ไบต์ (คำถามกับตัวเลขสรุปเล็กกว่านี้มาก กันคนส่งข้อมูลขยะก้อนใหญ่)</td></tr>
+<tr><td>12–26</td><td><b>System prompt</b> (เขียนเป็นภาษาอังกฤษเพราะ AI ทำตามคำสั่งภาษาอังกฤษได้แม่นกว่า แต่สั่งให้ตอบเป็นไทย) บอกว่า: เป็นน้องกล้า มาสคอตต้นกล้าสีทอง · น้ำเสียงสุขุม เป็นมิตร เรียกตัวเองว่า "กล้า" ไม่ใช้ครับ/ค่ะ · คำตอบถูกอ่านออกเสียง จึงห้ามอีโมจิ ห้ามรายการ ห้าม markdown · ตอบไม่เกิน 90 คำ · <b>ใช้เฉพาะตัวเลขในส่วน DATA ห้ามแต่งตัวเลขขึ้นมาเอง</b> · โครงคำตอบ: ตัวเลขบอกอะไร → สำคัญยังไง → คำแนะนำเล็ก ๆ 1–2 ข้อ → ให้ผู้ใช้ตัดสินใจเอง · <b>ห้ามตำหนิ</b> · ถ้าถาม "ซื้อได้ไหม" ให้ใช้ตัวเลข purchaseCheck บอก Runway ก่อนและหลัง · ไม่ใช่ที่ปรึกษาการเงินที่มีใบอนุญาต ห้ามแนะนำลงทุน กู้ยืม คริปโต</td></tr>
+</tbody></table>
+<x-code src="supabase/functions/coach/index.ts" lines="28-76"></x-code>
+<table class="walk"><thead><tr><th>บรรทัด</th><th>ความหมาย</th></tr></thead><tbody>
+<tr><td>28</td><td><span class="mono">Deno.serve</span> = "เปิดร้าน" รอรับคำขอ ทุกคำขอที่เข้ามาจะเรียกฟังก์ชันนี้ 1 ครั้ง</td></tr>
+<tr><td>29</td><td>คำขอแบบ OPTIONS คือเบราว์เซอร์ "ถามทาง" ก่อนส่งจริง (กฎ CORS ของเว็บ) ตอบ ok พร้อม header ที่อนุญาต</td></tr>
+<tr><td>30</td><td>รับเฉพาะ POST อย่างอื่นตอบ 405</td></tr>
+<tr><td>32–33</td><td><b>ตรวจตัวตน</b>: อ่าน token จากคำขอแล้วถาม Supabase ว่าเป็นใคร ไม่ผ่าน → 401 (แอปจะบอก "เซสชันหมดอายุ")</td></tr>
+<tr><td>35</td><td>คำขอใหญ่เกิน → 413 (ตรวจจากหัวคำขอ ก่อนอ่านเนื้อหา จึงไม่เปลืองหน่วยความจำ)</td></tr>
+<tr><td>36–42</td><td>อ่านเนื้อหาเป็น JSON ถ้าอ่านไม่ได้หรือไม่ใช่ object → 400</td></tr>
+<tr><td>43</td><td>คำถามตัดเหลือไม่เกิน 400 ตัวอักษร และตัดช่องว่างหัวท้าย</td></tr>
+<tr><td>44</td><td>ข้อมูลสรุปแปลงเป็นข้อความ JSON ตัดเหลือไม่เกิน 6,000 ตัวอักษร (คุมค่าใช้จ่าย)</td></tr>
+<tr><td>46</td><td>ไม่มีกุญแจ AI ใน Secrets → 503 not_configured</td></tr>
+<tr><td>49–51</td><td><b>ตรวจโควตา</b> และนับเพิ่ม 1 ในคำสั่งเดียว เกิน 60 ครั้งใน 24 ชั่วโมง → 429</td></tr>
+<tr><td>52–62</td><td><b>เรียก AI</b> ส่ง system prompt, จำกัดคำตอบ 500 token, และข้อความที่มี 2 ส่วน: <span class="mono">DATA:</span> ตามด้วยตัวเลข และ <span class="mono">QUESTION:</span> ตามด้วยคำถาม (ถ้าผู้ใช้ไม่ได้ถาม ใช้คำถามตั้งต้น "สรุปสถานะการเงินของฉันช่วงนี้...")</td></tr>
+<tr><td>63</td><td>ล้าง markdown ที่ AI อาจใส่มา (<span class="mono">plainText</span>) แล้วตอบแอปเป็น <span class="mono">{"text": "..."}</span></td></tr>
+<tr><td>64–75</td><td>จัดการ error ตามชนิด: กุญแจผิด/ไม่มี → 503 not_configured, AI ไม่ว่าง → 503 busy, อื่น ๆ → 502 และบันทึก log ไว้ดูใน Dashboard (บันทึกเฉพาะชนิด error ไม่บันทึกคำถามหรือคำตอบของผู้ใช้)</td></tr>
+</tbody></table>
+
+<h2>ตัวช่วยกลาง: supabase/functions/_shared/common.ts</h2>
+<x-code src="supabase/functions/_shared/common.ts" lines="17-83"></x-code>
+<table class="walk"><thead><tr><th>บรรทัด</th><th>ความหมาย</th></tr></thead><tbody>
+<tr><td>17–24</td><td>อ่านค่า Secret จากเซิร์ฟเวอร์ (<span class="mono">Deno.env.get</span>) ถ้าชื่อแปลกจนอ่านไม่ได้ ถือว่าไม่ได้ตั้ง</td></tr>
+<tr><td>25–26</td><td>หากุญแจ Gemini และ Claude จากรายชื่อที่ยอมรับ (ดู readKey ด้านล่าง)</td></tr>
+<tr><td>28–32</td><td>header CORS: ยอมให้เว็บจากทุกที่เรียกได้ (ความปลอดภัยมาจาก token ไม่ใช่จากที่อยู่เว็บ)</td></tr>
+<tr><td>34–39</td><td><span class="mono">json()</span> สร้างคำตอบ HTTP ที่เป็น JSON พร้อม header</td></tr>
+<tr><td>41–44</td><td><span class="mono">fail()</span> สร้างคำตอบ error รูปแบบเดียวกันทุกครั้ง <span class="mono">{"error": {"code", "message"}}</span> ที่แอปอ่าน code ได้ (บรรทัด 13–18 ของ coach.ts ฝั่งแอป)</td></tr>
+<tr><td>46–53</td><td><span class="mono">requireUser</span>: ตัดคำว่า "Bearer " ออกจาก header Authorization ได้ token แล้วถาม Auth ว่า token นี้เป็นของใคร คืน id ผู้ใช้ หรือ null</td></tr>
+<tr><td>55–59</td><td><span class="mono">admin()</span>: client ที่ใช้ <b>service role key</b> (ข้าม RLS ได้) มีเฉพาะบนเซิร์ฟเวอร์</td></tr>
+<tr><td>61–65</td><td>error 2 ชนิด: ไม่ได้ตั้งกุญแจ/กุญแจใช้ไม่ได้ และ AI ไม่ว่าง (ติดลิมิตหรือโหลดเกิน)</td></tr>
+<tr><td>67–71</td><td>อ่านโควตาจาก Secret ถ้าไม่ใช่ตัวเลขบวกใช้ค่าตั้งต้น</td></tr>
+<tr><td>73–83</td><td><span class="mono">takeQuota</span>: เรียกฟังก์ชัน SQL <span class="mono">take_ai_quota</span> ในฐานข้อมูล (rpc = เรียกฟังก์ชันระยะไกล) ซึ่งนับและบันทึกในขั้นตอนเดียว</td></tr>
+</tbody></table>
+<h3>ทำไมนับโควตาต้อง "ทำในขั้นตอนเดียว"</h3>
+<x-code src="supabase/migrations/20261001000000_atomic_ai_quota.sql" lines="1-44"></x-code>
+<table class="walk"><thead><tr><th>บรรทัด</th><th>ความหมาย</th></tr></thead><tbody>
+<tr><td>1–5</td><td>คอมเมนต์เล่าบั๊กเดิม: เดิมนับจำนวนครั้งวันนี้กับบันทึกครั้งใหม่เป็น 2 คำสั่งแยกกัน ถ้าส่งคำขอพร้อมกันหลายอัน ทุกอันนับได้ "ยังไม่เกิน" แล้วผ่านหมด (race condition) แก้ให้นับและบันทึกในคำสั่งเดียวภายใต้กุญแจล็อก</td></tr>
+<tr><td>7–14</td><td>สร้างฟังก์ชัน SQL รับ id ผู้ใช้ ชนิดงาน (slip/coach) และเพดาน คืนจริง/เท็จ รันด้วยสิทธิ์เจ้าของ (security definer)</td></tr>
+<tr><td>16–18</td><td>ค่าที่ส่งมาผิด → ไม่อนุญาต</td></tr>
+<tr><td>19</td><td><b>ล็อก</b> ต่อผู้ใช้ต่อชนิดงาน: คำขอที่ 2 ของคนเดียวกันต้องรอคำขอแรกเสร็จก่อน (ล็อกปลดเองเมื่อจบคำสั่ง)</td></tr>
+<tr><td>20–22</td><td>นับจำนวนการใช้ใน 24 ชั่วโมงล่าสุด</td></tr>
+<tr><td>23–25</td><td>ถึงเพดานแล้ว → ไม่อนุญาต</td></tr>
+<tr><td>26–27</td><td>ยังไม่ถึง → บันทึกการใช้ 1 ครั้ง แล้วอนุญาต</td></tr>
+<tr><td>31–32</td><td>ห้ามผู้ใช้ทั่วไปเรียกฟังก์ชันนี้ตรง ๆ ให้เฉพาะเซิร์ฟเวอร์ (service_role)</td></tr>
+<tr><td>34–44</td><td>(ไฟล์เดียวกัน) เพิ่มเพดานจำนวนเงิน ฿1,000,000,000 ให้ตารางรายการและโปรไฟล์ ตรงกับ MAX_SATANG ในแอป</td></tr>
+</tbody></table>
+
+<h2>เลือก AI ตัวไหน: Claude หรือ Gemini</h2>
+<x-code src="supabase/functions/_shared/helpers.ts" lines="1-45"></x-code>
+<table class="walk"><thead><tr><th>บรรทัด</th><th>ความหมาย</th></tr></thead><tbody>
+<tr><td>1–2</td><td>ไฟล์นี้เป็นฟังก์ชันล้วน ไม่ใช้คำสั่งของ Deno จึงเอาไปเทสต์ด้วย vitest ได้เหมือนโค้ดในแอป</td></tr>
+<tr><td>6–19</td><td>รายชื่อ Secret ที่ยอมรับ ตัวแรกคือชื่อที่ถูกต้อง ตัวอื่นเป็นชื่อสำรองและ <b>ชื่อที่พิมพ์ผิดบ่อย</b> คอมเมนต์เล่าว่าเคยมีคนตั้งชื่อ Secret เป็น "GEMINI API KEY" (มีเว้นวรรค) เมื่อ 28 ก.ย. 2569 ทำให้ AI ไม่ทำงาน ทีมจึงให้เซิร์ฟเวอร์รับชื่อเหล่านี้ด้วย</td></tr>
+<tr><td>25–32</td><td><span class="mono">readKey</span>: ไล่ดูชื่อทีละตัว เจอตัวแรกที่มีค่า ตัดช่องว่าง การขึ้นบรรทัด และเครื่องหมายคำพูดที่ติดมาตอนก็อปวางออก</td></tr>
+<tr><td>38–45</td><td><span class="mono">pickProvider</span>: ถ้าตั้ง <span class="mono">AI_PROVIDER</span> บังคับไว้ ใช้ตัวนั้น (ต้องมีกุญแจด้วย) ไม่งั้นมีกุญแจ Claude ใช้ Claude ก่อน ไม่มีก็ใช้ Gemini ไม่มีเลยคืน null</td></tr>
+</tbody></table>
+<table><thead><tr><th></th><th>Claude (Anthropic)</th><th>Gemini (Google)</th></tr></thead><tbody>
+<tr><td>Secret</td><td class="mono">ANTHROPIC_API_KEY</td><td class="mono">GEMINI_API_KEY</td></tr>
+<tr><td>รุ่นที่ใช้ (ค่าเริ่มต้น)</td><td>claude-haiku-4-5 (เปลี่ยนได้ด้วย SLIP_MODEL, COACH_MODEL)</td><td>gemini-3.5-flash-lite แล้วลองรุ่นถัดไปเองถ้าใช้ไม่ได้</td></tr>
+<tr><td>ค่าใช้จ่าย</td><td>ต้องเติมเครดิต อ่านสลิปใบละประมาณ 10 สตางค์</td><td>มีแบบฟรี (มีเพดานต่อนาที/ต่อวัน)</td></tr>
+<tr><td>ข้อมูลของผู้ใช้</td><td>ไม่นำไปฝึกโมเดล</td><td>แบบฟรี Google อาจนำข้อมูลไปปรับปรุงโมเดล (README บอกไว้ตรง ๆ)</td></tr>
+</tbody></table>
+
+<h2>ส่งคำขอไปที่ Claude: callClaude</h2>
+<x-code src="supabase/functions/_shared/common.ts" lines="114-200"></x-code>
+<table class="walk"><thead><tr><th>บรรทัด</th><th>ความหมาย</th></tr></thead><tbody>
+<tr><td>114–117</td><td><span class="mono">callAI</span> เรียกตัวที่บอกชื่อรุ่นด้วย แล้วคืนแค่ข้อความ</td></tr>
+<tr><td>119–124</td><td>เวลาสูงสุด: รอ AI ครั้งละไม่เกิน 45 วินาที และทั้งคำขอไม่เกิน 110 วินาที (Supabase จะตัดฟังก์ชันที่ 150 วินาที)</td></tr>
+<tr><td>127–136</td><td>เลือก AI แล้วเรียก จับเวลา และเขียน log เฉพาะข้อมูลกำกับ (ตัวไหน รุ่นไหน งานอะไร ใช้กี่มิลลิวินาที) <b>ไม่เคยบันทึกรูป คำถาม หรือคำตอบ</b></td></tr>
+<tr><td>139–149</td><td><span class="mono">timedFetch</span>: ส่งคำขอทางอินเทอร์เน็ตแบบมีเวลาจำกัด ถ้าหมดเวลาถือว่า AI ไม่ว่าง (แอปจะรอแล้วลองใหม่)</td></tr>
+<tr><td>153–156</td><td>เลือกรุ่นของ Claude ตามงาน ส่วนการอ่านสลิปครั้งที่ 2 (verify) ใช้รุ่น VERIFY_MODEL ถ้าตั้งไว้</td></tr>
+<tr><td>157–169</td><td>สร้างเนื้อหาคำขอตามรูปแบบของ Anthropic Messages API: รุ่น, จำนวน token สูงสุด, system prompt และข้อความของผู้ใช้ (รูปแปลงเป็นรูปแบบ base64 ที่ Claude รับ)</td></tr>
+<tr><td>170–172</td><td>ถ้างานนี้ต้องการ JSON ตามแบบฟอร์ม (อ่านสลิป) ใส่ schema ไปด้วย Claude จะตอบตามแบบฟอร์มเป๊ะ</td></tr>
+<tr><td>173–185</td><td>ส่งไปที่ <span class="mono">https://api.anthropic.com/v1/messages</span> แนบกุญแจใน header <span class="mono">x-api-key</span></td></tr>
+<tr><td>186–192</td><td>ตอบกลับไม่สำเร็จ: กุญแจผิด → NotConfigured, 429/529 (ส่งถี่เกิน/ระบบเต็ม) → Busy, อื่น ๆ → error ทั่วไป</td></tr>
+<tr><td>193–199</td><td>สำเร็จ: เอาเฉพาะส่วนที่เป็นข้อความมาต่อกัน คืนพร้อมชื่อรุ่น</td></tr>
+</tbody></table>
+<p>ฝั่ง Gemini (<span class="mono">callGemini</span> บรรทัด 202–268) หลักการเดียวกันแต่ซับซ้อนกว่า เพราะแบบฟรีติดลิมิตบ่อย: ไล่ลองหลายรุ่นตามลำดับ ถ้ารุ่นไหนใช้ไม่ได้กับกุญแจนี้ข้ามไปรุ่นถัดไป ถ้าทุกรุ่น "ไม่ว่าง" รอตามเวลาที่ Google บอก (ไม่เกิน 12 วินาที) แล้วลองทั้งหมดอีก 1 รอบ ก่อนจะบอกแอปว่า busy การตัดสินใจหลังแต่ละ error อยู่ในฟังก์ชัน <span class="mono">geminiStep</span></p>
+<x-code src="supabase/functions/_shared/helpers.ts" lines="75-93"></x-code>
+<table class="walk"><thead><tr><th>บรรทัด</th><th>ความหมาย</th></tr></thead><tbody>
+<tr><td>87</td><td>กุญแจผิด (401/403 หรือข้อความ API key not valid) → หยุด บอกว่ายังไม่ได้ตั้งค่า</td></tr>
+<tr><td>88</td><td>404 = ไม่มีรุ่นนี้ → ลองรุ่นถัดไป</td></tr>
+<tr><td>89</td><td>429 ที่บอกว่าโควตาเป็น 0 (กุญแจนี้ไม่มีสิทธิ์ใช้รุ่นนี้เลย) → รุ่นถัดไป</td></tr>
+<tr><td>90</td><td>400 ตอนใช้ JSON schema (รุ่นเก่าบางรุ่นไม่รองรับ) → ลองใหม่โดยเขียนแบบฟอร์มลงใน prompt แทน</td></tr>
+<tr><td>91</td><td>429/500/503 → ไม่ว่าง ลองรุ่นอื่นก่อน แล้วค่อยรอ</td></tr>
+<tr><td>92</td><td>อย่างอื่น → ล้มเหลว</td></tr>
+</tbody></table>
+
+<h2>ตั้งค่า AI (ผู้ดูแลทำครั้งเดียว)</h2>
+<ol>
+<li>สร้างกุญแจ: Gemini ที่ aistudio.google.com/apikey (ฟรี) หรือ Claude ที่ console.anthropic.com</li>
+<li>เปิด Supabase Dashboard → <b>Edge Functions → Secrets</b> (ไม่ใช่ Vault และไม่ใช่หน้า API keys)</li>
+<li>เพิ่ม Secret ชื่อ <span class="mono">GEMINI_API_KEY</span> หรือ <span class="mono">ANTHROPIC_API_KEY</span> ใส่ค่ากุญแจ</li>
+<li>ไม่ต้อง deploy ใหม่ ฟังก์ชันอ่าน Secret ทุกครั้งที่มีคำขอ</li>
+<li>ถ้าแก้โค้ดใน <span class="mono">supabase/functions</span> ต้อง deploy ด้วย <span class="mono">npx supabase functions deploy coach</span> (หรือ parse-slip)</li>
+</ol>
+
+<h2>หลักการใช้ AI อย่างรับผิดชอบที่ทีมเราใช้</h2>
+<table><thead><tr><th>หลักการ</th><th>ในโค้ด</th></tr></thead><tbody>
+<tr><td><b>AI ไม่คิดเลข</b> โค้ดที่ทดสอบแล้วคิด AI แค่อธิบาย</td><td>แอปคำนวณ Runway และ purchaseCheck เองก่อนส่ง (FR-5, FR-6) system prompt ห้ามแต่งตัวเลข</td></tr>
+<tr><td><b>AI ผิดได้ ต้องมีคนตรวจ</b></td><td>สลิปที่ไม่มั่นใจเป็นแบบร่าง อ่าน 2 ครั้งด้วย 2 รุ่น ไม่ตรงกันให้ผู้ใช้เลือก (FR-4)</td></tr>
+<tr><td><b>ส่งข้อมูลให้ AI น้อยที่สุด</b></td><td>โค้ชได้เฉพาะยอดรวม รูปที่ส่งอ่านคือรูปที่มี QR สลิปเท่านั้น และไม่เก็บรูปบนเซิร์ฟเวอร์</td></tr>
+<tr><td><b>คุมค่าใช้จ่าย</b></td><td>โควตาต่อวันแบบ atomic, ตัดความยาวคำถาม, จำกัด token คำตอบ</td></tr>
+<tr><td><b>บันทึกการใช้ AI ในการพัฒนา</b></td><td><code>docs/AI_USAGE_LOG.md</code> บันทึกตาม SRS ว่าใช้ AI ช่วยอะไร แก้อะไร และสมาชิกตรวจอะไร</td></tr>
+</tbody></table>
+</x-ch>

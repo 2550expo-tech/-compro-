@@ -1,0 +1,64 @@
+<x-ch title="วิธีอ่านโค้ด MindPay ด้วยตัวเอง" lead="โค้ดทั้งแอปมีเกือบ 19,000 บรรทัด ไม่มีใครจำได้หมด แต่ทุกไฟล์ใช้รูปแบบซ้ำ ๆ กัน รู้รูปแบบแล้วจะอ่านไฟล์ไหนก็ออก">
+
+<h2>ขั้นตอนอ่านไฟล์ที่ไม่เคยเห็น</h2>
+<ol>
+<li><b>อ่านคอมเมนต์บนสุดของไฟล์ก่อน</b> ทุกไฟล์ในโปรเจกต์เริ่มด้วยคอมเมนต์ <span class="mono">/** ... */</span> บอกว่าไฟล์นี้ทำอะไร เป็นของ FR ไหน และมีกฎอะไรสำคัญ (ภาษาอังกฤษง่าย ๆ ใช้ Google Translate ช่วยได้)</li>
+<li><b>ดูบรรทัด import</b> บอกว่าไฟล์นี้พึ่งใครบ้าง ถ้า import จาก <span class="mono">../domain</span> แปลว่ามีการคำนวณ ถ้าจาก <span class="mono">../data/AppProvider</span> แปลว่าใช้ข้อมูลกลาง</li>
+<li><b>กด Ctrl+Shift+O</b> ดูรายชื่อฟังก์ชันทั้งหมดในไฟล์ เหมือนดูสารบัญ</li>
+<li><b>หาฟังก์ชันที่มี export</b> นั่นคือ "ประตูหน้าบ้าน" ที่ไฟล์อื่นเรียก ฟังก์ชันที่ไม่มี export คือผู้ช่วยภายใน</li>
+<li><b>อ่านชนิดข้อมูลก่อนอ่านตัวโค้ด</b> ดูว่ารับอะไรเข้า คืนอะไรออก ก็เข้าใจไปครึ่งหนึ่งแล้ว</li>
+<li><b>หาเทสต์ของมัน</b> กด Shift+F12 ที่ชื่อฟังก์ชัน ถ้ามีเทสต์ใน <span class="mono">__tests__</span> จะเห็นตัวอย่างการใช้งานจริงพร้อมคำตอบที่ถูกต้อง อ่านง่ายกว่าตัวโค้ดเสียอีก</li>
+</ol>
+
+<h2>รูปแบบที่เจอซ้ำทั้งแอป (ตารางโกง)</h2>
+<table><thead><tr><th>เห็นอะไร</th><th>แปลว่าอะไร</th></tr></thead><tbody>
+<tr><td>ชื่อลงท้าย <span class="mono">Satang</span></td><td>จำนวนเงินเป็นสตางค์ (จำนวนเต็ม) หาร 100 ได้บาท</td></tr>
+<tr><td>ชื่อขึ้นต้น <span class="mono">bkk</span> เช่น <span class="mono">bkkDayKey</span>, <span class="mono">bkkToIso</span></td><td>ฟังก์ชันจัดการวันเวลาแบบเวลาไทย (กรุงเทพ UTC+7) อยู่ใน <code>src/domain/dates.ts</code></td></tr>
+<tr><td>ข้อความวันที่ <span class="mono">'2026-10-09'</span></td><td>"day key" วันที่ไทยรูปแบบ ปี-เดือน-วัน (ค.ศ.) เอามาเทียบมากกว่า/น้อยกว่ากันได้ตรง ๆ เพราะเรียงตามตัวอักษรก็ตรงกับเรียงตามเวลา</td></tr>
+<tr><td><span class="mono">useApp()</span></td><td>หยิบข้อมูลกลาง (โปรไฟล์ รายการ คำสั่ง addTx ฯลฯ)</td></tr>
+<tr><td><span class="mono">useMoney()</span></td><td>หยิบตัวเลขที่คำนวณแล้ว: ยอดคงเหลือ ค่าเฉลี่ย Runway แบบร่าง</td></tr>
+<tr><td><span class="mono">useTheme()</span> แล้วตามด้วย <span class="mono">theme.ink</span>, <span class="mono">theme.primary</span></td><td>สีจากธีมที่ผู้ใช้เลือก (ห้ามใส่รหัสสีเองในหน้าจอ)</td></tr>
+<tr><td><span class="mono">&lt;T v="h3"&gt;</span>, <span class="mono">&lt;Money satang={…}&gt;</span>, <span class="mono">&lt;Card&gt;</span>, <span class="mono">&lt;Button&gt;</span></td><td>ชิ้นส่วนหน้าตาจาก <code>src/ui/components.tsx</code></td></tr>
+<tr><td><span class="mono">space.lg</span>, <span class="mono">radius.md</span></td><td>ระยะห่างและมุมโค้งมาตรฐาน (16 จุด, 14 จุด) จาก <code>src/ui/theme.ts</code></td></tr>
+<tr><td><span class="mono">toast({ message })</span></td><td>ข้อความแจ้งสั้น ๆ ด้านล่างจอ</td></tr>
+<tr><td><span class="mono">router.push('/xxx')</span></td><td>เปิดหน้า <span class="mono">src/app/xxx.tsx</span></td></tr>
+<tr><td><span class="mono">accessibilityLabel="…"</span></td><td>ข้อความที่โปรแกรมอ่านหน้าจออ่านให้คนตาบอดฟัง และเทสต์ E2E ใช้หาปุ่ม</td></tr>
+<tr><td><span class="mono">status === 'confirmed'</span> หรือ <span class="mono">confirmedOnly(txs)</span></td><td>นับเฉพาะรายการที่ยืนยันแล้ว</td></tr>
+<tr><td><span class="mono">Reveal</span>, <span class="mono">usePressSpring</span>, <span class="mono">useReduceMotion</span></td><td>แอนิเมชัน (ค่อย ๆ โผล่, ปุ่มยุบตอนกด, เคารพ "ลดการเคลื่อนไหว")</td></tr>
+<tr><td>คอมเมนต์มีรหัส <span class="mono">TC-12</span></td><td>รหัสเทสต์ ตรงกับในเอกสาร <span class="mono">docs/TRACEABILITY.md</span></td></tr>
+<tr><td>ไฟล์ชื่อ <span class="mono">xxx.web.ts</span></td><td>ฉบับเว็บของไฟล์ <span class="mono">xxx.ts</span></td></tr>
+<tr><td>ชื่อแบบ snake_case เช่น <span class="mono">amount_satang</span></td><td>ชื่อคอลัมน์ในฐานข้อมูล (ฝั่งแอปใช้ camelCase <span class="mono">amountSatang</span>) แปลงกันใน <code>src/data/repo.ts</code></td></tr>
+</tbody></table>
+
+<h2>ฟังก์ชันวันเวลาที่ต้องรู้ (ทุก FR ใช้)</h2>
+<p>เวลาในฐานข้อมูลเก็บเป็นเวลาสากล (UTC) แต่ผู้ใช้อยู่ไทย (เร็วกว่า 7 ชั่วโมง) ถ้าไม่แปลง รายการตอน 06:00 น. ของวันที่ 8 จะถูกนับเป็นวันที่ 7 (เพราะ UTC ยังเป็น 23:00 ของวันที่ 7) ทุก FR จึงใช้ฟังก์ชันจาก <code>src/domain/dates.ts</code></p>
+<x-code src="src/domain/dates.ts" lines="1-51"></x-code>
+<table class="walk"><thead><tr><th>บรรทัด</th><th>ความหมาย</th></tr></thead><tbody>
+<tr><td>1–7</td><td>คอมเมนต์: ทุกอย่างที่ผู้ใช้เห็น (วันนี้, สัปดาห์นี้, วันที่บนสลิป) เป็นวันตามปฏิทินกรุงเทพ และเพราะไทยไม่มีการปรับเวลาฤดูร้อน (daylight saving) การบวก 7 ชั่วโมงตายตัวจึงถูกต้องเสมอ</td></tr>
+<tr><td>10</td><td>7 ชั่วโมงในหน่วยมิลลิวินาที (7 × 60 × 60 × 1000 = 25,200,000)</td></tr>
+<tr><td>11</td><td>1 วันในหน่วยมิลลิวินาที (86,400,000)</td></tr>
+<tr><td>13–17</td><td><b>bkkDayKey</b>: รับเวลาแบบไหนก็ได้ (Date, ข้อความ, ตัวเลข) บวก 7 ชั่วโมง แล้วตัดเอา 10 ตัวอักษรแรกของรูปแบบสากล ได้วันที่ไทย เช่น <span class="mono">bkkDayKey('2026-10-07T23:00:00Z')</span> → <span class="mono">'2026-10-08'</span> (23:00 UTC = 06:00 น. ของวันที่ 8 เวลาไทย)</td></tr>
+<tr><td>20–24</td><td><b>msUntilNextBkkMidnight</b>: เหลืออีกกี่มิลลิวินาทีถึงเที่ยงคืนไทยครั้งหน้า (เอาวันพรุ่งนี้ 00:00 ลบเวลาตอนนี้) ใช้ตั้งนาฬิกาใน AppProvider (บท A6)</td></tr>
+<tr><td>26–28</td><td><b>bkkDayStart</b>: วันที่ไทย → เวลาสากลของ 00:00 น. วันนั้น (ลบ 7 ชั่วโมงกลับ)</td></tr>
+<tr><td>30–35</td><td><b>addDays</b>: บวกหรือลบจำนวนวันจากวันที่ เช่น <span class="mono">addDays('2026-10-08', 20)</span> → <span class="mono">'2026-10-28'</span> ข้ามเดือนข้ามปีให้เอง</td></tr>
+<tr><td>37–40</td><td><b>daysBetween</b>: นับจำนวนวันจาก a ถึง b เช่น <span class="mono">daysBetween('2026-10-08', '2026-10-31')</span> → 23</td></tr>
+<tr><td>42–46</td><td><b>bkkToIso</b>: เอาวันไทย + เวลา "HH:MM" มารวมเป็นเวลาสากลสำหรับเก็บในฐานข้อมูล ถ้าเวลาผิดรูปแบบใช้ 12:00 แทน เช่น <span class="mono">bkkToIso('2026-10-08', '06:00')</span> → <span class="mono">'2026-10-07T23:00:00.000Z'</span></td></tr>
+<tr><td>48–51</td><td><b>bkkTime</b>: เวลาสากล → "HH:MM" ตามเวลาไทย ใช้แสดงเวลาของรายการ</td></tr>
+</tbody></table>
+
+<h2>แผนที่: อยากรู้เรื่องนี้ ไปเปิดไฟล์ไหน</h2>
+<table><thead><tr><th>อยากรู้</th><th>เปิดไฟล์</th></tr></thead><tbody>
+<tr><td>หน้าจอนี้หน้าตาแบบนี้เพราะอะไร</td><td><span class="mono">src/app/ชื่อหน้า.tsx</span> (ตารางในบท A7)</td></tr>
+<tr><td>ตัวเลขนี้คิดยังไง</td><td><span class="mono">src/domain/</span>: <code>src/domain/summary.ts</code> (ยอด), <code>src/domain/runway.ts</code> (Runway), <code>src/domain/insights.ts</code> (การ์ดโค้ช)</td></tr>
+<tr><td>ข้อมูลโหลด/บันทึกยังไง</td><td><code>src/data/repo.ts</code>, <code>src/data/AppProvider.tsx</code></td></tr>
+<tr><td>ตารางในฐานข้อมูลมีคอลัมน์อะไร</td><td><code>supabase/migrations/20260927000000_init.sql</code></td></tr>
+<tr><td>AI ได้รับคำสั่งอะไร</td><td><code>supabase/functions/coach/index.ts</code>, <code>supabase/functions/parse-slip/index.ts</code></td></tr>
+<tr><td>สี ขนาด ฟอนต์</td><td><code>src/ui/theme.ts</code>, <code>docs/DESIGN_SYSTEM.md</code></td></tr>
+<tr><td>ฟีเจอร์นี้ตอบ requirement ข้อไหน มีเทสต์อะไร</td><td><code>docs/TRACEABILITY.md</code></td></tr>
+<tr><td>ทีมใช้ AI ช่วยเขียนตรงไหน ตรวจอะไรไปแล้ว</td><td><code>docs/AI_USAGE_LOG.md</code></td></tr>
+<tr><td>build / deploy อัตโนมัติ</td><td><span class="mono">.github/workflows/*.yml</span></td></tr>
+</tbody></table>
+<x-box kind="tip" title="ถ้าอ่านแล้วงง">
+<p>ใส่ <span class="mono">console.log('ค่า', ตัวแปร)</span> ไว้ในโค้ดแล้วเปิดแอปด้วย <span class="mono">npm run web</span> กด F12 ในเบราว์เซอร์ แท็บ Console จะเห็นค่าที่พิมพ์ออกมา (อย่าลืมลบก่อน commit) หรือเขียนเทสต์เล็ก ๆ ลองส่งค่าเข้าฟังก์ชันใน <span class="mono">src/domain</span> แล้วดูผล</p>
+</x-box>
+</x-ch>

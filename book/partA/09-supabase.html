@@ -1,0 +1,207 @@
+<x-ch title="เซิร์ฟเวอร์และฐานข้อมูล: Supabase" lead="ข้อมูลของผู้ใช้เก็บที่ไหน เก็บยังไง แอปต่อเซิร์ฟเวอร์ยังไง และทำไมคนอื่นแอบดูข้อมูลเราไม่ได้ ทั้งที่กุญแจอยู่ในแอป">
+
+<h2>ฐานข้อมูลคืออะไร</h2>
+<p>ฐานข้อมูล (database) คือที่เก็บข้อมูลแบบมีระเบียบ คิดว่าเป็น <b>สมุด Excel บนคลาวด์</b> ที่มีหลายชีต แต่ละชีตเรียกว่า <b>ตาราง (table)</b> แต่ละแถวคือข้อมูล 1 ชิ้น (row) แต่ละคอลัมน์คือช่องข้อมูล (column) เช่น ตาราง transactions มี 1 แถวต่อรายการเงิน 1 รายการ</p>
+<table><thead><tr><th>id</th><th>user_id</th><th>kind</th><th class="n">amount_satang</th><th>title</th><th>status</th><th>occurred_at</th></tr></thead><tbody>
+<tr><td class="mono">a1b2…</td><td class="mono">มิ้นท์</td><td>expense</td><td class="n">8500</td><td>ข้าวมันไก่</td><td>confirmed</td><td class="mono">2026-10-08T05:10Z</td></tr>
+<tr><td class="mono">c3d4…</td><td class="mono">มิ้นท์</td><td>income</td><td class="n">1000000</td><td>ค่าขนมจากที่บ้าน</td><td>confirmed</td><td class="mono">2026-10-01T02:00Z</td></tr>
+<tr><td class="mono">e5f6…</td><td class="mono">ต้น</td><td>expense</td><td class="n">125000</td><td>โอนให้ นาย ส***</td><td>draft</td><td class="mono">2026-10-07T11:42Z</td></tr>
+</tbody></table>
+<p class="small muted">ตัวอย่างสมมติ คอลัมน์ user_id จริงเป็นรหัสยาว (UUID) ไม่ใช่ชื่อ</p>
+<p>ภาษาที่ใช้สั่งฐานข้อมูลคือ <b>SQL</b> คำสั่งพื้นฐานมี 4 คำ</p>
+<table><thead><tr><th>SQL</th><th>ความหมาย</th><th>ในแอปเขียนว่า (supabase-js)</th></tr></thead><tbody>
+<tr><td class="mono">SELECT * FROM transactions</td><td>อ่านข้อมูล</td><td class="mono">db.from('transactions').select('*')</td></tr>
+<tr><td class="mono">INSERT INTO transactions …</td><td>เพิ่มแถว</td><td class="mono">db.from('transactions').insert(row)</td></tr>
+<tr><td class="mono">UPDATE transactions SET … WHERE id = …</td><td>แก้แถว</td><td class="mono">db.from('transactions').update(row).eq('id', id)</td></tr>
+<tr><td class="mono">DELETE FROM transactions WHERE id = …</td><td>ลบแถว</td><td class="mono">db.from('transactions').delete().eq('id', id)</td></tr>
+</tbody></table>
+<p>แอปไม่ได้เขียน SQL ตรง ๆ แต่ใช้ไลบรารี supabase-js ซึ่งแปลงคำสั่งเป็นคำขอผ่านอินเทอร์เน็ต แล้วเซิร์ฟเวอร์แปลงเป็น SQL ให้อีกที</p>
+
+<h2>Supabase ให้อะไรทีมเราบ้าง</h2>
+<table><thead><tr><th>ส่วน</th><th>คืออะไร</th><th>ใช้ทำอะไรใน MindPay</th></tr></thead><tbody>
+<tr><td><b>PostgreSQL</b></td><td>ฐานข้อมูลแบบตาราง ที่นิยมที่สุดตัวหนึ่งของโลก</td><td>เก็บ 4 ตาราง: profiles, transactions, savings_goals, ai_usage</td></tr>
+<tr><td><b>Auth</b></td><td>ระบบบัญชีผู้ใช้สำเร็จรูป</td><td>สมัคร เข้าสู่ระบบ ส่งรหัส 6 หลักทางอีเมล ลืมรหัสผ่าน</td></tr>
+<tr><td><b>REST API อัตโนมัติ</b></td><td>สร้าง "ประตู" ให้เข้าถึงตารางผ่านอินเทอร์เน็ตให้เอง</td><td>แอปอ่าน/เขียนตารางได้โดยไม่ต้องเขียนเซิร์ฟเวอร์เอง</td></tr>
+<tr><td><b>Row Level Security</b></td><td>กฎความปลอดภัยรายแถว</td><td>แต่ละคนเห็นเฉพาะแถวของตัวเอง</td></tr>
+<tr><td><b>Edge Functions</b></td><td>ที่รันโค้ด TypeScript ฝั่งเซิร์ฟเวอร์ (Deno)</td><td>parse-slip และ coach ซึ่งถือกุญแจ AI (บท A10)</td></tr>
+<tr><td><b>Dashboard</b></td><td>หน้าเว็บจัดการทั้งหมด</td><td>ดูตาราง รัน SQL ตั้ง Secrets ดู log</td></tr>
+</tbody></table>
+<p>โปรเจกต์ของทีมอยู่ภูมิภาค Singapore (ใกล้ไทย ตอบเร็ว) และใช้แพ็กเกจฟรี</p>
+
+<h2>Migration: ไฟล์สร้างฐานข้อมูล</h2>
+<p>แทนที่จะคลิกสร้างตารางในหน้าเว็บ ทีมเราเขียนคำสั่ง SQL ไว้ในไฟล์ เรียกว่า <b>migration</b> เรียงตามวันที่ในชื่อไฟล์ ใครจะสร้างฐานข้อมูลใหม่ก็แค่รันไฟล์ตามลำดับ ได้ฐานข้อมูลเหมือนกันทุกตัว และเก็บประวัติใน Git ได้</p>
+<table><thead><tr><th>ไฟล์</th><th>ทำอะไร</th></tr></thead><tbody>
+<tr><td><code>supabase/migrations/20260927000000_init.sql</code></td><td>สร้างตารางหลัก 3 ตาราง กฎ RLS และ trigger (27 ก.ย. 2569)</td></tr>
+<tr><td><code>supabase/migrations/20260927000100_harden.sql</code></td><td>แก้ตามคำแนะนำของตัวตรวจความปลอดภัย Supabase Advisor</td></tr>
+<tr><td><code>supabase/migrations/20260929000000_savings_goals.sql</code></td><td>เพิ่มตารางกระปุกออม (FR-6)</td></tr>
+<tr><td><code>supabase/migrations/20261001000000_atomic_ai_quota.sql</code></td><td>ฟังก์ชันนับโควตา AI แบบกันแย่งกัน และเพดานจำนวนเงิน</td></tr>
+</tbody></table>
+
+<h3>ตาราง profiles: ผู้ใช้ 1 คน = 1 แถว</h3>
+<x-code src="supabase/migrations/20260927000000_init.sql" lines="1-22"></x-code>
+<table class="walk"><thead><tr><th>บรรทัด</th><th>ความหมาย</th></tr></thead><tbody>
+<tr><td>1–7</td><td>คอมเมนต์ SQL (ขึ้นต้นด้วย <span class="mono">--</span>) อธิบายวิธีรัน และหลักความปลอดภัย: ทุกแถวเป็นของผู้ใช้คนเดียว RLS ทำให้อ่านแก้ได้เฉพาะของตัวเอง แม้แอปจะคุยกับฐานข้อมูลตรง ๆ ด้วยกุญแจสาธารณะ</td></tr>
+<tr><td>12</td><td>สร้างตาราง <span class="mono">profiles</span> ในส่วน public (ถ้ายังไม่มี)</td></tr>
+<tr><td>13</td><td><span class="mono">id</span> ชนิด uuid (รหัสยาวไม่ซ้ำ) เป็น <b>primary key</b> (ตัวระบุแถว) และ <b>อ้างอิง</b> ผู้ใช้ในระบบ Auth ถ้าลบผู้ใช้ โปรไฟล์ถูกลบตาม (<span class="mono">on delete cascade</span>)</td></tr>
+<tr><td>14</td><td>ชื่อเล่น ห้ามว่าง (not null) ค่าเริ่มต้นเป็นข้อความว่าง</td></tr>
+<tr><td>15</td><td>เงินตอนเริ่มใช้แอป เป็นสตางค์ ชนิด <span class="mono">bigint</span> (จำนวนเต็มขนาดใหญ่)</td></tr>
+<tr><td>16</td><td><b>เส้นเงินสำรองของ FR-6</b> ค่าเริ่มต้น 50,000 สตางค์ (฿500) และมี <span class="mono">check</span> บังคับว่าต้อง ≥ 0 ถ้าแอปส่งค่าติดลบมา ฐานข้อมูลปฏิเสธเอง</td></tr>
+<tr><td>17</td><td>งบต่อเดือน ไม่ตั้งก็ได้ (null) ถ้าตั้งต้องมากกว่า 0</td></tr>
+<tr><td>18</td><td>โทนโค้ช (ของเดิม FR-5) ต้องเป็น 1 ใน 3 ค่าเท่านั้น</td></tr>
+<tr><td>19</td><td>ตั้งค่าเงินครั้งแรกเสร็จหรือยัง (ใช้กับ Stack.Protected ในบท A7)</td></tr>
+<tr><td>20–21</td><td>เวลาสร้างและแก้ไขล่าสุด ใส่เวลาปัจจุบันให้เอง (<span class="mono">now()</span>)</td></tr>
+</tbody></table>
+
+<h3>ตาราง transactions: รายการเงิน (FR-1)</h3>
+<x-code src="supabase/migrations/20260927000000_init.sql" lines="24-53"></x-code>
+<table class="walk"><thead><tr><th>บรรทัด</th><th>ความหมาย</th></tr></thead><tbody>
+<tr><td>28</td><td>id สร้างให้อัตโนมัติด้วยฟังก์ชันสุ่ม (<span class="mono">gen_random_uuid()</span>)</td></tr>
+<tr><td>29</td><td><b>user_id</b> เจ้าของรายการ ค่าเริ่มต้นคือ <span class="mono">auth.uid()</span> = id ของคนที่ส่งคำขอมา แอปจึงไม่ต้องส่ง user_id เอง (และปลอมเป็นคนอื่นไม่ได้)</td></tr>
+<tr><td>30</td><td>ประเภทต้องเป็น income หรือ expense เท่านั้น (กฎเดียวกับ TxKind ในแอป)</td></tr>
+<tr><td>31</td><td>จำนวนเงินเป็นสตางค์ ต้องมากกว่า 0</td></tr>
+<tr><td>32</td><td>รหัสหมวด</td></tr>
+<tr><td>33–34</td><td>ชื่อยาวไม่เกิน 120 ตัวอักษร บันทึกไม่เกิน 500 (ตรงกับ maxLength ในหน้าจดรายการ)</td></tr>
+<tr><td>35</td><td>เวลาที่เกิดรายการ ชนิด timestamptz (เวลาพร้อมเขตเวลา)</td></tr>
+<tr><td>36–37</td><td>ที่มา (manual/slip) และสถานะ (draft/confirmed) ค่าเริ่มต้นคือยืนยันแล้ว</td></tr>
+<tr><td>38–39</td><td>เลขอ้างอิงสลิป และ hash ของรูป สำหรับกันซ้ำ (FR-4)</td></tr>
+<tr><td>40</td><td>ความมั่นใจของ AI ตัวเลข 0.00 ถึง 1.00</td></tr>
+<tr><td>41</td><td>ช่องที่ต้องตรวจ เป็น array ของข้อความ (<span class="mono">text[]</span>)</td></tr>
+<tr><td>46</td><td><b>index</b> = สารบัญของตาราง ช่วยให้ค้น "รายการของผู้ใช้คนนี้ เรียงตามเวลาล่าสุด" ได้เร็ว ไม่ต้องไล่ทุกแถว</td></tr>
+<tr><td>48–53</td><td><b>unique index</b> = ห้ามซ้ำ: ผู้ใช้คนเดียวกันจะมีเลขอ้างอิงสลิปซ้ำกันไม่ได้ และ hash รูปซ้ำไม่ได้ ถ้ามือถือ 2 เครื่องสแกนสลิปใบเดียวกันพร้อมกัน ฐานข้อมูลปฏิเสธใบที่ 2 เอง (ตอบรหัส 23505 ที่ repo.ts แปลงเป็น DuplicateSlipError)</td></tr>
+</tbody></table>
+
+<h3>ตาราง ai_usage: นับการใช้ AI</h3>
+<x-code src="supabase/migrations/20260927000000_init.sql" lines="55-65"></x-code>
+<p>ทุกครั้งที่ AI ถูกเรียก (อ่านสลิป 1 ใบ หรือถามโค้ช 1 ครั้ง) Edge Function จะเพิ่ม 1 แถว เพื่อนับว่าวันนี้ใช้ไปกี่ครั้งแล้ว กันบัญชีเดียวใช้ AI จนค่าใช้จ่ายบานปลาย (ผู้ใช้อ่านของตัวเองได้ แต่เขียนได้เฉพาะเซิร์ฟเวอร์)</p>
+
+<h2>Row Level Security (RLS): หัวใจความปลอดภัย</h2>
+<x-box kind="analogy" title="เปรียบเทียบ: ตู้ล็อกเกอร์ในห้องสมุด">
+<p>กุญแจสาธารณะ (publishable key) ในแอปเหมือน "บัตรเข้าห้องสมุด" ใครมีก็เดินเข้าห้องได้ แต่ละคนมีล็อกเกอร์ของตัวเอง RLS คือ "ยามประจำล็อกเกอร์" ที่ดูบัตรประชาชน (การเข้าสู่ระบบ) ทุกครั้ง และเปิดให้เฉพาะล็อกเกอร์ที่มีชื่อเรา แม้แฮกเกอร์จะขโมยบัตรเข้าห้องสมุด (กุญแจในแอป) ไปได้ ก็เปิดล็อกเกอร์คนอื่นไม่ได้</p>
+</x-box>
+<x-code src="supabase/migrations/20260927000000_init.sql" lines="67-87"></x-code>
+<table class="walk"><thead><tr><th>บรรทัด</th><th>ความหมาย</th></tr></thead><tbody>
+<tr><td>70–72</td><td>เปิด RLS ทั้ง 3 ตาราง พอเปิดแล้ว ค่าเริ่มต้นคือ <b>ห้ามทุกอย่าง</b> ต้องมี policy อนุญาตทีละเรื่อง</td></tr>
+<tr><td>74–76</td><td>policy "own profile read": อ่านโปรไฟล์ได้ เฉพาะแถวที่ id ตรงกับคนที่เข้าสู่ระบบ (<span class="mono">auth.uid() = id</span>) <span class="mono">drop policy if exists</span> ด้านบนคือลบของเก่าก่อน ทำให้รันไฟล์ซ้ำได้</td></tr>
+<tr><td>77–79</td><td>แก้โปรไฟล์ได้เฉพาะของตัวเอง <span class="mono">using</span> = ตรวจแถวเดิม, <span class="mono">with check</span> = ตรวจแถวหลังแก้ (กันแก้ id ให้เป็นของคนอื่น) ไม่มี policy insert/delete เพราะโปรไฟล์สร้างโดย trigger เท่านั้น</td></tr>
+<tr><td>81–83</td><td>รายการเงิน: ทำได้ทุกอย่าง (<span class="mono">for all</span> = อ่าน เพิ่ม แก้ ลบ) เฉพาะแถวที่ user_id เป็นของตัวเอง</td></tr>
+<tr><td>85–87</td><td>ai_usage อ่านได้อย่างเดียวและเฉพาะของตัวเอง</td></tr>
+</tbody></table>
+<p>ทีมทดสอบเรื่องนี้ด้วยแผน MT-10 "บัญชี A ไม่เห็นรายการของบัญชี B" และรันตัวตรวจ Security Advisor ของ Supabase แล้วแก้จนไม่เหลือคำเตือนเรื่องตาราง ไฟล์ harden.sql เปลี่ยน <span class="mono">auth.uid()</span> เป็น <span class="mono">(select auth.uid())</span> เพื่อให้ฐานข้อมูลคำนวณครั้งเดียวต่อคำสั่ง แทนที่จะคำนวณทุกแถว (เร็วขึ้นเมื่อมีรายการเยอะ)</p>
+<x-code src="supabase/migrations/20260927000100_harden.sql" lines="1-25"></x-code>
+
+<h3>Trigger: งานที่ฐานข้อมูลทำเองอัตโนมัติ</h3>
+<x-code src="supabase/migrations/20260927000000_init.sql" lines="89-118"></x-code>
+<table class="walk"><thead><tr><th>บรรทัด</th><th>ความหมาย</th></tr></thead><tbody>
+<tr><td>92–97</td><td>ฟังก์ชัน <span class="mono">touch_updated_at</span> (เขียนด้วยภาษา plpgsql ของ PostgreSQL) ตั้งเวลาแก้ไขล่าสุดเป็นตอนนี้</td></tr>
+<tr><td>99–104</td><td><b>trigger</b> = "ทุกครั้งก่อนแก้แถวในตาราง profiles หรือ transactions ให้เรียกฟังก์ชันนั้น" updated_at จึงถูกต้องเสมอ ไม่ต้องพึ่งแอป</td></tr>
+<tr><td>107–114</td><td>ฟังก์ชัน <span class="mono">handle_new_user</span>: สร้างแถวโปรไฟล์ใหม่ โดยเอาชื่อเล่นที่ผู้ใช้กรอกตอนสมัคร (เก็บใน raw_user_meta_data) ถ้าไม่มีใช้ข้อความว่าง และถ้ามีแถวนี้อยู่แล้วไม่ต้องทำ (<span class="mono">on conflict do nothing</span>) <span class="mono">security definer</span> = รันด้วยสิทธิ์ของเจ้าของฟังก์ชัน (เพราะผู้ใช้ไม่มีสิทธิ์ insert โปรไฟล์เอง)</td></tr>
+<tr><td>116–118</td><td>trigger บนตารางผู้ใช้ของระบบ Auth: <b>หลังจากมีคนสมัครใหม่</b> ให้สร้างโปรไฟล์ทันที แอปจึงไม่ต้องสร้างเอง</td></tr>
+</tbody></table>
+
+<h2>กุญแจ 2 แบบ: อันไหนอยู่ในแอปได้ อันไหนห้าม</h2>
+<table><thead><tr><th></th><th>Publishable key (anon)</th><th>Service role key (secret)</th></tr></thead><tbody>
+<tr><td>อยู่ที่ไหน</td><td>ในแอป (.env, eas.json) เผยแพร่ได้</td><td>บนเซิร์ฟเวอร์ใน Edge Functions เท่านั้น (Supabase ใส่ให้เอง)</td></tr>
+<tr><td>ทำอะไรได้</td><td>ทุกคำขอต้องผ่าน RLS เห็นเฉพาะข้อมูลของคนที่เข้าสู่ระบบ</td><td><b>ข้าม RLS ได้ทั้งหมด</b> อ่านเขียนทุกแถว</td></tr>
+<tr><td>ใช้ทำอะไร</td><td>แอปอ่าน/เขียนรายการของผู้ใช้</td><td>ตรวจตัวตนผู้ใช้ และนับโควตา AI ใน Edge Function</td></tr>
+<tr><td>ถ้ารั่ว</td><td>ไม่เป็นไร (ออกแบบมาให้เปิดเผยได้)</td><td><b>อันตรายมาก</b> ต้องเปลี่ยนกุญแจทันที</td></tr>
+</tbody></table>
+<p>กุญแจ AI (Claude หรือ Gemini) ก็เป็นความลับระดับเดียวกับ service role เก็บใน Supabase → Edge Functions → Secrets เท่านั้น</p>
+
+<h2>แอปต่อ Supabase ยังไง: src/data/supabase.ts</h2>
+<x-code src="src/data/supabase.ts" lines="1-38"></x-code>
+<table class="walk"><thead><tr><th>บรรทัด</th><th>ความหมาย</th></tr></thead><tbody>
+<tr><td>1–9</td><td>คอมเมนต์: กุญแจมาจากตัวแปรสภาพแวดล้อม (.env) กุญแจ publishable ปลอดภัยเพราะ RLS และกุญแจ AI ไม่อยู่ที่นี่</td></tr>
+<tr><td>10</td><td>ตั้งที่เก็บการเข้าสู่ระบบ (บนมือถือใช้ SQLite เก็บไว้ ปิดแอปแล้วยังเข้าสู่ระบบอยู่)</td></tr>
+<tr><td>11</td><td>จดที่อยู่ของหน้าเว็บตอนเปิด (ไว้จัดการลิงก์ยืนยันอีเมล)</td></tr>
+<tr><td>15–16</td><td>อ่านที่อยู่เซิร์ฟเวอร์และกุญแจจาก .env (<span class="mono">process.env.EXPO_PUBLIC_...</span>)</td></tr>
+<tr><td>18–29</td><td>ถ้ามีทั้งสองค่า สร้าง "client" สำหรับคุยกับ Supabase ถ้าไม่มี (build แบบไม่มีการตั้งค่า) ได้ null แล้วแอปใช้ได้เฉพาะโหมดทดลอง</td></tr>
+<tr><td>23–26</td><td>ตั้งค่าการเข้าสู่ระบบ: เก็บ session ไว้ (<span class="mono">persistSession</span>), ต่ออายุ token อัตโนมัติ (token ของ Supabase มีอายุสั้น ค่าปกติคือ 1 ชั่วโมง), และไม่ให้ไลบรารีอ่านลิงก์ในแถบที่อยู่เอง (AppProvider จัดการเองเพื่อให้เว็บกับแอปทำงานเหมือนกัน)</td></tr>
+<tr><td>31–36</td><td>ต่ออายุ token เฉพาะตอนแอปเปิดอยู่บนหน้าจอ พอแอปถูกพับไว้หยุดต่ออายุ (ประหยัดแบตและเน็ต)</td></tr>
+<tr><td>38</td><td>บอกส่วนอื่นของแอปว่าใช้บัญชีจริงได้ไหม</td></tr>
+</tbody></table>
+
+<h2>การสมัครและเข้าสู่ระบบ</h2>
+<div class="flow">
+<div class="st"><b>1. กรอกชื่อเล่น อีเมล รหัสผ่าน ≥ 8 ตัว</b> <code>src/app/welcome.tsx</code></div>
+<div class="ar">↓ <span class="mono">supabase.auth.signUp</span></div>
+<div class="st"><b>2. Supabase สร้างผู้ใช้</b><small>trigger <span class="mono">handle_new_user</span> สร้างแถวโปรไฟล์ให้ทันที แล้วส่งอีเมลที่มีรหัส 6 หลักและลิงก์ยืนยัน</small></div>
+<div class="ar">↓ <span class="mono">supabase.auth.verifyOtp</span> (กรอกรหัส) หรือแตะลิงก์ในอีเมล</div>
+<div class="st"><b>3. ได้ session</b><small>แอปเก็บ token ไว้ในเครื่อง AppProvider เห็นเหตุการณ์ SIGNED_IN แล้วสร้าง CloudRepo โหลดข้อมูล</small></div>
+<div class="ar">↓</div>
+<div class="st gold"><b>4. โปรไฟล์ยังไม่ onboarded</b><small>Stack.Protected พาไปหน้าตั้งค่าเงิน กรอกยอดเงินตอนนี้และเงินสำรอง แล้วเข้าหน้าหลัก</small></div>
+</div>
+<x-code src="src/app/welcome.tsx" lines="148-172"></x-code>
+<table class="walk"><thead><tr><th>บรรทัด</th><th>ความหมาย</th></tr></thead><tbody>
+<tr><td>148</td><td>ตัดช่องว่างหัวท้ายของชื่อเล่น</td></tr>
+<tr><td>149–153</td><td>สั่งสมัคร: ส่งอีเมล รหัสผ่าน ชื่อเล่น (เก็บใน metadata ของผู้ใช้ ซึ่ง trigger จะคัดลอกไปใส่โปรไฟล์) และที่อยู่ที่ลิงก์ในอีเมลจะพากลับมา</td></tr>
+<tr><td>154</td><td>ถ้า error (เช่น รหัสผ่านสั้นเกิน) แสดงข้อความภาษาไทยที่บอกวิธีแก้</td></tr>
+<tr><td>155–164</td><td>กรณีพิเศษ: อีเมลนี้เคยสมัครแล้ว Supabase จะตอบเหมือนสำเร็จ (เพื่อไม่ให้คนนอกรู้ว่าอีเมลไหนมีบัญชี) แอปตรวจจับได้แล้วบอกให้ไปเข้าสู่ระบบหรือกดลืมรหัสผ่าน แทนที่จะขึ้น "สมัครสำเร็จ" หลอก ๆ</td></tr>
+<tr><td>165–169</td><td>ถ้าโปรเจกต์ปิดการยืนยันอีเมลไว้ จะได้ session ทันที ขึ้นหน้าต่าง "สมัครบัญชีสำเร็จ"</td></tr>
+<tr><td>170–171</td><td>ไม่งั้นไปหน้ากรอกรหัส 6 หลัก และเริ่มนับถอยหลังก่อนให้กดส่งรหัสใหม่ได้</td></tr>
+</tbody></table>
+
+<h2>Repo: ชั้นที่ซ่อนว่าข้อมูลอยู่ที่ไหน</h2>
+<p>หน้าจอไม่เคยคุยกับ Supabase หรือที่เก็บในเครื่องโดยตรง แต่คุยผ่าน <b>Repo</b> (ย่อจาก repository แปลว่าคลัง) ซึ่งมี 2 แบบที่หน้าตาเหมือนกันทุกประการ</p>
+<x-code src="src/data/repo.ts" lines="1-38"></x-code>
+<table class="walk"><thead><tr><th>บรรทัด</th><th>ความหมาย</th></tr></thead><tbody>
+<tr><td>1–7</td><td>คอมเมนต์: หน้าจอใช้ Repo เสมอ มี 2 ตัว คือ CloudRepo (Supabase, บัญชีจริง) และ DemoRepo (เก็บในเครื่อง มีข้อมูลตัวอย่าง ใช้ลองแอปหรือสำรองตอนพรีเซนต์)</td></tr>
+<tr><td>14–19</td><td>error เฉพาะสำหรับสลิปซ้ำ (อธิบายในบท A5)</td></tr>
+<tr><td>21</td><td><b>interface Repo</b> = สัญญาว่า Repo ทุกตัวต้องทำสิ่งเหล่านี้ได้</td></tr>
+<tr><td>22</td><td>บอกว่าเป็นแบบไหน</td></tr>
+<tr><td>23–24</td><td>อ่านและแก้โปรไฟล์</td></tr>
+<tr><td>25–29</td><td>โหลดรายการประมาณ 13 เดือนล่าสุด และ "ยอดยกมา" ของรายการที่เก่ากว่านั้น (ยังต้องนับในยอดคงเหลือ แต่ไม่ต้องโหลดมาเป็นรายการ)</td></tr>
+<tr><td>30–33</td><td>เพิ่ม แก้ ลบ รายการ และยืนยันหลายรายการพร้อมกัน (สลิปรอยืนยัน)</td></tr>
+<tr><td>34–37</td><td>คำสั่งของกระปุกออม (FR-6)</td></tr>
+</tbody></table>
+<x-box kind="analogy" title="ทำไมต้องมี 2 แบบ">
+<p>เหมือนปลั๊กไฟ: หน้าจอคือเครื่องใช้ไฟฟ้า Repo คือเต้าเสียบ จะต่อกับไฟบ้าน (Supabase) หรือแบตเตอรี่สำรอง (เครื่อง) หน้าจอไม่ต้องรู้ เสียบแล้วใช้ได้เหมือนกัน ทีมเราจึงพรีเซนต์ได้แม้อินเทอร์เน็ตในห้องเรียนล่ม และ E2E ทดสอบได้โดยไม่แตะบัญชีจริง</p>
+</x-box>
+<h3>แปลงชื่อระหว่างแอปกับฐานข้อมูล</h3>
+<x-code src="src/data/repo.ts" lines="44-93"></x-code>
+<table class="walk"><thead><tr><th>บรรทัด</th><th>ความหมาย</th></tr></thead><tbody>
+<tr><td>44–59</td><td><span class="mono">TxRow</span> = หน้าตาของแถวในฐานข้อมูล ใช้ชื่อแบบ snake_case (คั่นด้วยขีดล่าง) ตามธรรมเนียมของ SQL</td></tr>
+<tr><td>61–76</td><td><span class="mono">fromRow</span>: แถวฐานข้อมูล → Transaction ของแอป ใช้ <span class="mono">Number(...)</span> ครอบตัวเลข เพราะ bigint บางครั้งส่งมาเป็นข้อความ และ review_flags ที่เป็น null ให้เป็น array ว่าง</td></tr>
+<tr><td>78–93</td><td><span class="mono">toRow</span>: กลับทาง ใส่เฉพาะช่องที่มีค่า (ไม่ใช่ undefined) เพราะตอนแก้รายการ เราส่งแค่บางช่อง ถ้าใส่ทุกช่อง ช่องที่ไม่ได้ส่งจะถูกเขียนทับเป็นค่าว่าง</td></tr>
+</tbody></table>
+<h3>โหลดรายการจากคลาวด์</h3>
+<x-code src="src/data/repo.ts" lines="166-216"></x-code>
+<table class="walk"><thead><tr><th>บรรทัด</th><th>ความหมาย</th></tr></thead><tbody>
+<tr><td>166–169</td><td>สร้าง CloudRepo ของผู้ใช้คนนี้ <span class="mono">supabase!</span> (เครื่องหมายตกใจ) บอก TypeScript ว่า "มั่นใจว่าไม่ใช่ null"</td></tr>
+<tr><td>170–174</td><td>อ่านโปรไฟล์: จากตาราง profiles เลือกทุกคอลัมน์ ที่ id เท่ากับผู้ใช้ เอาแถวเดียว (RLS ก็กันไว้อีกชั้นอยู่แล้ว)</td></tr>
+<tr><td>175–179</td><td>แก้โปรไฟล์แล้วขอแถวใหม่กลับมา</td></tr>
+<tr><td>182</td><td>คำนวณวันที่ย้อนหลัง 400 วัน (ประมาณ 13 เดือน พอสำหรับช่วง "1 ปี" ในหน้าหลัก)</td></tr>
+<tr><td>184–196</td><td>โหลดทีละหน้า หน้าละ 1,000 แถว (API จำกัดจำนวนแถวต่อครั้ง) เรียงจากใหม่ไปเก่า ถ้าได้น้อยกว่า 1,000 แปลว่าหมดแล้ว หยุด</td></tr>
+<tr><td>190–191</td><td>เรียงด้วย id เป็นตัวตัดสินรอง ถ้ามีหลายรายการเวลาเดียวกัน จะไม่หลุดหรือซ้ำข้ามหน้า (บั๊กที่ทีมเจอและแก้ตอนตรวจทั้ง repo)</td></tr>
+<tr><td>197–214</td><td>ยอดยกมา: รายการที่ <b>ยืนยันแล้ว</b> และเก่ากว่า 400 วัน โหลดมาแค่ 2 คอลัมน์ (ประเภทและจำนวน) แล้วรวมเป็นตัวเลขเดียว รายรับบวก รายจ่ายลบ ยอดคงเหลือจึงยังถูกต้องแม้ผู้ใช้ใช้แอปมาหลายปี</td></tr>
+</tbody></table>
+<h3>โหมดทดลอง: DemoRepo</h3>
+<x-code src="src/data/repo.ts" lines="264-305"></x-code>
+<p>บรรทัด 265: ข้อมูลโหมดทดลองเก็บในเครื่องด้วยชื่อ <span class="mono">mindpay.demo.v2</span> (v2 เพราะข้อมูลชุดแรกเคยทำให้ยอดติดลบ จึงเปลี่ยนชุดใหม่) บรรทัด 273–281 คือโปรไฟล์ของผู้ทดลองใช้: เงินตั้งต้น ฿3,000 เส้นสำรอง ฿500 งบ ฿10,000 บรรทัด 292–305: ครั้งแรกที่เปิดยังไม่มีข้อมูล จะสร้างรายการตัวอย่าง (<span class="mono">buildSampleTransactions</span> ใน <code>src/domain/sample.ts</code>) ประมาณ 75 วันย้อนหลังจากวันนี้ แล้วเก็บไว้ ข้อมูลตัวอย่างจึงสดใหม่เสมอไม่ว่าเปิดวันไหน</p>
+
+<h2>เปิดแอปแล้วเกิดอะไรขึ้น: AppProvider เลือกโหมด</h2>
+<x-code src="src/data/AppProvider.tsx" lines="271-318"></x-code>
+<table class="walk"><thead><tr><th>บรรทัด</th><th>ความหมาย</th></tr></thead><tbody>
+<tr><td>272</td><td>ทำครั้งเดียวตอนแอปเริ่ม</td></tr>
+<tr><td>275–276</td><td>ถ้าแอปถูกเปิดจากลิงก์ในอีเมล (ยืนยันสมัคร/ตั้งรหัสใหม่) จัดการลิงก์ก่อน ถ้าเข้าสู่ระบบสำเร็จก็จบ</td></tr>
+<tr><td>277–281</td><td>อ่านโหมดที่จำไว้ในเครื่อง ถ้าเป็นโหมดทดลอง ใช้ DemoRepo</td></tr>
+<tr><td>282–285</td><td>build ที่ไม่มี Supabase: ไปหน้าต้อนรับ</td></tr>
+<tr><td>286–291</td><td>ถามว่ามี session ค้างอยู่ไหม (เคยเข้าสู่ระบบไว้) ถ้ามี ใช้ CloudRepo ของคนนั้น ไม่มีก็ไปหน้าต้อนรับ</td></tr>
+<tr><td>294–309</td><td>ฟังเหตุการณ์ของระบบ Auth: เข้าสู่ระบบ (SIGNED_IN), กู้รหัสผ่าน (PASSWORD_RECOVERY) หรือ token กลับมาหลังออฟไลน์ → เปิดบัญชีนั้น · ออกจากระบบ (SIGNED_OUT) → ล้างข้อมูล ทั้งหมดห่อด้วย <span class="mono">setTimeout(..., 0)</span> เพราะ Supabase เตือนว่าเรียกคำสั่งอื่นในนี้ตรง ๆ อาจค้าง</td></tr>
+<tr><td>310–312</td><td>ฟังลิงก์ที่เข้ามาระหว่างแอปเปิดอยู่</td></tr>
+<tr><td>313–317</td><td>เก็บกวาดเมื่อปิด: เลิกฟังทุกอย่าง</td></tr>
+</tbody></table>
+<x-code src="src/data/AppProvider.tsx" lines="127-167"></x-code>
+<table class="walk"><thead><tr><th>บรรทัด</th><th>ความหมาย</th></tr></thead><tbody>
+<tr><td>127–128</td><td><span class="mono">loadAll</span>: โหลดข้อมูลทั้งหมด แต่ละครั้งได้เลขรอบใหม่ (gen)</td></tr>
+<tr><td>129–130</td><td>เริ่มจดการเปลี่ยนแปลงในเครื่องใหม่ และล้าง error เก่า</td></tr>
+<tr><td>133</td><td>โหลด 3 อย่างพร้อมกัน (บท A5)</td></tr>
+<tr><td>134</td><td>ถ้ามีการโหลดรอบใหม่กว่าเริ่มไปแล้ว หรือสลับบัญชีไปแล้ว ทิ้งผลรอบนี้ (กันข้อมูลบัญชีเก่าโผล่ในบัญชีใหม่)</td></tr>
+<tr><td>135–140</td><td>ถ้าระหว่างโหลด สแกนสลิปอัตโนมัติบันทึกรายการใหม่ไป เอารายการนั้นใส่กลับไว้ด้านหน้า ไม่ให้หายเพราะผลโหลดมาทับ</td></tr>
+<tr><td>139–143</td><td>ใส่ข้อมูลลง state ทั้งหมด แล้วบอกว่าพร้อม (หน้าจอวาดใหม่)</td></tr>
+<tr><td>144–147</td><td>ถ้าโหลดพลาด เก็บข้อความ error ให้หน้าหลักแสดงปุ่ม "ลองอีกครั้ง"</td></tr>
+<tr><td>151–167</td><td><span class="mono">activateRepo</span>: เปลี่ยนไปใช้ Repo ของบัญชีใหม่ ถ้าเป็นคนละบัญชีกับเดิม ล้างข้อมูลเก่าออกก่อนทันที แล้วจำ Repo และโหลดข้อมูล</td></tr>
+</tbody></table>
+<x-box kind="tip" title="สรุปบท A9">
+<p>ฐานข้อมูลมี 4 ตาราง ทุกตารางเปิด RLS ให้แต่ละคนเห็นเฉพาะของตัวเอง เงินเก็บเป็นสตางค์และมี check กันค่าผิด สลิปซ้ำถูกกันด้วย unique index ระดับฐานข้อมูล แอปคุยกับฐานข้อมูลผ่าน Repo ซึ่งมีแบบคลาวด์และแบบในเครื่อง และ AppProvider เป็นคนเลือกว่าจะใช้แบบไหน</p>
+</x-box>
+</x-ch>

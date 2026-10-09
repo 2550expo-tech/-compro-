@@ -1,0 +1,80 @@
+<x-ch title="พจนานุกรมสัญลักษณ์: อ่าน runway.ts ออกทุกตัวอักษร" lead="ทุกเครื่องหมายและคำสั่งที่ปรากฏในไฟล์หัวใจของ FR-6 พร้อมตัวอย่างจากไฟล์จริง เปิดหน้านี้ค้างไว้ข้าง VS Code ระหว่างอ่านโค้ด">
+<p>คนที่ไม่เคยเขียนโค้ดมักติดที่ "เครื่องหมายแปลก ๆ" มากกว่าตรรกะ บทนี้รวบรวม <b>ทุกสัญลักษณ์</b> ที่อยู่ใน <code>src/domain/runway.ts</code> (141 บรรทัด) เรียงตามที่เจอในไฟล์ แต่ละแถวบอกว่า อ่านออกเสียงว่าอะไร ทำอะไร และยกบรรทัดจริงมาให้ดู</p>
+
+<h2>1. โครงของไฟล์</h2>
+<table class="dec"><thead><tr><th>สัญลักษณ์</th><th>ความหมาย และตัวอย่างจาก runway.ts</th></tr></thead><tbody>
+<tr><td class="mono">/** … */</td><td>คอมเมนต์หลายบรรทัด คอมพิวเตอร์ไม่อ่าน มีไว้ให้คนอ่าน ถ้าขึ้นต้นด้วย <span class="mono">/**</span> VS Code จะเอาไปโชว์เป็นคำอธิบายเวลาเอาเมาส์ชี้ชื่อฟังก์ชัน · บรรทัด 1–18 คือนิยาม 5 ข้อของ FR-6</td></tr>
+<tr><td class="mono">// …</td><td>คอมเมนต์ถึงท้ายบรรทัด · บรรทัด 23: <span class="mono">50_000; // ฿500</span></td></tr>
+<tr><td class="mono">import { a, b } from './x'</td><td>"ยืม" ฟังก์ชันจากไฟล์อื่นมาใช้ · บรรทัด 19: ยืม addDays, bkkDayKey, daysBetween จากไฟล์ dates.ts (<span class="mono">./</span> = โฟลเดอร์เดียวกัน)</td></tr>
+<tr><td class="mono">import type</td><td>ยืมเฉพาะ "ชนิดข้อมูล" ใช้ตอนตรวจโค้ดเท่านั้น หายไปตอนแปลงเป็น JavaScript · บรรทัด 21</td></tr>
+<tr><td class="mono">export</td><td>อนุญาตให้ไฟล์อื่นยืมสิ่งนี้ไปใช้ ไม่มี export = ใช้ได้แค่ในไฟล์นี้ · ทุกฟังก์ชันใน runway.ts มี export เพราะหน้าจอและเทสต์ต้องเรียก</td></tr>
+<tr><td class="mono">;</td><td>จบคำสั่ง (เหมือนจุดจบประโยค)</td></tr>
+</tbody></table>
+
+<h2>2. ค่าคงที่ ตัวแปร และชนิดข้อมูล</h2>
+<table class="dec"><thead><tr><th>สัญลักษณ์</th><th>ความหมาย และตัวอย่างจาก runway.ts</th></tr></thead><tbody>
+<tr><td class="mono">const ชื่อ = ค่า</td><td>สร้างกล่องเก็บค่าที่ <b>เปลี่ยนไม่ได้</b> · บรรทัด 24: <span class="mono">const RUNWAY_WINDOW_DAYS = 7</span> · ชื่อตัวพิมพ์ใหญ่ทั้งหมดเป็นธรรมเนียมว่า "นี่คือค่าตั้ง" (ไม่ได้บังคับ)</td></tr>
+<tr><td class="mono">50_000</td><td>ตัวเลข 50000 ขีดล่างช่วยให้อ่านง่ายเหมือนจุลภาค (คอมพิวเตอร์ไม่สนขีด) = 50,000 สตางค์ = ฿500</td></tr>
+<tr><td class="mono">type A = 'x' | 'y'</td><td>ตั้งชื่อชนิดข้อมูลที่ "เป็นได้แค่ค่าเหล่านี้" (<span class="mono">|</span> อ่านว่า "หรือ") · บรรทัด 28: สถานะเป็นได้ 5 คำเท่านั้น พิมพ์ผิดเป็น 'helthy' TypeScript ขีดเส้นแดงทันที</td></tr>
+<tr><td class="mono">interface ชื่อ { … }</td><td>กำหนด "หน้าตา" ของอ็อบเจกต์ว่าต้องมีช่องอะไร ชนิดอะไร · บรรทัด 30–34 AverageSpend มี 3 ช่องเป็นตัวเลข</td></tr>
+<tr><td class="mono">ชื่อ: number</td><td>เครื่องหมาย <span class="mono">:</span> หลังชื่อ = "เป็นชนิด" · <span class="mono">totalSatang: number</span> = ต้องเป็นตัวเลข</td></tr>
+<tr><td class="mono">number | null</td><td>เป็นตัวเลข หรือ null ("ไม่มีค่า") · บรรทัด 60: days เป็น null ได้เมื่อคำนวณไม่ได้ (ต่างจาก 0 ที่แปลว่าศูนย์วัน)</td></tr>
+<tr><td class="mono">Transaction[]</td><td><span class="mono">[]</span> หลังชนิด = "อาร์เรย์ (รายการหลายตัว) ของ…" · <span class="mono">txs: Transaction[]</span> = รายการธุรกรรมหลายรายการ</td></tr>
+<tr><td class="mono">now?: Date</td><td><span class="mono">?</span> หลังชื่อ = ช่องนี้ "ไม่ส่งก็ได้" · บรรทัด 76</td></tr>
+</tbody></table>
+
+<h2>3. ฟังก์ชัน</h2>
+<table class="dec"><thead><tr><th>สัญลักษณ์</th><th>ความหมาย และตัวอย่างจาก runway.ts</th></tr></thead><tbody>
+<tr><td class="mono">function ชื่อ(พารามิเตอร์): ชนิดผล { … }</td><td>ประกาศฟังก์ชัน = เครื่องที่รับของเข้า ทำงาน แล้วส่งผลออก · บรรทัด 36: รับ txs และ now คืน AverageSpend</td></tr>
+<tr><td class="mono">now: Date = new Date()</td><td>ค่าเริ่มต้นของพารามิเตอร์: ถ้าไม่ส่ง now มา ใช้เวลาปัจจุบัน (<span class="mono">new Date()</span> = เวลาตอนนี้) · เทสต์ส่งวันที่ตายตัวมาแทน ผลจึงเหมือนเดิมทุกครั้ง</td></tr>
+<tr><td class="mono">params: { a: number; … }</td><td>รับพารามิเตอร์เป็น "อ็อบเจกต์ก้อนเดียว" ที่มีหลายช่อง อ่านง่ายกว่าส่งตัวเลขเรียงกัน 4 ตัว · บรรทัด 72–77</td></tr>
+<tr><td class="mono">return ค่า</td><td>ส่งผลออกและ <b>จบฟังก์ชันทันที</b> บรรทัดหลังจากนั้นไม่ทำงาน · บรรทัด 84 ถ้าเงินหมด ไม่ไปถึงบรรทัด 89 เลย</td></tr>
+<tr><td class="mono">(t) =&gt; …</td><td>"ฟังก์ชันลูกศร" ฟังก์ชันสั้น ๆ ไม่มีชื่อ อ่านว่า "รับ t แล้วได้ …" · <span class="mono">(t) =&gt; t.kind === 'expense'</span> = รับรายการ t แล้วตอบว่าเป็นรายจ่ายไหม</td></tr>
+</tbody></table>
+
+<h2>4. อ็อบเจกต์และอาร์เรย์</h2>
+<table class="dec"><thead><tr><th>สัญลักษณ์</th><th>ความหมาย และตัวอย่างจาก runway.ts</th></tr></thead><tbody>
+<tr><td class="mono">{ a: 1, b: 2 }</td><td>อ็อบเจกต์ = กล่องที่มีหลายช่อง แต่ละช่องมีชื่อ · ผลของ computeRunway เป็นอ็อบเจกต์ที่มีช่อง status, days, depletionDay …</td></tr>
+<tr><td class="mono">t.kind</td><td>จุด = "ช่องของ" · <span class="mono">t.amountSatang</span> = จำนวนเงินของรายการ t</td></tr>
+<tr><td class="mono">const { a, b } = obj</td><td>"แกะกล่อง" (destructuring): ดึงช่อง a กับ b ออกมาเป็นตัวแปรในบรรทัดเดียว · บรรทัด 78 แกะ 3 ค่าจาก params</td></tr>
+<tr><td class="mono">{ balanceSatang, floorSatang }</td><td>เขียนย่อ: <span class="mono">{ balanceSatang }</span> = <span class="mono">{ balanceSatang: balanceSatang }</span> เมื่อชื่อช่องกับชื่อตัวแปรเหมือนกัน · บรรทัด 81</td></tr>
+<tr><td class="mono">{ ...base, status }</td><td><span class="mono">...</span> (spread) = "เทของทุกช่องจาก base ใส่กล่องใหม่" แล้วเพิ่ม/ทับช่องอื่น · บรรทัด 84, 87, 93 ใช้ base ร่วมกัน ไม่ต้องเขียนซ้ำ 3 รอบ</td></tr>
+<tr><td class="mono">const [y, m] = arr</td><td>แกะอาร์เรย์ตามลำดับ: ตัวแรกเป็น y ตัวที่สองเป็น m · บรรทัด 115</td></tr>
+<tr><td class="mono">arr[0]</td><td>ตัวแรกของอาร์เรย์ (นับจาก 0) · บรรทัด 42 <span class="mono">.sort()[0]</span> = ตัวที่น้อยที่สุดหลังเรียง = วันแรกสุด</td></tr>
+<tr><td class="mono">.length</td><td>จำนวนสมาชิก · บรรทัด 40 <span class="mono">confirmed.length === 0</span> = ไม่มีรายการเลย</td></tr>
+</tbody></table>
+
+<h2>5. เมธอดของอาร์เรย์ (ใช้ต่อกันเป็นสาย)</h2>
+<table class="dec"><thead><tr><th>สัญลักษณ์</th><th>ความหมาย และตัวอย่างจาก runway.ts</th></tr></thead><tbody>
+<tr><td class="mono">.filter(เงื่อนไข)</td><td>เก็บเฉพาะตัวที่เงื่อนไขเป็นจริง (เหมือนตะแกรงร่อน) · บรรทัด 47 เก็บแต่รายจ่าย บรรทัด 48–51 เก็บแต่ที่อยู่ในหน้าต่าง</td></tr>
+<tr><td class="mono">.map(แปลง)</td><td>แปลงทุกตัวเป็นค่าใหม่ ได้อาร์เรย์ยาวเท่าเดิม · บรรทัด 42 แปลงรายการเป็น "วันไทย" · บรรทัด 115 <span class="mono">.map(Number)</span> แปลงข้อความ "2026" เป็นตัวเลข 2026</td></tr>
+<tr><td class="mono">.reduce((s, t) =&gt; s + t.x, 0)</td><td>"ยุบ" ทั้งอาร์เรย์ให้เหลือค่าเดียว: เริ่มที่ 0 แล้วบวกเข้าไปทีละตัว (s = ยอดสะสม, t = ตัวปัจจุบัน) · บรรทัด 52 รวมรายจ่าย 0 → 12000 → … → 101500</td></tr>
+<tr><td class="mono">.sort()</td><td>เรียงจากน้อยไปมาก (ข้อความ "2026-09-01" เรียงตามเวลาได้ถูก เพราะเขียนปี-เดือน-วัน)</td></tr>
+<tr><td class="mono">.split('-')</td><td>หั่นข้อความตรงเครื่องหมาย - · "2026-10-08" → ["2026", "10", "08"]</td></tr>
+<tr><td class="mono">.slice(0, 10)</td><td>ตัดข้อความตำแหน่ง 0 ถึงก่อน 10 · "2026-10-31T00:00:00.000Z" → "2026-10-31"</td></tr>
+</tbody></table>
+
+<h2>6. การเปรียบเทียบและการตัดสินใจ</h2>
+<table class="dec"><thead><tr><th>สัญลักษณ์</th><th>ความหมาย และตัวอย่างจาก runway.ts</th></tr></thead><tbody>
+<tr><td class="mono">===</td><td>เท่ากันจริง ๆ (ทั้งค่าและชนิด) · <span class="mono">t.kind === 'expense'</span> · ระวัง: <span class="mono">=</span> ตัวเดียวคือ "ใส่ค่า" ไม่ใช่ "เทียบ"</td></tr>
+<tr><td class="mono">&lt;= &gt;= &lt; &gt;</td><td>น้อยกว่าหรือเท่ากับ / มากกว่าหรือเท่ากับ / น้อยกว่า / มากกว่า · บรรทัด 83 <span class="mono">spendable &lt;= 0</span> (เท่ากับศูนย์ก็นับว่าแตะเส้น ตรงนิยาม TC-16)</td></tr>
+<tr><td class="mono">&amp;&amp;</td><td>"และ" ต้องจริงทั้งสองฝั่ง · บรรทัด 50 <span class="mono">d &gt;= windowStart &amp;&amp; d &lt;= today</span> = อยู่ในหน้าต่าง</td></tr>
+<tr><td class="mono">if (เงื่อนไข) { … }</td><td>ถ้าจริงทำในวงเล็บปีกกา ถ้าไม่จริงข้ามไป · บรรทัด 83 และ 86 คือด่านตรวจ 2 ด่าน</td></tr>
+<tr><td class="mono">ก ? ข : ค</td><td>"ternary" = if-else แบบสั้น: ถ้า ก จริงได้ ข ไม่งั้นได้ ค · บรรทัด 91 <span class="mono">capped ? 365 : raw</span> · บรรทัด 92 ซ้อน 2 ชั้น: น้อยกว่า 7 → critical ไม่งั้น (น้อยกว่า 14 → watch ไม่งั้น healthy)</td></tr>
+<tr><td class="mono">a ?? b</td><td>"ถ้า a ไม่มีค่า (null หรือ undefined) ใช้ b" · บรรทัด 79 <span class="mono">params.now ?? new Date()</span></td></tr>
+</tbody></table>
+
+<h2>7. คณิตศาสตร์และวันที่</h2>
+<table class="dec"><thead><tr><th>สัญลักษณ์</th><th>ความหมาย และตัวอย่างจาก runway.ts</th></tr></thead><tbody>
+<tr><td class="mono">Math.floor(x)</td><td><b>ปัดลง</b> เป็นจำนวนเต็ม · floor(20.69) = 20 · บรรทัด 89 และ 110</td></tr>
+<tr><td class="mono">Math.round(x)</td><td>ปัดใกล้สุด (.5 ขึ้น) · บรรทัด 54 ปัดค่าเฉลี่ยเป็นสตางค์ · บรรทัด 138</td></tr>
+<tr><td class="mono">Math.max(a, b) / Math.min(a, b)</td><td>ค่าที่มากกว่า / น้อยกว่า · <span class="mono">Math.max(0, spendable)</span> = ไม่ให้ติดลบ · <span class="mono">Math.min(7, trackedDays)</span> = ไม่เกิน 7 · ใช้ทั้งคู่ซ้อนกันเพื่อ "บีบให้อยู่ในช่วง" (บรรทัด 134: 0 ถึง 100)</td></tr>
+<tr><td class="mono">-(RUNWAY_WINDOW_DAYS - 1)</td><td>วงเล็บคิดก่อน: 7 − 1 = 6 แล้วใส่ลบ = −6 · บรรทัด 38 ย้อนไป 6 วัน</td></tr>
+<tr><td class="mono">Date.UTC(y, m, d)</td><td>สร้างเวลาแบบสากล · <b>เดือนนับจาก 0</b> (มกราคม = 0) และวันที่ 0 = วันสุดท้ายของเดือนก่อน · บรรทัด 116 ใช้หาวันสิ้นเดือน</td></tr>
+<tr><td class="mono">.toISOString()</td><td>แปลงเวลาเป็นข้อความมาตรฐาน "2026-10-31T00:00:00.000Z"</td></tr>
+<tr><td class="mono">bkkDayKey / addDays / daysBetween</td><td>ฟังก์ชันวันที่ของ MindPay เอง (ไฟล์ dates.ts): แปลงเป็นวันไทย "YYYY-MM-DD" / บวกลบวัน / นับวันระหว่างสองวัน</td></tr>
+</tbody></table>
+<x-box kind="analogy" title="อ่านโค้ดให้เหมือนอ่านภาษาไทย">
+<p>บรรทัด 92 <span class="mono">const status = days &lt; 7 ? 'critical' : days &lt; 14 ? 'watch' : 'healthy';</span> อ่านเป็นประโยคได้ว่า "ให้ status เป็น: ถ้าจำนวนวันน้อยกว่า 7 ก็ critical ไม่งั้นถ้าน้อยกว่า 14 ก็ watch นอกนั้น healthy" ลองอ่านทุกบรรทัดของ runway.ts ออกเสียงเป็นภาษาไทยแบบนี้ ถ้าอ่านได้ครบ ถือว่าอ่านโค้ดออกแล้ว</p>
+</x-box>
+</x-ch>
